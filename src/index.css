@@ -1,0 +1,356 @@
+@import "tailwindcss";
+@tailwind utilities;
+
+@theme {
+	--font-roboto: "Roboto", sans-serif;
+	--font-raleway: "Raleway", sans-serif;
+	--font-neuton: "Neuton", serif;
+	--font-jetbrains: "JetBrains Mono", monospace;
+	--font-montserrat: "Montserrat", sans-serif;
+	--font-nunito: "Nunito Sans", sans-serif;
+
+	--color-ic-light-000: #b8ffe9;
+	--color-ic-light-100: #7cffdc;
+	--color-ic-light-200: #35f3c5;
+	--color-ic-light-300: #33d7b1;
+	--color-ic-light-400: #25ac90;
+	--color-ic-light-450: #23987c;
+	--color-ic-light-500: #1f7f6b; /* Default */
+	--color-ic-light-600: #1c705e;
+
+	--color-ic-dark-000: #1b5673;
+	--color-ic-dark-100: #16455a;
+	--color-ic-dark-200: #123c4c;
+	--color-ic-dark-300: #103443;
+	--color-ic-dark-400: #0d2c3a;
+	--color-ic-dark-500: #0c2835; /* Default */
+	--color-ic-dark-600: #0a2129;
+	--color-ic-dark-700: #07181e;
+
+	--color-ic-blue-500: #226f92; /* Default */
+
+	/* Named colors */
+	--color-ic-orange-500: #cb6033; /* Default */
+	--color-ic-orange-600: #b5532a;
+
+	--color-ic-red-100: #fa7779;
+	--color-ic-red-200: #e35d5f;
+	--color-ic-red-300: #d35355;
+	--color-ic-red-400: #c14749;
+	--color-ic-red-500: #b23939; /* Default */
+	--color-ic-red-600: #903030;
+	--color-ic-red-700: #703030;
+
+	--color-ic-green: #218b73; /* Mhm, green */
+	--color-ic-item-count: #ca8d35;
+
+	/* Specific colors */
+	--color-stat-neutral: #d1d5dc;
+	--color-stat-positive: #b6ffa5;
+	--color-stat-negative: #ffa5a5;
+	
+	/* Animations */
+	
+	/* - Wiggle, wait x seconds, repeat */
+	--animate-wiggle: wiggle 4s linear infinite;
+	
+	@keyframes wiggle {
+		44% { transform: rotate(0deg); }
+		47% { transform: rotate(-15deg); }
+		50% { transform: rotate(15deg); }
+		53% { transform: rotate(-15deg); }
+		56% { transform: rotate(15deg); }
+		59% { transform: rotate(0deg); }
+	}
+}
+
+.font-raleway {
+	-webkit-font-feature-settings: "lnum";
+	-moz-font-feature-settings: "lnum";
+	font-feature-settings: "lnum";
+}
+
+.tbox-trim-both-cap {
+	text-box: trim-both cap alphabetic;
+}
+
+.tbox-trim-start {
+	text-box-trim: trim-start;
+}
+
+.tbox-trim-end {
+	text-box-trim: trim-end;
+}
+
+.tbox-trim-both {
+	text-box-trim: trim-both;
+}
+
+
+/*
+bg-[#1e1e24]
+ */
+
+:root {
+	/*--ip-darkest: #15161a;
+	--ip-darker: #181a1e;
+	--ip-dark: #25252c;
+	--ip-light: #42424b;
+
+	--ip-text-title: #fff;
+	--ip-text-subtitle: #e5e7eb;
+	--ip-text-highlight: #d1d5dc;
+	--ip-text-default: #a9b2be;*/
+
+	--color-brightester: red;
+
+
+	/* Bright - Titles and text */
+	--color-brightest: #fff4ee;
+	--color-brighter: #ffebdf;
+	--color-bright: #f5e0d3;
+
+	/* Lighter+ - Used for disabled text, buttons, input fields, etc */
+	--color-lightest: #e6c5ab;
+	--color-lighter-p: #ca9772;
+	--color-lighter: #a57e60;
+
+	/* Light - Used for some backgrounds */
+	--color-light-p: #80554e;
+	--color-light: #67443D;
+
+	/* Dark - Used for some background, background for other divs, etc */
+	--color-dark-m: #6b4151;
+	--color-dark: #5F3D39;
+	--color-dark-p: #593935;
+	--color-darker: #4B302B;
+	--color-darkest: #301f1c;
+	/* Background - Used for page background */
+	/*--color-background: #1e1614;*/
+	--color-background: #0b1319;
+	/* Shadow - Used for shadows */
+	--color-shadow: #00000033;
+	--color-contrast: #52322F;
+
+	--ip-darkest: red;
+	/*--ip-darkest: #1A1614;*/
+	--ip-darker: red;
+	/*--ip-darker: #231C19;*/
+	--ip-dark: red;
+	/*--ip-dark: #332925;*/
+	--ip-light: red;
+	/*--ip-light: #453B36;*/
+
+	--ip-text-title: red;
+	/*--ip-text-title: #FFF7F2;*/
+	--ip-text-subtitle: red;
+	/*--ip-text-subtitle: #EBE2DC;*/
+	--ip-text-highlight: red;
+	/*--ip-text-highlight: #D6CAC2;*/
+	--ip-text-default: red;
+	/*--ip-text-default: #B5A7A0;*/
+
+	--color-moderator-3: #49a1ff;
+	--color-moderator-2: #0d2837;
+	--color-moderator-1: #1473d8;
+
+	--color-gilded-3: #ffc622;
+	--color-gilded-2: #0d2837;
+	--color-gilded-1: #f0b305;
+
+	--color-premium-3: #3afacb;
+	--color-premium-2: #0d2837;
+	--color-premium-1: #23a88b;
+
+	--color-btn-lime: #62a559;
+	--color-btn-lime-hover: #6fc562;
+
+}
+
+html, body {
+	overflow-x: hidden;
+	overflow-y: hidden;
+}
+
+body {
+	@apply bg-gray-100 text-gray-900 antialiased;
+	/*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;*/
+}
+
+.page-background {
+	background-attachment: fixed;
+	background-image: url(https://i.imgur.com/i5QFDpF.jpeg);
+	background-position: 50%;
+	background-repeat: no-repeat;
+	background-size: cover;
+	display: block;
+	filter: blur(.5rem) brightness(.5);
+	-webkit-filter: blur(.5rem) brightness(.5);
+	-moz-filter: blur(.5rem) brightness(.5);
+	-o-filter: blur(.5rem) brightness(.5);
+	height: 100%;
+	left: 0;
+	right: 0;
+	position: fixed;
+	transform: scale(1.22);
+	width: 100%;
+	z-index: -10000;
+}
+
+.border-ridge {
+	border-style: ridge;
+}
+
+.text-rainbow {
+	animation: rainbow-text 7.5s infinite;
+}
+
+.bg-rainbow {
+	animation: rainbow-bg 7.5s infinite;
+}
+
+@keyframes rainbow-text {
+	0%   { color: hsl(0   100% 74% / 1); }
+	5%   { color: hsl(18  100% 74% / 1); }
+	10%  { color: hsl(36  100% 74% / 1); }
+	15%  { color: hsl(54  100% 74% / 1); }
+	20%  { color: hsl(72  100% 74% / 1); }
+	25%  { color: hsl(90  100% 74% / 1); }
+	30%  { color: hsl(108 100% 74% / 1); }
+	35%  { color: hsl(126 100% 74% / 1); }
+	40%  { color: hsl(144 100% 74% / 1); }
+	45%  { color: hsl(162 100% 74% / 1); }
+	50%  { color: hsl(180 100% 74% / 1); }
+	55%  { color: hsl(198 100% 74% / 1); }
+	60%  { color: hsl(216 100% 74% / 1); }
+	65%  { color: hsl(234 100% 74% / 1); }
+	70%  { color: hsl(252 100% 74% / 1); }
+	75%  { color: hsl(270 100% 74% / 1); }
+	80%  { color: hsl(288 100% 74% / 1); }
+	85%  { color: hsl(306 100% 74% / 1); }
+	90%  { color: hsl(324 100% 74% / 1); }
+	95%  { color: hsl(342 100% 74% / 1); }
+	100% { color: hsl(360 100% 74% / 1); }
+}
+
+@keyframes rainbow-bg {
+	0%   { background-color: hsl(0   100% 74% / 1); }
+	5%   { background-color: hsl(18  100% 74% / 1); }
+	10%  { background-color: hsl(36  100% 74% / 1); }
+	15%  { background-color: hsl(54  100% 74% / 1); }
+	20%  { background-color: hsl(72  100% 74% / 1); }
+	25%  { background-color: hsl(90  100% 74% / 1); }
+	30%  { background-color: hsl(108 100% 74% / 1); }
+	35%  { background-color: hsl(126 100% 74% / 1); }
+	40%  { background-color: hsl(144 100% 74% / 1); }
+	45%  { background-color: hsl(162 100% 74% / 1); }
+	50%  { background-color: hsl(180 100% 74% / 1); }
+	55%  { background-color: hsl(198 100% 74% / 1); }
+	60%  { background-color: hsl(216 100% 74% / 1); }
+	65%  { background-color: hsl(234 100% 74% / 1); }
+	70%  { background-color: hsl(252 100% 74% / 1); }
+	75%  { background-color: hsl(270 100% 74% / 1); }
+	80%  { background-color: hsl(288 100% 74% / 1); }
+	85%  { background-color: hsl(306 100% 74% / 1); }
+	90%  { background-color: hsl(324 100% 74% / 1); }
+	95%  { background-color: hsl(342 100% 74% / 1); }
+	100% { background-color: hsl(360 100% 74% / 1); }
+}
+
+/* Hide scrollbar */
+
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+.no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+/* Dark theme scrollbar */
+
+/*.dark-scrollbar {
+	scrollbar-color: #ffffff50 #00000050;
+	scrollbar-width: thin;
+}*/
+
+.dark-scrollbar::-webkit-scrollbar {
+	width: 0.5rem !important;
+}
+
+.dark-scrollbar::-webkit-scrollbar-track {
+	background: #00000050;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb {
+	background: #B0B0B070;
+	border-radius: 0.1rem;
+}
+
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #C0C0C0A0;
+}
+
+/* Idle Clas scrollbar */
+
+.ic-scrollbar::-webkit-scrollbar {
+	width: 0.4rem !important;
+}
+
+.ic-scrollbar::-webkit-scrollbar-track {
+	background: #35f3c570;
+	border-radius: 10rem;
+}
+
+.ic-scrollbar::-webkit-scrollbar-thumb {
+	background: #35f3c5;
+	border-radius: 10rem;
+}
+
+.ic-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #7cffdc;
+}
+
+/* Sidebar Scrollbar */
+
+.sidebar-scrollbar::-webkit-scrollbar {
+	width: 0.25rem !important;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+	background: #00000050;
+	border-radius: 10rem;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+	background: #ffffff50;
+	border-radius: 10rem;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #ffffff70;
+}
+
+/* Inventory Scrollbar */
+
+.inventory-scrollbar::-webkit-scrollbar {
+	width: 0.5rem !important;
+}
+
+.inventory-scrollbar::-webkit-scrollbar-track {
+	background: #00000050;
+}
+
+.inventory-scrollbar::-webkit-scrollbar-thumb {
+	background: #35f3c5;
+	border-radius: 0.15rem;
+}
+
+.inventory-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #7cffdc;
+}
+
+.color-pick {
+	background: #ca8d35;
+}

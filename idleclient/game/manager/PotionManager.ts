@@ -1,0 +1,57 @@
+import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { LoginDataMessage, PotionType } from "@idleclient/network/NetworkData.ts";
+import useSmartRef from "@hooks/smartref/useSmartRef.ts";
+
+export interface PotionManagerType extends ManagerType {
+	isPotionActive: (type: PotionType) => boolean;
+
+	initialize: (data: LoginDataMessage) => void;
+	cleanup: () => void;
+}
+
+export const PotionManager = (managers: ManagerStorage): PotionManagerType => {
+	const _activePotions = useSmartRef(new Map<PotionType, number>);
+
+	/*
+	 * Functions
+	 */
+
+	const isPotionActive = (type: PotionType) => {
+		const content = _activePotions.content();
+		const potion = content.get(type);
+		if (potion === undefined) return false;
+		return potion > 0;
+	}
+
+	/*
+	 * Initialization
+	 */
+
+	const initialize = (data: LoginDataMessage) => {
+		const potions = data.ActivePotionEffects;
+		if (potions === null || potions === undefined)
+			throw new Error("PotionManager: Received login data without potions.");
+
+		const potionsMap = new Map<PotionType, number>(Object.keys(potions)
+			.map(key => {
+				const potion = PotionType[key as keyof typeof PotionType] ?? PotionType.None;
+				const duration = potions.get(key) ?? -1;
+				return [potion, duration];
+			}));
+
+		_activePotions.setContent(potionsMap);
+	}
+
+	const cleanup = () => {
+		_activePotions.setContent(new Map());
+	}
+
+	return {
+		$managerName: "potionManager",
+
+		isPotionActive: isPotionActive,
+
+		initialize: initialize,
+		cleanup: cleanup
+	}
+}
