@@ -1,5 +1,5 @@
 import { BaseModalProps } from "./BaseModal";
-import React, { useState } from "react";
+import React from "react";
 
 interface GenericTextModalProps extends BaseModalProps {
 	title?: string;

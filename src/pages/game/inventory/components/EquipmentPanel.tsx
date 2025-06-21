@@ -153,7 +153,7 @@ function EquipSlotComponent({ slot, item, count = 1, size = 16, onClick, tooltip
 					${item ? "hover:bg-ic-light-500 hover:border-ic-light-450" : ""}`}
 					style={slotStyle}
 					onClick={() => item != null && onClick(slot)}
-					onContextMenu={(e) => {
+					onContextMenu={() => {
 						if (item === null) return;
 						onClick(slot);
 					}}

@@ -1,5 +1,5 @@
 import { FiHome, FiSettings, FiUsers, FiMenu, FiChevronsLeft } from 'react-icons/fi';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useWebsite } from '../context/WebsiteContext';
 import { FaUser } from "react-icons/fa";
 import { RiLoginBoxLine, RiLogoutBoxLine } from "react-icons/ri";

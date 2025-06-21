@@ -1,7 +1,6 @@
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { ItemIcon, SpriteIcon } from "@components/icon";
-import { GameData } from "@idleclient/game/data/GameData.ts";
 import { AttackStyle, Skill } from "@idleclient/network/NetworkData.ts";
 import ReactDOM from "react-dom";
 import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";

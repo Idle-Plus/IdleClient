@@ -4,11 +4,6 @@ import React, { useCallback, useEffect, useRef } from "react";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import { InventorySection } from "@pages/game/inventory/components/InventorySection.tsx";
 import { useWebsite } from "@context/WebsiteContext.tsx";
-import { SpriteIcon } from "@components/icon";
-import { ItemIcon } from "@components/icon";
-import { GameData } from "@idleclient/game/data/GameData.ts";
-import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
-import { useGame } from "@context/GameContext.tsx";
 
 // How many rows per inventory component.
 const rowsPerComponent = 5; // TODO: Changeable in settings.

@@ -1,5 +1,5 @@
 import { BaseModalProps } from "./BaseModal";
-import React, { useState } from "react";
+import React from "react";
 import { TextUtils } from "@idleclient/utils/TextUtils.tsx";
 
 interface GenericConfirmationModalProps extends BaseModalProps {

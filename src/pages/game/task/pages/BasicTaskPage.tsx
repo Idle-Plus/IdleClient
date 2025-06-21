@@ -1,11 +1,6 @@
 import { Skill, TaskType } from "@idleclient/network/NetworkData.ts";
 import React, { useMemo, useState } from "react";
-import { useGame } from "@context/GameContext.tsx";
-import useIndexEventListener from "@hooks/useIndexEventListener.ts";
-import useSkillWatcher from "@hooks/game/skill/useSkillWatcher.ts";
-import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 import CraftingTaskCard from "@pages/game/task/components/tasks/CraftingTaskCard.tsx";
-import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
 import BasicTaskHeader from "@pages/game/task/components/BasicTaskHeader.tsx";
 import GatheringTaskCard from "@pages/game/task/components/tasks/GatheringTaskCard.tsx";
@@ -91,7 +86,7 @@ const BasicTaskPage: React.FC<BasicTaskPageProps> = ({ type }) => {
 			>
 				<div className="max-w-[calc(100% - 122px)] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-					{ categories?.[currentCategory]?.tasks?.filter(v => !v.disabled).map((task, i) => {
+					{ categories?.[currentCategory]?.tasks?.filter(v => !v.disabled).map((task, _) => {
 						if (task.isHarvestingTask() && task.costs.length === 0) return (
 							<GatheringTaskCard key={(type * 1000) + task.taskId} task={task} />
 						);
