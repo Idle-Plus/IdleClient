@@ -17,7 +17,7 @@ still under development, with many features that have yet to be implemented.
 ## Features
 
 Below is a list of currently implemented features. While it may not seem like much, some systems, like the task system, 
-represent a significant portion of the game. For example, tasks effectively complete nine of the skills.
+represent a significant portion of the game, with nine skills being fully implemented by just having basic tasks.
 
 - Login and account page.
 - System to import and work with the configData.json file.
@@ -59,7 +59,7 @@ that the client uses to look up individual textures.
 
 ## Contributing
 
-Contributions are welcome and appreciated! Be it a new feature, improvements or just bug fixes in general; your help
+Contributions are welcome and appreciated! Be it a new feature, improvements, or just bug fixes in general; your help
 is encouraged. Please note that to test and run the client effectively, you will most likely need to set up and run
 a local instance of the [relay](https://github.com/Idle-Plus/IdleRelay).
 
