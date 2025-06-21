@@ -6,11 +6,18 @@ const LOADING_ID = "spriteSheetContext$loading";
 
 type SheetMap = Map<string, HTMLCanvasElement>;
 
-const SpriteSheetContext = createContext<SheetMap | null>(null);
+interface SpriteSheetContextType {
+	loading: boolean;
+	sheets: SheetMap;
+}
+
+const SpriteSheetContext = createContext<SpriteSheetContextType | null>(null);
 
 export const SpriteSheetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const loading = useLoading();
-	const [sheets, setSheets] = useState<SheetMap | null>(() => new Map<string, HTMLCanvasElement>());
+	const loader = useLoading();
+
+	const [loading, setLoading] = useState(true);
+	const [sheets, setSheets] = useState<SheetMap>(new Map<string, HTMLCanvasElement>());
 
 	useEffect(() => {
 		async function loadSheets() {
@@ -24,13 +31,13 @@ export const SpriteSheetProvider: React.FC<{ children: React.ReactNode }> = ({ c
 				.forEach((value, _) => queue.push({ src: value.image, tries: 0 }));
 
 			const start = Date.now();
-			loading.set(LOADING_ID, `Loading sprites\n0%`, -1);
+			loader.set(LOADING_ID, `Loading sprites\n0%`, -1);
 
 			const total = queue.length;
 			let finished = 0;
 			const onFinishEntry = () => {
 				finished++;
-				loading.update(LOADING_ID, `Loading sprites\n${(finished / total * 100).toFixed(0)}%`);
+				loader.update(LOADING_ID, `Loading sprites\n${(finished / total * 100).toFixed(0)}%`);
 			}
 
 			async function loadImage(src: string): Promise<HTMLCanvasElement> {
@@ -98,16 +105,20 @@ export const SpriteSheetProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
 			const end = Date.now();
 			console.log(`SpriteSheetContext: Loaded ${total} sprite sheets in ${end - start}ms.`);
-			loading.remove(LOADING_ID);
+			loader.remove(LOADING_ID);
 
 			setSheets(map);
+			setLoading(false);
 		}
 
 		loadSheets();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
-		<SpriteSheetContext.Provider value={sheets ?? new Map<string, HTMLCanvasElement>()}>
+		<SpriteSheetContext.Provider value={{
+			loading: loading,
+			sheets: sheets
+		}}>
 			{children}
 		</SpriteSheetContext.Provider>
 	);

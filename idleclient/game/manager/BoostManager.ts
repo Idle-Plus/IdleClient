@@ -1,9 +1,8 @@
 import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
-import { MasteryCapeType, Skill } from "@idleclient/network/NetworkData.ts";
+import { LoginDataMessage, MasteryCapeType, Skill } from "@idleclient/network/NetworkData.ts";
 import { RefObject, useRef } from "react";
 import { useIdleEvent } from "@hooks/event/useIdleEvent.ts";
 import { EquipmentEvents } from "@idleclient/event/EquipmentEvents.ts";
-import { GameEvents } from "@idleclient/event/GameEvents.ts";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
 import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
@@ -18,6 +17,16 @@ export interface BoostManagerType extends ManagerType {
 	combatBoosts: SmartRef<CombatBoosts>;
 
 	getSkillBoost: (skill: Skill) => number;
+
+	/**
+	 * Initialize the boost manager.
+	 */
+	initialize: (data: LoginDataMessage) => void,
+	/**
+	 * Cleans up the boost manager, should always be called when the player
+	 * disconnects from the game server.
+	 */
+	cleanup: () => void,
 }
 
 export const BoostManager = (managers: ManagerStorage): BoostManagerType => {
@@ -41,15 +50,6 @@ export const BoostManager = (managers: ManagerStorage): BoostManagerType => {
 	 * Events
 	 */
 
-	useIdleEvent(GameEvents.ConnectedPreEvent, () => {
-		_skillBoostsRef.current.clear()
-		_combatBoostsRef.setContent({
-			melee: { strength: 0, accuracy: 0, defence: 0 },
-			archery: { strength: 0, accuracy: 0, defence: 0 },
-			magic: { strength: 0, accuracy: 0, defence: 0}
-		});
-	});
-
 	useIdleEvent(EquipmentEvents.ItemEquipEvent, (item, _) => {
 		handleSkillBoost(item, true, _skillBoostsRef);
 		handleCompletionistCapeBoost(item, true, _skillBoostsRef);
@@ -62,12 +62,32 @@ export const BoostManager = (managers: ManagerStorage): BoostManagerType => {
 		handleCombatBoost(item, false, _combatBoostsRef);
 	});
 
+	/*
+	 * Initialization
+	 */
+
+	const initialize = (data: LoginDataMessage) => {
+
+	}
+
+	const cleanup = () => {
+		_skillBoostsRef.current.clear()
+		_combatBoostsRef.setContent({
+			melee: { strength: 0, accuracy: 0, defence: 0 },
+			archery: { strength: 0, accuracy: 0, defence: 0 },
+			magic: { strength: 0, accuracy: 0, defence: 0}
+		});
+	}
+
 	return {
 		$managerName: "boostManager",
 
 		combatBoosts: _combatBoostsRef,
 
-		getSkillBoost: getSkillBoost
+		getSkillBoost: getSkillBoost,
+
+		initialize: initialize,
+		cleanup: cleanup
 	}
 }
 

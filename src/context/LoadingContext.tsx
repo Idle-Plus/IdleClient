@@ -51,7 +51,7 @@ const LoadingComponent: React.FC<{ entriesRef: SmartRef<Map<string, { time: numb
 			}
 
 			if (!updated) {
-				// A loader is stuck.
+				// Check if a loader is stuck.
 				if (currentEntry && entries.size <= 0) {
 					entriesRef.trigger();
 				}
@@ -63,19 +63,27 @@ const LoadingComponent: React.FC<{ entriesRef: SmartRef<Map<string, { time: numb
 		return () => clearInterval(handle);
 	});
 
-	if (!shouldRender) return null;
-	/*if (currentEntry === undefined || entries.size <= 0)
-		return null;*/
+	useEffect(() => {
+		const setScrollLock = (lock: boolean) => {
+			document.body.style.overflow = lock ? "hidden" : "";
+			document.body.style.height = lock ? "100%" : "";
+		};
 
-	if (currentEntry?.[1].title) {
-		lastTitleRef.current = currentEntry?.[1].title;
-	}
+		if (entries.size > 0) setScrollLock(true);
+		else setScrollLock(false);
+		return () => setScrollLock(false);
+	}, [entries.size]);
+
+
+	if (!shouldRender) return null;
+
+	if (currentEntry?.[1].title) lastTitleRef.current = currentEntry?.[1].title;
 	const title = currentEntry?.[1].title ?? lastTitleRef.current;
 
 	return (
 		<div
-			className={`absolute flex items-center justify-center w-full h-full bg-black/33 opacity-0
-			transition-opacity ease-in-out z-[10000] ${isVisible ? 'opacity-100!' : ''}`}
+			className={`fixed flex items-center justify-center w-full h-full bg-black/33 opacity-0
+			transition-opacity ease-in-out z-[10000] inset-0 ${isVisible ? "opacity-100!" : ""}`}
 
 			style={ isVisible ?
 				{ pointerEvents: "auto", userSelect: "none", transitionDuration: `${FADE_IN_DELAY}ms` } :

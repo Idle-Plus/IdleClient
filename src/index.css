@@ -167,14 +167,13 @@ bg-[#1e1e24]
 
 }
 
-html, body {
+html {
 	overflow-x: hidden;
-	overflow-y: hidden;
+	margin-right: calc(-1 * (100vw - 100%));
 }
 
 body {
 	@apply bg-gray-100 text-gray-900 antialiased;
-	/*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;*/
 }
 
 .page-background {
@@ -184,16 +183,16 @@ body {
 	background-repeat: no-repeat;
 	background-size: cover;
 	display: block;
-	filter: blur(.5rem) brightness(.5);
-	-webkit-filter: blur(.5rem) brightness(.5);
-	-moz-filter: blur(.5rem) brightness(.5);
-	-o-filter: blur(.5rem) brightness(.5);
-	height: 100%;
+	filter: blur(.5rem) brightness(.7);
+	-webkit-filter: blur(.5rem) brightness(.7);
+	-moz-filter: blur(.5rem) brightness(.7);
+	-o-filter: blur(.5rem) brightness(.7);
+	height: 100vh;
+	width: 100vw;
 	left: 0;
 	right: 0;
 	position: fixed;
 	transform: scale(1.22);
-	width: 100%;
 	z-index: -10000;
 }
 
@@ -309,6 +308,24 @@ body {
 }
 
 .ic-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #7cffdc;
+}
+
+/* Idle Clas scrollbar - no round */
+
+.ic-scrollbar-nr::-webkit-scrollbar {
+	width: 0.4rem !important;
+}
+
+.ic-scrollbar-nr::-webkit-scrollbar-track {
+	background: #35f3c570;
+}
+
+.ic-scrollbar-nr::-webkit-scrollbar-thumb {
+	background: #35f3c5;
+}
+
+.ic-scrollbar-nr::-webkit-scrollbar-thumb:hover {
 	background: #7cffdc;
 }
 

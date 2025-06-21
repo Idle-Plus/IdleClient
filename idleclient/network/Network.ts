@@ -1,6 +1,6 @@
 import { deserialize, Packet } from "@idleclient/network/NetworkData.ts";
 
-const address = "ws://localhost:25000/";
+const address: string = import.meta.env.VITE_RELAY_ADDRESS;
 
 let nextListenerId = 0;
 const packetListeners: { [packet: number]: { [id: number]: (packet: any) => void } } = {};
@@ -147,6 +147,8 @@ export class Network {
 				return;
 			}
 
+			console.log("Network: Received packet:", parsedPacket);
+
 			for (const key in packetListeners[parsedPacket.MsgType]) {
 				packetListeners[parsedPacket.MsgType][key](parsedPacket);
 			}
@@ -173,7 +175,7 @@ export class Network {
 	}
 
 	public static close() {
-		if (this.socket) this.socket.close();
+		if (this.socket) this.socket.close(1000, "CLIENT_CLOSE");
 		this.socket = null;
 	}
 }

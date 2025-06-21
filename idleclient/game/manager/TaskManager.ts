@@ -4,7 +4,7 @@ import { JobTask } from "@idleclient/game/data/TaskDatabase.ts";
 import usePacket from "@hooks/network/usePacket.ts";
 import {
 	ActiveTaskCancelledMessage,
-	CompleteTaskMessage,
+	CompleteTaskMessage, LoginDataMessage,
 	PacketType,
 	Skill, StartTaskMessage,
 	TaskPotionInteraction,
@@ -38,6 +38,16 @@ export interface TaskManagerType extends ManagerType {
 	 * server, requesting the task to be either started or stopped.
 	 */
 	activateTask: (task: JobTask, useConsumables?: boolean) => void;
+
+	/**
+	 * Initialize the task manager.
+	 */
+	initialize: (data: LoginDataMessage) => void,
+	/**
+	 * Cleans up the task manager, should always be called when the player
+	 * disconnects from the game server.
+	 */
+	cleanup: () => void,
 }
 
 export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
@@ -345,11 +355,26 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 
 	}, [], PacketType.CompleteTaskMessage);
 
+	/*
+	 * Initialization
+	 */
+
+	const initialize = (data: LoginDataMessage) => {
+
+	}
+
+	const cleanup = () => {
+		currentTask.setContent(null);
+	}
+
 	return {
 		$managerName: "taskManager",
 
 		currentTask: currentTask,
 
 		activateTask: activateTask,
+
+		initialize: initialize,
+		cleanup: cleanup,
 	}
 }

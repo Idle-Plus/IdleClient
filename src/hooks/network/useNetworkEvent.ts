@@ -13,6 +13,7 @@ export enum NetworkEvent {
 
 export enum CloseReason {
 	UNKNOWN,
+	CLIENT_INITIATED,
 	FAILED_TO_CONNECT,
 }
 
@@ -38,11 +39,10 @@ export function useNetworkEvent(
 				id = Network.onConnect(callbackRef.current);
 				break;
 			case NetworkEvent.DISCONNECT:
-				id = Network.onDisconnect((connected: boolean, _code: number, message: string | null) => {
-					if (!connected)
-						callbackRef.current(CloseReason.FAILED_TO_CONNECT, message);
-					else
-						callbackRef.current(CloseReason.UNKNOWN, message)
+				id = Network.onDisconnect((connected: boolean, code: number, message: string | null) => {
+					if (!connected) callbackRef.current(CloseReason.FAILED_TO_CONNECT, message);
+					else if (code === 1000 && message === "CLIENT_DISCONNECT") callbackRef.current(CloseReason.CLIENT_INITIATED, null);
+					else callbackRef.current(CloseReason.UNKNOWN, message)
 				});
 				break;
 			case NetworkEvent.ERROR:

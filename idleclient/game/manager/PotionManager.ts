@@ -5,8 +5,15 @@ import useSmartRef from "@hooks/smartref/useSmartRef.ts";
 export interface PotionManagerType extends ManagerType {
 	isPotionActive: (type: PotionType) => boolean;
 
-	initialize: (data: LoginDataMessage) => void;
-	cleanup: () => void;
+	/**
+	 * Initialize the potion manager.
+	 */
+	initialize: (data: LoginDataMessage) => void,
+	/**
+	 * Cleans up the potion manager, should always be called when the player
+	 * disconnects from the game server.
+	 */
+	cleanup: () => void,
 }
 
 export const PotionManager = (managers: ManagerStorage): PotionManagerType => {
@@ -28,14 +35,12 @@ export const PotionManager = (managers: ManagerStorage): PotionManagerType => {
 	 */
 
 	const initialize = (data: LoginDataMessage) => {
-		const potions = data.ActivePotionEffects;
-		if (potions === null || potions === undefined)
-			throw new Error("PotionManager: Received login data without potions.");
-
+		const potions = data.ActivePotionEffects === undefined || data.ActivePotionEffects === null ?
+			{} : data.ActivePotionEffects;
 		const potionsMap = new Map<PotionType, number>(Object.keys(potions)
 			.map(key => {
 				const potion = PotionType[key as keyof typeof PotionType] ?? PotionType.None;
-				const duration = potions.get(key) ?? -1;
+				const duration = potions[key] ?? -1;
 				return [potion, duration];
 			}));
 

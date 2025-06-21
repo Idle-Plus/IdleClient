@@ -56,13 +56,6 @@ export interface EquipmentManagerType extends ManagerType {
 	 * Retrieves the equipment item definition for the specified equipment slot.
 	 */
 	getEquipment: (slot: EquipmentSlot) => ItemDefinition | null
-	/**
-	 * Checks whether a specific item is currently equipped.
-	 *
-	 * @deprecated Use isItemEquipped instead.
-	 */
-	isEquipped: (item: ItemId) => boolean,
-
 	isItemEquipped: (item: ItemId) => boolean,
 	isVariantOrItemEquipped: (item: ItemId) => boolean,
 
@@ -295,7 +288,6 @@ export const EquipmentManager = (managers: ManagerStorage): EquipmentManagerType
 		unequipItem: unequipItem,
 
 		getEquipment: getEquipment,
-		isEquipped: isItemEquipped,
 		isItemEquipped: isItemEquipped,
 		isVariantOrItemEquipped: isVariantOrItemEquipped,
 

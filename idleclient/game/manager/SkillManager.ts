@@ -128,9 +128,8 @@ export const SkillManager = (managers: ManagerStorage): SkillManagerType => {
 	 */
 
 	const initialize = (data: LoginDataMessage) => {
-		if (data.SkillExperiencesJson === undefined || data.SkillExperiencesJson === null)
-			throw new Error("SkillManager: Received login data without experience.");
-		const parsedExperience = JSON.parse(data.SkillExperiencesJson) as Record<string, number>
+		const parsedExperience = data.SkillExperiencesJson === undefined || data.SkillExperiencesJson === null ?
+			{} : JSON.parse(data.SkillExperiencesJson);
 		const skills = new Map<Skill, number>(Object.keys(parsedExperience)
 			.map(key => {
 				const skill = Skill[key as keyof typeof Skill] ?? Skill.None;

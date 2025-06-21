@@ -49,8 +49,8 @@ const CanvasIcon: React.FC<CanvasIconProps> = ({
 	className,
 	style
 }) => {
-	const sheets = useSpriteSheets();
-	const sheet = sheets.get(icon.sheet.image);
+	const spriteSheets = useSpriteSheets();
+	const sheet = spriteSheets.sheets.get(icon.sheet.image);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	useEffect(() => {

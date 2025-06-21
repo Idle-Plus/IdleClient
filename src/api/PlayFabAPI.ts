@@ -1,12 +1,12 @@
 import { JSEncrypt } from "jsencrypt";
 import { PlayFabSession } from "@idleclient/types/playFabTypes.ts";
 
-// Settings
-const TITLE_ID = "753EF"; // TEST server
-const PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCvMDt1Bccu/bsLyPFsb42aq417DALVOwHHk+p0ax/MEf3ueoZVeX+W6KDYk/k2xJ1tlyEll0ZrxGcPPisSGBYFi3V491TeVJS5Yq3DSXXyEqukW6LxB7U9eAm9y40JQr00s/mCTNtskWuMyNwDgSohis5DXI7EKrJ9Oq2UaMfeqwIDAQAB"
+const TITLE_ID: string = import.meta.env.VITE_PLAYFAB_TITLE_ID;
+const PUBLIC_KEY: string = import.meta.env.VITE_PLAYFAB_PUBLIC_KEY;
 
 const URL = `https://${TITLE_ID}.playfabapi.com`;
 const LOGIN_EMAIL_PASSWORD = `${URL}/Client/LoginWithEmailAddress`;
+const REGISTER_EMAIL_PASSWORD = `${URL}/Client/RegisterPlayFabUser`;
 
 const encryptSessionTicket = (sessionTicket: string): string => {
 	const encrypt = new JSEncrypt();
@@ -16,13 +16,12 @@ const encryptSessionTicket = (sessionTicket: string): string => {
 	return encrypted;
 }
 
-export type LoginResult =
+export type PlayFabLoginResult =
 	| { success: true, session: PlayFabSession }
 	| { success: false };
 
-export const login = async (email: string, password: string): Promise<LoginResult> => {
+export const login = async (email: string, password: string): Promise<PlayFabLoginResult> => {
 	return new Promise((resolve, _reject) => {
-		// Post request to PlayFab
 		fetch(LOGIN_EMAIL_PASSWORD, {
 			method: "POST",
 			headers: {
@@ -63,4 +62,69 @@ export const login = async (email: string, password: string): Promise<LoginResul
 			});
 		})
 	});
+}
+
+export type PlayFabRegisterResult =
+	| { success: true, session: PlayFabSession }
+	| { success: false, message: string };
+
+export const register = async (name: string, email: string, password: string): Promise<PlayFabRegisterResult> => {
+	return new Promise((resolve, _reject) => {
+		fetch(REGISTER_EMAIL_PASSWORD, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				TitleId: TITLE_ID,
+				Username: name,
+				DisplayName: name,
+				Email: email,
+				Password: password,
+				InfoRequestParameters: {
+					GetUserAccountInfo: true
+				}
+			})
+		}).then(async (response) => {
+			if (!response.ok) {
+				try {
+					const data = await response.json();
+
+					let message: string;
+					switch (data.errorCode as number) {
+						case 1005:
+						case 1006: message = "Email address is already in use"; break
+						case 1008: message = "Invalid password"; break;
+						case 1007: message = "Invalid username"; break;
+						case 1058:
+						case 1009: message = "Username isn't available"; break
+						default: message = data.errorMessage; break;
+					}
+
+					resolve({ success: false, message: message });
+					return;
+				} catch (e) {
+					console.error(e);
+					resolve({ success: false, message: "Failed to register account" });
+					return;
+				}
+			}
+
+			response.json().then((data) => {
+				const sessionTicket = data.data.SessionTicket;
+				const playFabId = data.data.PlayFabId;
+				const expiration = data.data.EntityToken.TokenExpiration;
+				const displayName = data.data.Username;
+
+				const session: PlayFabSession = {
+					sessionTicket: encryptSessionTicket(sessionTicket),
+					playFabId: playFabId,
+					displayName: displayName,
+					expiration: expiration
+				}
+
+				resolve({ success: true, session: session });
+			});
+		})
+	})
 }
