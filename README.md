@@ -35,6 +35,7 @@ A non-exhaustive overview of the project structure.
   - `network/`: Network logic.
     - `NetworkData.ts`: Automatically generated game packets and type definitions.
   - `wasm/`: WebAssembly module for the client, used when calculating experience and task times.
+- `public/atlas/`: The location where the texture atlases are stored.
 - `src/`: The React frontend application.
 
 ## Relay Server
@@ -49,6 +50,13 @@ following:
 
 For more information, visit the Idle Relay repository.
 
+## Textures
+
+Game items and icons are stored as texture atlases in the `public/atlas/` directory. They are created using 
+[Atlaser](https://github.com/Idle-Plus/Atlaser), a tool made specifically for this project. It automatically processes
+the textures: resizing and scaling images, combining them into multiple texture atlases, and generating a JSON file
+that the client uses to look up individual textures.
+
 ## Contributing
 
 Contributions are welcome and appreciated! Be it a new feature, improvements or just bug fixes in general; your help
@@ -59,9 +67,9 @@ a local instance of the [relay](https://github.com/Idle-Plus/IdleRelay).
 
 **Q**: Am I allowed to use this client? Can I get banned for using it?
 <br>**A**: As far as I can tell, yes, the client should be allowed, and you shouldn't be banned for using it. When I 
-first asked Temsei about making a browser-based Idle Clans client, I got the following response: `Would be an 
-interesting project for sure! Can't think of any good reasons to be against it haha go for it`. I'm also regularly 
-checking with Temsei about features I plan to implement, in case it's something that isn't allowed.
+first asked Temsei about making a browser-based Idle Clans client, I got the following response: 
+`Would be an interesting project for sure! Can't think of any good reasons to be against it haha go for it`.
+I'm also regularly checking with Temsei about features I plan to implement, in case it's something that isn't allowed.
 
 **Q**: Can you improve or add feature X?
 <br>**A**: Maybe! If you have a feature request or suggestion, then feel free to 
