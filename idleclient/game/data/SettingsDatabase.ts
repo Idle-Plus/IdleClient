@@ -84,7 +84,11 @@ class SharedSettings {
 		Object.assign(this, entry);
 	}
 
+	get baseClanVaultSpace(): Int { return this.BaseClanVaultSpace; }
+	get iapClanVaultSpacePerPurchase(): Int { return this.IAPClanVaultSpacePerPurchase; }
+	get iapMaxPurchasableClanVaultSpace(): Int { return this.IAPMaxPurchasableClanVaultSpace; }
 	get dailyAdsExperienceBoostPct(): Int { return this.DailyAdsExperienceBoostPct; }
+	get guildMaxMembers(): Int { return this.GuildMaxMembers; }
 	get maxSkillLevel(): Int { return this.MaxSkillLevel; }
 	get maxPlayerSkillExperience(): Int { return this.MaxPlayerSkillExperience; }
 }
@@ -123,11 +127,11 @@ export class SettingsDatabase {
 		return this.clientSettings;
 	}
 
-	public static getSharedSettings(): SharedSettings {
+	public static shared(): SharedSettings {
 		return GameData.settings().shared();
 	}
 
-	public static getClientSettings(): ClientSettings {
+	public static client(): ClientSettings {
 		return GameData.settings().client();
 	}
 }

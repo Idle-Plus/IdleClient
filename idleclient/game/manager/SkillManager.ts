@@ -37,6 +37,7 @@ export interface SkillManagerType extends ManagerType {
 	 * Get the level of the specified skill.
 	 */
 	getLevel: (skill: Skill) => number,
+	getTotalLevel: () => number,
 
 	/*
 	 * Experience
@@ -93,7 +94,20 @@ export const SkillManager = (managers: ManagerStorage): SkillManagerType => {
 	});
 
 	const getLevel = (skill: Skill) => {
-		return _skillsRef.content().get(skill) ?? 0;
+		const experience = _skillsRef.content().get(skill) ?? 0;
+		return SkillUtils.getLevelForExperience(experience);
+	}
+
+	const getTotalLevel = () => {
+		let result = 0;
+
+		const skills = Object.keys(Skill).map(Number).filter(key => !isNaN(key));
+		for (const skill of skills) {
+			if (skill === Skill.None) continue;
+			result += getLevel(skill as Skill);
+		}
+
+		return result;
 	}
 
 	const addExperience = (skill: Skill, amount: number) => {
@@ -151,6 +165,7 @@ export const SkillManager = (managers: ManagerStorage): SkillManagerType => {
 
 		hasLevel: hasLevel,
 		getLevel: getLevel,
+		getTotalLevel: getTotalLevel,
 
 		addExperience: addExperience,
 		removeExperience: removeExperience,

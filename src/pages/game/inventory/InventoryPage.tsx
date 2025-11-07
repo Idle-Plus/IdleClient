@@ -180,16 +180,16 @@ const InventoryPage: React.FC = () => {
 	console.log("InventoryPage: Drawing");
 
 	return (
-		<div className="flex justify-center max-w-7xl mx-auto h-full">
+		<div className="flex justify-center max-w-7xl mx-auto h-full p-4">
 
-			<div className="flex flex-col {/*bg-sky-400/25*/} gap-4">
+			<div className="flex flex-col gap-4 grow">
 
 				{/* min-h-10 lg:min-h-14 - 56 px */}
 				<InventoryHeader />
 
 				{/* InventoryPanel + EquipmentPanel */}
 				<div
-					className="flex justify-center gap-4 w-fit h-[calc(100%-40px)] lg:h-[calc(100%-56px)]"
+					className="flex justify-between gap-4 w-full h-[calc(100%-40px)] lg:h-[calc(100%-56px)]"
 					//style={{height: "calc(100% - 56px)"}} // Needs to match the used space above.
 				>
 					<InventoryCurrentlyDraggingContext.Provider value={currentDragFromRef}>

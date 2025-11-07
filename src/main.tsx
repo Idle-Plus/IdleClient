@@ -10,27 +10,30 @@ import { SpriteSheetProvider } from "@context/SpriteSheetContext.tsx";
 import { LoadingProvider } from "@context/LoadingContext.tsx";
 import { ConsoleProvider } from "@context/ConsoleContext.tsx";
 import { ModalBlur, ModalContainer, ModalProvider } from "@context/ModalContext.tsx";
+import { ToastProvider } from "@context/ToastContext.tsx";
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<BrowserRouter>
 			<LoadingProvider>
 				<WebsiteProvider>
-					<ModalProvider>
-						<ConsoleProvider>
-							<SessionProvider>
-								<GameProvider>
-									<SpriteSheetProvider>
-										<div className="page-background" />
-										<ModalBlur>
-											<App />
-										</ModalBlur>
-										<ModalContainer />
-									</SpriteSheetProvider>
-								</GameProvider>
-							</SessionProvider>
-						</ConsoleProvider>
-					</ModalProvider>
+					<ToastProvider>
+						<ModalProvider>
+							<ConsoleProvider>
+								<SessionProvider>
+									<GameProvider>
+										<SpriteSheetProvider>
+											<div className="page-background" />
+											<ModalBlur>
+												<App />
+											</ModalBlur>
+											<ModalContainer />
+										</SpriteSheetProvider>
+									</GameProvider>
+								</SessionProvider>
+							</ConsoleProvider>
+						</ModalProvider>
+					</ToastProvider>
 				</WebsiteProvider>
 			</LoadingProvider>
 		</BrowserRouter>

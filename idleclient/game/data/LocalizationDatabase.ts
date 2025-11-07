@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import VanillaLocalization from "@idleclient/data/vanillaLocalization.csv?raw";
+import { GameData } from "@idleclient/game/data/GameData.ts";
 
 export class LocalizationDatabase {
 
@@ -20,6 +21,10 @@ export class LocalizationDatabase {
 		data.data.forEach(row => {
 			this.vanillaLocalization.set(row[""], row["English"]);
 		})
+	}
+
+	public static get(key: string, args?: any[]): string {
+		return GameData.localization().get(key, args);
 	}
 
 	get(key: string, args?: any[]): string {

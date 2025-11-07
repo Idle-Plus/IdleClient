@@ -1,6 +1,6 @@
 import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
-import { JobTask } from "@idleclient/game/data/TaskDatabase.ts";
+import { JobTask, TaskDatabase } from "@idleclient/game/data/TaskDatabase.ts";
 import usePacket from "@hooks/network/usePacket.ts";
 import {
 	ActiveTaskCancelledMessage,
@@ -68,7 +68,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 	 */
 
 	usePacket<TaskStartedMessage>(packet => {
-		const task = GameData.tasks().getTaskById(packet.TaskType, packet.TaskId);
+		const task = TaskDatabase.getTaskById(packet.TaskType, packet.TaskId);
 		if (task === undefined) {
 			debug.warn(`TaskManager: TaskStartedMessage / Failed to find task ${packet.TaskId} of type ${packet.TaskType}.`);
 			return;
@@ -180,7 +180,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			}
 			case TaskUpgradeInteraction.UpgradeWoodcuttingExtraPlank: {
 				// Find the carpentry task that consumes this item.
-				const task = GameData.tasks()
+				const task = TaskDatabase
 					.getTaskCategories(TaskType.Carpentry)
 					?.flatMap(category => category.tasks)
 					?.find(task =>
@@ -198,7 +198,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 				break;
 			}
 			case TaskUpgradeInteraction.LampExtraCoal: {
-				const task = GameData.tasks()
+				const task = TaskDatabase
 					.getTaskCategories(TaskType.Mining)
 					?.flatMap(category => category.tasks)
 					?.find(task => task.itemReward === 31);
@@ -303,7 +303,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			ItemDatabase.get(cookedItemId).name}`);
 
 		// Find the cooking task that produces the cooked item.
-		const task = GameData.tasks()
+		const task = TaskDatabase
 			.getTaskCategories(TaskType.Cooking)
 			?.flatMap(category => category.tasks)
 			?.find(task => task.itemReward === cookedItemId);

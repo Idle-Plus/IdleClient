@@ -1,4 +1,5 @@
 import { Int, PotionType } from "@idleclient/network/NetworkData.ts";
+import { GameData } from "@idleclient/game/data/GameData.ts";
 
 export class PotionData {
 
@@ -19,7 +20,7 @@ export class PotionData {
 
 export class PotionDatabase {
 
-	private readonly potions: Map<PotionType, PotionData> = new Map();
+	public readonly potions: Map<PotionType, PotionData> = new Map();
 
 	constructor(potionData: any) {
 		const startTime = Date.now();
@@ -34,7 +35,7 @@ export class PotionDatabase {
 		console.log(`PotionDatabase: Initialized ${this.potions.size} potions in ${timeTaken}ms.`);
 	}
 
-	public getPotion(type: PotionType): PotionData | undefined {
-		return this.potions.get(type);
+	public static getPotion(type: PotionType): PotionData | undefined {
+		return GameData.potions().potions.get(type);
 	}
 }

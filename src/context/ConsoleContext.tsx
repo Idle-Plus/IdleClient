@@ -167,7 +167,9 @@ export const ConsoleProvider: React.FC<{ children: React.ReactNode }> = ({childr
 
 	const write = (type: LogType = LogType.INFO, ...text: (string | object | ReactNode)[]) => {
 		let message: string | ReactNode = parseConsoleLog(...text);
-		console.log(`${LogType[type]}: ${message}`);
+		if (type === LogType.ERROR) console.error(`${LogType[type]}: ${message}`);
+		else if (type === LogType.WARNING) console.warn(`${LogType[type]}: ${message}`);
+		else console.log(`${LogType[type]}: ${message}`);
 
 		if (type === LogType.DEBUG) message = <span className="text-[#c0c0c0]">{message}</span>
 		else if (type === LogType.WARNING) message = <span className="text-orange-200">{message}</span>;

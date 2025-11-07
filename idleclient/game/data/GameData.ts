@@ -7,12 +7,16 @@ import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 import { TaskDatabase } from "@idleclient/game/data/TaskDatabase.ts";
 import { UpgradeDatabase } from "@idleclient/game/data/UpgradeDatabase.ts";
 import { PotionDatabase } from "@idleclient/game/data/PotionDatabase.ts";
+import { ClanHouseDatabase } from "@idleclient/game/data/ClanHouseDatabase.ts";
 
 const DATA_ID_REGEX = /"_id"\s*:\s*ObjectId\("([a-f0-9]+)"\)/g;
+
 function getGameData(): GameDataType {
 	const replaced = RawGameData.replace(DATA_ID_REGEX, (_, id) => {
 		return `"_id": "ObjectId(${id})"`;
 	});
+
+	console.log("Parsed data: ", JSON.parse(replaced));
 
 	return JSON.parse(replaced);
 }
@@ -42,6 +46,7 @@ export class GameData {
 	private static ITEM_DATA: ItemDatabase | null = null;
 	private static TASK_DATA: TaskDatabase | null = null;
 	private static UPGRADE_DATA: UpgradeDatabase | null = null;
+	private static HOUSE_DATA: ClanHouseDatabase | null = null;
 	private static POTION_DATA: PotionDatabase | null = null;
 	private static SETTINGS_DATA: SettingsDatabase | null = null;
 	private static LOCALIZATION_DATA: LocalizationDatabase | null = null;
@@ -55,9 +60,11 @@ export class GameData {
 
 		// Data
 		const data = getGameData();
+
 		GameData.ITEM_DATA = new ItemDatabase(data.Items);
 		GameData.TASK_DATA = new TaskDatabase(data.Tasks);
 		GameData.UPGRADE_DATA = new UpgradeDatabase(data.Upgrades, data.ClanUpgrades);
+		GameData.HOUSE_DATA = new ClanHouseDatabase(data.Houses);
 		GameData.POTION_DATA = new PotionDatabase(data.PotionData);
 		GameData.SETTINGS_DATA = new SettingsDatabase(data.SharedSettings, data.ClientSettings);
 		GameData.LOCALIZATION_DATA = new LocalizationDatabase();
@@ -84,6 +91,11 @@ export class GameData {
 
 	public static upgrades(): UpgradeDatabase {
 		if (GameData.UPGRADE_DATA) return GameData.UPGRADE_DATA;
+		throw new Error("Game data not initialized");
+	}
+
+	public static houses(): ClanHouseDatabase {
+		if (GameData.HOUSE_DATA) return GameData.HOUSE_DATA;
 		throw new Error("Game data not initialized");
 	}
 

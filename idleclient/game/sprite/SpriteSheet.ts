@@ -142,6 +142,7 @@ export class SheetIcon {
 			backgroundSize: `${spriteSheetWidth}px ${spriteSheetHeight}px`,
 			backgroundPosition: `-${positionX}px -${positionY}px`,
 			width: width,
+			minWidth: width,
 			height: height,
 			backgroundRepeat: "no-repeat",
 		};

@@ -17,6 +17,7 @@
 	--color-ic-light-450: #23987c;
 	--color-ic-light-500: #1f7f6b; /* Default */
 	--color-ic-light-600: #1c705e;
+	--color-ic-light-700: #176353;
 
 	--color-ic-dark-000: #1b5673;
 	--color-ic-dark-100: #16455a;
@@ -30,9 +31,15 @@
 	--color-ic-blue-500: #226f92; /* Default */
 
 	/* Named colors */
+	--color-ic-orange-000: #ff9d6e;
+	--color-ic-orange-100: #ff8e5c;
+	--color-ic-orange-200: #f37e4c;
+	--color-ic-orange-300: #e67140;
+	--color-ic-orange-400: #da6939;
 	--color-ic-orange-500: #cb6033; /* Default */
 	--color-ic-orange-600: #b5532a;
 
+	--color-ic-red-000: #ff8b8c;
 	--color-ic-red-100: #fa7779;
 	--color-ic-red-200: #e35d5f;
 	--color-ic-red-300: #d35355;
@@ -50,6 +57,20 @@
 	--color-stat-negative: #ffa5a5;
 	
 	/* Animations */
+
+	/* - Toast sliding in and out */
+	--animate-toast-slide-in: toast-slide-in 0.2s ease-in forwards;
+	--animate-toast-slide-out: toast-slide-out 0.2s ease-in forwards;
+
+	@keyframes toast-slide-in {
+		from { opacity: 0; transform: translateX(-100%); }
+		to { opacity: 1; transform: translateX(0); }
+	}
+
+	@keyframes toast-slide-out {
+		from { opacity: 1; transform: translateX(0%); }
+		to { opacity: 0; transform: translateX(-100%); }
+	}
 	
 	/* - Wiggle, wait x seconds, repeat */
 	--animate-wiggle: wiggle 4s linear infinite;

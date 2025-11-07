@@ -3,6 +3,7 @@ import { GameMode, Int, LoginDataMessage, Skill, UpgradeType } from "@idleclient
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { ItemId } from "@idleclient/types/gameTypes.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
+import { UpgradeDatabase } from "@idleclient/game/data/UpgradeDatabase.ts";
 
 interface AdBoost {
 	/**
@@ -27,6 +28,9 @@ export interface PlayerManagerType extends ManagerType {
 	mode: SmartRef<GameMode>;
 	adBoost: SmartRef<AdBoost>;
 
+	premium: SmartRef<boolean>;
+	gilded: SmartRef<boolean>;
+
 	upgrades: SmartRef<Map<UpgradeType, Int>>;
 	enchantments: SmartRef<Map<ItemId, Skill[]>>;
 
@@ -48,6 +52,9 @@ export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
 	const mode = useSmartRef<GameMode>(GameMode.NotSelected);
 	const adBoost = useSmartRef<AdBoost>({ expires: null, seconds: -1, paused: true });
 
+	const _premiumRef = useSmartRef<boolean>(false);
+	const _gildedRef = useSmartRef<boolean>(false);
+
 	const upgrades = useSmartRef<Map<UpgradeType, Int>>(new Map());
 	const enchantments = useSmartRef<Map<ItemId, Skill[]>>(new Map());
 
@@ -66,7 +73,7 @@ export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
 		const currentTier = upgrades.content().get(type);
 		if (currentTier === undefined) return 0;
 
-		const upgrade = GameData.upgrades().getUpgrade(type);
+		const upgrade = UpgradeDatabase.getUpgrade(type);
 		if (!upgrade) throw new Error("Upgrade not found");
 		const unlocks = upgrade.tierUnlocks;
 
@@ -99,7 +106,12 @@ export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
 			if (!data.SerializedItemEnchantments) return map;
 			for (const [key, value] of Object.entries(JSON.parse(data.SerializedItemEnchantments))) {
 				const itemId = parseInt(key);
-				const skills = value as Skill[];
+
+				// Quick test to make sure the skill is of type string.
+				if (typeof (value as string[])[0] !== "string")
+					throw Error("Invalid enchantment data, skill isn't a string.");
+				const skills: Skill[] = (value as string[]).map(skillString => Skill[skillString as keyof typeof Skill]);
+
 				map.set(itemId, skills);
 			}
 			return map;
@@ -114,6 +126,9 @@ export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
 			seconds: adBoostSeconds,
 			paused: adBoostPaused
 		}));
+
+		_premiumRef.setContent(data.PremiumEndDate !== null);
+		_gildedRef.setContent(data.IsPremiumPlus);
 	}
 
 	const cleanup = () => {
@@ -121,6 +136,9 @@ export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
 		mode.setContent(GameMode.NotSelected);
 		upgrades.setContent(new Map());
 		enchantments.setContent(new Map());
+
+		_premiumRef.setContent(false);
+		_gildedRef.setContent(false);
 	}
 
 	return {
@@ -129,6 +147,9 @@ export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
 		username: username,
 		mode: mode,
 		adBoost: adBoost,
+
+		premium: _premiumRef,
+		gilded: _gildedRef,
 
 		upgrades: upgrades,
 		enchantments: enchantments,

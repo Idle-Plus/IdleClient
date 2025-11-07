@@ -14,6 +14,7 @@ import { IdleClansMath } from "@idleclient/game/utils/IdleClansMath.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
 import { ToolbeltUtils } from "@idleclient/game/utils/ToolbeltUtils.ts";
 import { EnchantmentUtils } from "@idleclient/game/utils/EnchantmentUtils.ts";
+import { PotionDatabase } from "@idleclient/game/data/PotionDatabase.ts";
 
 interface TaskCost {
 	itemId: ItemId,
@@ -185,6 +186,7 @@ export class JobTask {
 		bonusPercentage += this.getSkillSpeedBoost(game);
 
 		// TODO: Get clan upgrade.
+		//       Huh, is there a clan upgrade for experience?
 		/*if (this.isHarvestingTask() && game.clan.isInClan &&
 			game.clan.hasUpgrade(UpgradeType.clan_upgrade_gatherers)) {
 			const upgrade = GameData.upgrades().getUpgrade(UpgradeType.clan_upgrade_gatherers);
@@ -203,8 +205,9 @@ export class JobTask {
 		const skillingBoost = this.getSkillSpeedBoost(game);
 		let time = IdleClansMath.get().calc_negative_percentage_float_float(this.baseTime, skillingBoost);
 
-		if (this.isHarvestingTask()) {
-			// TODO: Check clan upgrade.
+		if (this.isHarvestingTask() && game.clan.isUpgradeUnlocked(UpgradeType.clan_upgrade_gatherers)) {
+			const boost = game.clan.getUpgradeBenefits(UpgradeType.clan_upgrade_gatherers);
+			time = IdleClansMath.get().calc_negative_percentage_float_float(time, boost);
 		}
 
 		if (this.baseTime * 0.2 > time) {
@@ -224,7 +227,9 @@ export class JobTask {
 			boost = game.player.getUpgradeBenefits(UpgradeType.upgrade_housing);
 		}
 
-		// TODO: Get clan boost.
+		const clanHouse = game.clan.clan.content()?.getHouse();
+		if (clanHouse) boost += clanHouse.globalSkillingBoost;
+
 		return boost;
 	}
 
@@ -234,15 +239,15 @@ export class JobTask {
 
 		const boostFromGear = game.boost.getSkillBoost(this.Skill);
 		const boostFromToolbelt = this.getBoostPercentageFromToolbelt(game);
-		const boostFromEnchantments = EnchantmentUtils.getEnchantmentBoostForSkill(game, this.Skill);
 		const baseBoost = boostFromGear + boostFromToolbelt;
 
-		if (boostFromEnchantments <= 0)
-			return baseBoost;
-		if (!game.potion.isPotionActive(PotionType.AncientKnowledge))
-			return baseBoost + boostFromEnchantments;
+		// If we don't have any enchantment boost, then return here, as a potion
+		// of ancient knowledge only changes the enchantment boost.
+		const boostFromEnchantments = EnchantmentUtils.getEnchantmentBoostForSkill(game, this.Skill);
+		if (boostFromEnchantments <= 0) return baseBoost;
+		if (!game.potion.isPotionActive(PotionType.AncientKnowledge)) return baseBoost + boostFromEnchantments;
 
-		const potionData = GameData.potions().getPotion(PotionType.AncientKnowledge);
+		const potionData = PotionDatabase.getPotion(PotionType.AncientKnowledge);
 		if (!potionData) {
 			console.error("Ancient Knowledge potion not found while calculating skill boost.");
 			return baseBoost + boostFromEnchantments;
@@ -310,10 +315,9 @@ export class JobTaskCategory {
 
 export class TaskDatabase {
 
-	private readonly jobs: Map<TaskType, Map<Int, JobTask>> = new Map();
-	private readonly categories: Map<TaskType, JobTaskCategory[]> = new Map();
-
-	private readonly tasksByName: Map<string, JobTask> = new Map();
+	public readonly jobs: Map<TaskType, Map<Int, JobTask>> = new Map();
+	public readonly categories: Map<TaskType, JobTaskCategory[]> = new Map();
+	public readonly tasksByName: Map<string, JobTask> = new Map();
 
 	constructor(taskData: any) {
 		const startTime = Date.now();
@@ -336,7 +340,6 @@ export class TaskDatabase {
 			entries.sort((a, b) =>
 				(a.SortOrder ?? 0) - (b.SortOrder ?? 0));
 
-			let currentStartId = 0;
 			const jobsMap = new Map<Int, JobTask>();
 			const categoriesArray: JobTaskCategory[] = [];
 
@@ -350,15 +353,13 @@ export class TaskDatabase {
 				const tasksArray: JobTask[] = [];
 
 				for (let j = 0; j < items.length; j++) {
-					const id = currentStartId + j;
 					const item = items[j];
 
-					item.TaskId = id;
 					item.identifiableType = customId;
 					item.taskType = type;
 
 					const job = new JobTask(item);
-					jobsMap.set(id, job);
+					jobsMap.set(item.TaskId, job);
 					tasksArray.push(job);
 
 					if (tasksByName.has(job.name))
@@ -368,7 +369,6 @@ export class TaskDatabase {
 
 				// Store the category and increase the start id.
 				categoriesArray.push(new JobTaskCategory(tasksArray, customId, sortOrder));
-				currentStartId += items.length;
 			}
 
 			jobs.set(type, jobsMap);
@@ -390,12 +390,14 @@ export class TaskDatabase {
 		console.log(`TaskDatabase: Initialized ${total} tasks, ${disabled} of which are disabled, in ${time}ms.`);
 	}
 
-	public getTaskCategories(type: TaskType): ReadonlyArray<JobTaskCategory> | undefined {
-		return this.categories.get(type);
+	public static getTaskCategories(type: TaskType): ReadonlyArray<JobTaskCategory> | undefined {
+		const database = GameData.tasks();
+		return database.categories.get(type);
 	}
 
-	public getTaskCategory(type: TaskType, customId: string): JobTaskCategory | undefined {
-		const categories = this.categories.get(type);
+	public static getTaskCategory(type: TaskType, customId: string): JobTaskCategory | undefined {
+		const database = GameData.tasks();
+		const categories = database.categories.get(type);
 		if (categories === undefined) return undefined;
 
 		for (const category of categories) {
@@ -405,13 +407,15 @@ export class TaskDatabase {
 		return undefined;
 	}
 
-	public getTaskById(type: TaskType, id: Int): JobTask | undefined {
-		const jobs = this.jobs.get(type);
+	public static getTaskById(type: TaskType, id: Int): JobTask | undefined {
+		const database = GameData.tasks();
+		const jobs = database.jobs.get(type);
 		if (jobs === undefined) return undefined;
 		return jobs.get(id);
 	}
 
-	public getTaskByName(name: string): JobTask | undefined {
-		return this.tasksByName.get(name);
+	public static getTaskByName(type: TaskType, name: string): JobTask | undefined {
+		const database = GameData.tasks();
+		return database.tasksByName.get(name);
 	}
 }

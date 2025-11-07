@@ -13,6 +13,11 @@ interface ItemTooltipProps {
 	count?: number;
 
 	positions: { x: number, y: number }[] | HTMLElement; // 0 = top, 1 = left, 2 = bottom.
+
+	/**
+	 * The preferred side to show the tooltip on.
+	 */
+	preferredSide?: "top" | "left";
 	/**
 	 * If positions is a DOM element, then this can be used to add padding
 	 * to the calculated position.
@@ -28,7 +33,9 @@ interface ItemTooltipProps {
 	delay?: number;
 }
 
-const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, positionPadding, className, delay }) => {
+const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, preferredSide, positionPadding, className, delay }) => {
+	preferredSide = preferredSide ?? "top";
+
 	const game = useGame();
 	// 0 = hidden, waiting until the tooltip has been rendered once to get the
 	//     width and height.
@@ -125,18 +132,31 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, posit
 
 		const padding = 16;
 
-		// Check if the tooltip fits on the top.
-		if ((positions[0].y - rect.height) - padding > 0) {
-			positionRef.current = 0;
-			return getPositionStyle(0);
+		if (preferredSide === "top") {
+			// Check top, then left
+			if ((positions[0].y - rect.height) - padding > 0) {
+				positionRef.current = 0;
+				return getPositionStyle(0);
+			}
+
+			if ((positions[1].x - rect.width) - padding > 0 && (positions[1].y - (rect.height / 2)) - padding > 0) {
+				positionRef.current = 1;
+				return getPositionStyle(1);
+			}
+		} else if (preferredSide == "left") {
+			// Check left, then top
+			if ((positions[1].x - rect.width) - padding > 0 && (positions[1].y - (rect.height / 2)) - padding > 0) {
+				positionRef.current = 1;
+				return getPositionStyle(1);
+			}
+
+			if ((positions[0].y - rect.height) - padding > 0) {
+				positionRef.current = 0;
+				return getPositionStyle(0);
+			}
 		}
 
-		// Okay, now check the left side.
-		if ((positions[1].x - rect.width) - padding > 0 && (positions[1].y - (rect.height / 2)) - padding > 0) {
-			positionRef.current = 1;
-			return getPositionStyle(1);
-		}
-
+		// Fallback to the bottom
 		positionRef.current = 2;
 		return getPositionStyle(2);
 	}
@@ -208,7 +228,7 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, posit
 
 	const tooltip = (
 		<div
-			className="absolute z-40 font-nunito"
+			className="fixed z-40 font-nunito"
 			style={{
 				...getPosition(),
 				pointerEvents: 'none',
@@ -216,7 +236,7 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, posit
 		>
 			<div
 				ref={tooltipRef}
-				className={`bg-ic-dark-300 rounded-md max-w-[23rem] ${(className ?? "")}`}
+				className={`relative bg-ic-dark-300 rounded-md max-w-[23rem] ${(className ?? "")}`}
 			>
 
 				<div className="flex flex-row">

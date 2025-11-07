@@ -9,8 +9,10 @@ const TaskPage: React.FC = () => {
 
 	if (!name) return null;
 
-	const typeKey = name.charAt(0).toUpperCase() + name.slice(1);
-	const type = TaskType[typeKey as keyof typeof TaskType];
+	const type = Object.entries(TaskType)
+		.find(entry => (entry[1] as string).toLowerCase() === name.toLowerCase())
+		?.map(entry => TaskType[(entry as string) as keyof typeof TaskType])
+		.pop()
 
 	if (type === undefined || type === TaskType.None) {
 		navigate("/game");

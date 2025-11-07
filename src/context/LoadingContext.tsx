@@ -166,6 +166,7 @@ export const LoadingProvider = ({ children }: LoadingContextProps) => {
 
 	const set = (id: string, title?: string, timeout?: number) => {
 		if (timeout === undefined) timeout = 5000;
+		title = title ?? "Loading";
 		if (timeout < 0) timeout = Infinity;
 		timeout = Date.now() + timeout;
 

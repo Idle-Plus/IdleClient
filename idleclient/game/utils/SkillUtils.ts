@@ -22,9 +22,14 @@ export class SkillUtils {
 	}
 
 	public static getSpriteIconId(skill: Skill, size?: number): string {
-		let skillName = Skill[skill].toLowerCase();
+		let skillName = typeof skill === "number" ? Skill[skill].toLowerCase() : (skill as string).toLowerCase();
 		if (skillName === "rigour") skillName = "attack";
-		return "skill_" + skillName + (size ? "_" + size : "");
+		return "skill/skill_" + skillName + (size ? "_" + size : "");
+	}
+
+	public static getSkills(): Skill[] {
+		return Object.keys(Skill).map(Number).filter(key => !isNaN(key))
+			.map(key => key as Skill).filter(skill => skill !== Skill.None) as Skill[];
 	}
 
 	/*

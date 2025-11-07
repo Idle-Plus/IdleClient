@@ -2,7 +2,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { useWebsite } from "@context/WebsiteContext.tsx";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import { useGame } from "@context/GameContext.tsx";
-import { EquipmentSlot } from "@idleclient/network/NetworkData.ts";
+import { EquipmentSlot, Skill } from "@idleclient/network/NetworkData.ts";
 import { ItemIcon, SpriteIcon } from "@components/icon";
 import { ItemId } from "@idleclient/types/gameTypes.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
@@ -12,26 +12,27 @@ import { GiAbdominalArmor } from "react-icons/gi";
 import { IoSettings } from "react-icons/io5";
 import { LuChevronsUpDown } from "react-icons/lu";
 import { toKMB } from "@idleclient/game/utils/numberUtils.ts";
+import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 
 const EQUIPMENT_SLOT_TO_ICON: Record<EquipmentSlot, string> = {
-	[EquipmentSlot.None]: "slot_none",
-	[EquipmentSlot.Ammunition]: "slot_arrow",
-	[EquipmentSlot.Earrings]: "slot_earrings",
-	[EquipmentSlot.Amulet]: "slot_amulet",
-	[EquipmentSlot.Jewellery]: "slot_ring",
-	[EquipmentSlot.Bracelet]: "slot_bracelet",
+	[EquipmentSlot.None]: "slot/slot_none",
+	[EquipmentSlot.Ammunition]: "slot/slot_arrow",
+	[EquipmentSlot.Earrings]: "slot/slot_earrings",
+	[EquipmentSlot.Amulet]: "slot/slot_amulet",
+	[EquipmentSlot.Jewellery]: "slot/slot_ring",
+	[EquipmentSlot.Bracelet]: "slot/slot_bracelet",
 
-	[EquipmentSlot.Pet]: "slot_pet",
-	[EquipmentSlot.Head]: "slot_head",
-	[EquipmentSlot.Cape]: "slot_cape",
-	[EquipmentSlot.LeftHand]: "slot_right_hand", // TODO: Change icon name.
-	[EquipmentSlot.Body]: "slot_body",
-	[EquipmentSlot.RightHand]: "slot_left_hand", // TODO: Change icon name.
-	[EquipmentSlot.Gloves]: "slot_gloves",
-	[EquipmentSlot.Legs]: "slot_legs",
-	[EquipmentSlot.Belt]: "slot_belt",
-	[EquipmentSlot.BootsLeft]: "slot_boots",
-	[EquipmentSlot.Boots]: "slot_boots",
+	[EquipmentSlot.Pet]: "slot/slot_pet",
+	[EquipmentSlot.Head]: "slot/slot_head",
+	[EquipmentSlot.Cape]: "slot/slot_cape",
+	[EquipmentSlot.LeftHand]: "slot/slot_right_hand", // TODO: Change icon name.
+	[EquipmentSlot.Body]: "slot/slot_body",
+	[EquipmentSlot.RightHand]: "slot/slot_left_hand", // TODO: Change icon name.
+	[EquipmentSlot.Gloves]: "slot/slot_gloves",
+	[EquipmentSlot.Legs]: "slot/slot_legs",
+	[EquipmentSlot.Belt]: "slot/slot_belt",
+	[EquipmentSlot.BootsLeft]: "slot/slot_boots",
+	[EquipmentSlot.Boots]: "slot/slot_boots",
 }
 
 function getSize(width: number) {
@@ -336,9 +337,9 @@ const EquipmentBonusEntry: React.FC<{
 
 	const size = 32;
 	const className = "drop-shadow-sm drop-shadow-black/20";
-	const icon = type === "melee" ? <SpriteIcon icon="skill_attack" size={size} className={className} /> :
-		type === "archery" ? <SpriteIcon icon="skill_archery" size={size} className={className} /> :
-			<SpriteIcon icon="skill_magic" size={size} className={className} />;
+	const icon = type === "melee" ? <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Rigour, 32)} size={size} className={className} /> :
+		type === "archery" ? <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Archery, 32)} size={size} className={className} /> :
+			<SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Magic, 32)} size={size} className={className} />;
 
 	return (
 		<div className="flex justify-between py-1 text-(--color-bright) bg-ic-light-500/50">

@@ -4,6 +4,7 @@ import CraftingTaskCard from "@pages/game/task/components/tasks/CraftingTaskCard
 import { GameData } from "@idleclient/game/data/GameData.ts";
 import BasicTaskHeader from "@pages/game/task/components/BasicTaskHeader.tsx";
 import GatheringTaskCard from "@pages/game/task/components/tasks/GatheringTaskCard.tsx";
+import { TaskDatabase } from "@idleclient/game/data/TaskDatabase.ts";
 
 const TaskTypeToSkill: Record<TaskType, Skill> = {
 	[TaskType.None]: Skill.None,
@@ -23,6 +24,7 @@ const TaskTypeToSkill: Record<TaskType, Skill> = {
 	[TaskType.Enchanting]: Skill.Enchanting,
 	[TaskType.Brewing]: Skill.Brewing,
 	[TaskType.Exterminating]: Skill.Exterminating,
+	[TaskType.ItemCreation]: Skill.None, // Special case.
 }
 
 interface BasicTaskPageProps {
@@ -31,15 +33,11 @@ interface BasicTaskPageProps {
 
 const BasicTaskPage: React.FC<BasicTaskPageProps> = ({ type }) => {
 	const skill = TaskTypeToSkill[type];
-	if (skill === Skill.None) throw new Error("Invalid task type.");
 
 	const [currentCategory, setCurrentCategory] = useState(0);
 	const categories = useMemo(() => {
-		console.log("Getting categories.");
-		return GameData.tasks().getTaskCategories(type)?.filter(v => !v.disabled);
+		return TaskDatabase.getTaskCategories(type)?.filter(v => !v.disabled);
 	}, [type]);
-
-	console.log("BasicTaskPage render");
 
 	if (categories === undefined) return null;
 
@@ -56,7 +54,9 @@ const BasicTaskPage: React.FC<BasicTaskPageProps> = ({ type }) => {
 	return (
 		<div className="flex flex-col max-w-7xl mx-auto h-full p-4">
 
-			<BasicTaskHeader skill={skill} />
+			{ skill !== Skill.None && (
+				<BasicTaskHeader skill={skill} />
+			) }
 
 			{/* Tab List */}
 			{ categories && categories.length > 1 && (

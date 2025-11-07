@@ -20,6 +20,12 @@ export interface ActiveExterminatingAssignment {
 	MonsterName: string | null;
 }
 
+export interface AfkRaidInfo {
+	RaidType: RaidType;
+	StartTimeUtc: string;
+	WaveMilestoneRecord: WaveMilestoneRecord | null;
+}
+
 export interface CombatOfflineProgressNetwork {
 	CombatEnded: boolean;
 	ConsumedFood: { [key: Int /* i32 */]: Int /* i32 */ } | null;
@@ -75,6 +81,17 @@ export interface PetOfflineProgression {
 	TaskId: Int /* i32 */;
 }
 
+export interface PurchaseLimitScopeCountDto {
+	Scope: PurchaseLimitScope;
+	Used: Int /* i32 */;
+}
+
+export interface PvmBestRecord {
+	BestTimeMs: Long /* i64 */;
+	HighestWave: Int /* i32 */ | null;
+	LastUpdatedUtc: string;
+}
+
 export interface ShopListingItem {
 	Amount: Int /* i32 */;
 	ItemId: Int /* i32 */;
@@ -92,6 +109,12 @@ export interface SkillingOfflineProgressNetwork {
 	TaskTypeToContinue: TaskType;
 }
 
+export interface WaveMilestoneRecord {
+	BestTimeMs: Long /* i64 */;
+	LastUpdatedUtc: string;
+	Wave: Int /* i32 */;
+}
+
 export enum AttackStyle {
 	None,
 	Stab,
@@ -102,6 +125,27 @@ export enum AttackStyle {
 	Magic,
 	RandomizeOnCombatStart,
 	ApplyAll,
+	Dragonfire,
+}
+
+export enum ClanBossModifierType {
+	None,
+	AttackSpeed,
+	LootRolls,
+}
+
+export enum ClanCategory {
+	None,
+	Casual,
+	Competitive,
+	Hardcore,
+}
+
+export enum ClanEventBossType {
+	None,
+	OtherWorldlyGolem,
+	SkeletonWarrior,
+	MalignantSpider,
 }
 
 export enum EquipmentSlot {
@@ -189,6 +233,7 @@ export enum ExterminatingShopUnlockType {
 	AutoComplete,
 	AssignmentExtension,
 	BloodmoonEquipment,
+	ExterminatingSupplyCrate,
 }
 
 export enum FTUEStage {
@@ -208,6 +253,26 @@ export enum GameMode {
 	Default,
 	Ironman,
 	GroupIronman,
+}
+
+export enum GuildActionResponse {
+	guild_already_exists,
+	guild_invalid_characters,
+	guild_name_too_long,
+	guild_name_too_short,
+	guild_creation_requirements_not_met,
+	invited_player_is_already_in_a_guild,
+	other_player_is_offline,
+	guild_is_full,
+	application_already_active,
+	application_has_expired,
+	invitation_has_expired,
+	guild_not_found,
+	guild_application_sent,
+	guild_invitation_sent,
+	guild_not_recruiting,
+	guild_gamemode_mismatch,
+	guild_not_high_enough_rank,
 }
 
 export enum GuildRank {
@@ -230,6 +295,9 @@ export enum ItemActivatableType {
 	BossPage,
 	QuestingToken,
 	ExterminatingToken,
+	RaidAFKToken,
+	ClanBossRareBoundDrop,
+	ExterminatingSupplyCrate,
 }
 
 export enum ItemEffectTriggerType {
@@ -262,6 +330,38 @@ export enum PotionType {
 	DarkMagic,
 	PurePower,
 	AncientKnowledge,
+	DragonfirePotion,
+}
+
+export enum PurchaseLimitScope {
+	None,
+	ExterminatingCrate,
+}
+
+export enum PvmStatType {
+	None,
+	Griffin,
+	Devil,
+	Hades,
+	Zeus,
+	Medusa,
+	Chimera,
+	Kronos,
+	ReckoningOfTheGods,
+	GuardiansOfTheCitadel,
+	MalignantSpider,
+	SkeletonWarrior,
+	OtherworldlyGolem,
+	BloodmoonMassacre,
+	Sobek,
+	Mesines,
+}
+
+export enum RaidType {
+	None,
+	ReckoningOfTheGods,
+	GuardiansOfTheCitadel,
+	BloodmoonMassacre,
 }
 
 export enum Skill {
@@ -311,6 +411,7 @@ export enum TaskType {
 	Enchanting,
 	Brewing,
 	Exterminating,
+	ItemCreation,
 }
 
 export enum TaskUpgradeInteraction {
@@ -382,6 +483,7 @@ export enum UpgradeType {
 	upgrade_bloodmoon_exterminator,
 	upgrade_bloodmoon_fisherman,
 	upgrade_bloodmoon_helmet_upgrade,
+	upgrade_skilling_ticket_boost,
 }
 
 export enum WeaponClassType {
@@ -470,10 +572,10 @@ export class InventoryItemSwapMessage extends Packet {
 
 export class LoginDataMessage extends Packet {
 	public readonly MsgType: number = 1;
-	constructor(public Username: string | null, public SkillExperiencesJson: string | null, public InventoryJson: string | null, public Gold: Double /* f64 */, public EquipmentJson: string | null, public EquippedAmmunitionAmount: Int /* i32 */, public NewPlayer: boolean, public Health: Int /* i32 */, public IsVerified: boolean, public PremiumEndDate: string | null, public IsPremiumPlus: boolean, public UnlockedBossHunter: boolean, public UnlockedAutoLoadouts: boolean, public Upgrades: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null, public CombatStyle: Byte /* i8 */, public ArcheryCombatStyle: Byte /* i8 */, public MagicCombatStyle: Byte /* i8 */, public AutoEatPercentage: Byte /* i8 */, public UsedBossKey: Int /* i32 */, public KronosAttackStyleWeakness: AttackStyle, public TutorialStage: FTUEStage | null, public GameMode: GameMode | null, public ConfigVersion: Int /* i32 */, public GuildName: string | null, public Members: { [key: string]: GuildMember } | null, public ActiveGuildApplications: Array<GuildApplicationForLogin> | null, public VaultGold: Double /* f64 */, public GuildHouseId: Int /* i32 */, public ClanCredits: Int /* i32 */, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null, public SkillingContributors: Array<string> | null, public CombatContributors: Array<string> | null, public UnlockedUpgrades: Array<UpgradeType> | null, public AccumulatedCredits: Int /* i32 */, public OfflineHours: Byte /* i8 */, public SkillingOfflineProgress: SkillingOfflineProgressNetwork | null, public CombatOfflineProgress: CombatOfflineProgressNetwork | null, public ItemsSoldOffline: Array<ShopListingItem> | null, public SerializedPlayerToggleableSettings: string | null, public AdsWatchedToday: Byte /* i8 */, public LastAdWatchedTimestampTicks: Long /* i64 */, public AdBoostedSeconds: Int /* i32 */, public AdBoostPaused: boolean, public PurchasedInventorySlots: Int /* i32 */, public ClanVaultSpacePurchased: Int /* i32 */, public ActivePotionEffects: { [key: string /* Name of: PotionType */]: Int /* i32 */ } | null, public SerializedItemEnchantments: string | null, public GuildInvitations: Array<GuildInvitation> | null, public UseInventoryConsumables: boolean, public ShouldShowQuestsNotification: boolean, public QuesterUnlocked: boolean, public PetOfflineProgress: PetOfflineProgression | null, public ActivePetSkill: Skill | null, public PetTaskId: Byte /* i8 */, public ItemsInWithdrawalBox: boolean, public ExterminatingPoints: Int /* i32 */, public ActiveExterminatingAssignment: ActiveExterminatingAssignment | null, public ExterminatorUnlocked: boolean, public UnlockedExterminatingPurchases: Array<ExterminatingShopUnlockType> | null, public PlayerRewards: { [key: string /* Name of: PlayerRewardType */]: Int /* i32 */ } | null) { super(); }
+	constructor(public Username: string | null, public SkillExperiencesJson: string | null, public InventoryJson: string | null, public Gold: Double /* f64 */, public EquipmentJson: string | null, public EquippedAmmunitionAmount: Int /* i32 */, public NewPlayer: boolean, public Health: Int /* i32 */, public IsVerified: boolean, public PremiumEndDate: string | null, public IsPremiumPlus: boolean, public UnlockedBossHunter: boolean, public UnlockedAutoLoadouts: boolean, public Upgrades: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null, public CombatStyle: Byte /* i8 */, public ArcheryCombatStyle: Byte /* i8 */, public MagicCombatStyle: Byte /* i8 */, public AutoEatPercentage: Byte /* i8 */, public UsedBossKey: Int /* i32 */, public KronosAttackStyleWeakness: AttackStyle, public TutorialStage: FTUEStage | null, public GameMode: GameMode | null, public ConfigVersion: Int /* i32 */, public GuildName: string | null, public Members: { [key: string]: GuildMember } | null, public ActiveGuildApplications: Array<GuildApplicationForLogin> | null, public VaultGold: Double /* f64 */, public GuildHouseId: Int /* i32 */, public ClanCredits: Int /* i32 */, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null, public SkillingContributors: Array<string> | null, public CombatContributors: Array<string> | null, public UnlockedUpgrades: Array<UpgradeType> | null, public AccumulatedCredits: Int /* i32 */, public OfflineHours: Byte /* i8 */, public SkillingOfflineProgress: SkillingOfflineProgressNetwork | null, public CombatOfflineProgress: CombatOfflineProgressNetwork | null, public ItemsSoldOffline: Array<ShopListingItem> | null, public SerializedPlayerToggleableSettings: string | null, public AdsWatchedToday: Byte /* i8 */, public LastAdWatchedTimestampTicks: Long /* i64 */, public AdBoostedSeconds: Int /* i32 */, public AdBoostPaused: boolean, public PurchasedInventorySlots: Int /* i32 */, public ClanVaultSpacePurchased: Int /* i32 */, public ActivePotionEffects: { [key: string /* Name of: PotionType */]: Int /* i32 */ } | null, public SerializedItemEnchantments: string | null, public GuildInvitations: Array<GuildInvitation> | null, public UseInventoryConsumables: boolean, public ShouldShowQuestsNotification: boolean, public QuesterUnlocked: boolean, public PetOfflineProgress: PetOfflineProgression | null, public ActivePetSkill: Skill | null, public PetTaskId: Byte /* i8 */, public ItemsInWithdrawalBox: boolean, public ExterminatingPoints: Int /* i32 */, public ActiveExterminatingAssignment: ActiveExterminatingAssignment | null, public ExterminatorUnlocked: boolean, public UnlockedExterminatingPurchases: Array<ExterminatingShopUnlockType> | null, public PlayerRewards: { [key: string /* Name of: PlayerRewardType */]: Int /* i32 */ } | null, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ }, public PvmBestTimes: { [key: string /* Name of: PvmStatType */]: PvmBestRecord } | null, public AfkRaidInfo: AfkRaidInfo | null, public UnlockedAFKRaids: Array<RaidType>, public PurchaseLimitCounts: Array<PurchaseLimitScopeCountDto>) { super(); }
 
 	public static fromJson(json: any): LoginDataMessage {
-		return new LoginDataMessage(json.Username, json.SkillExperiencesJson, json.InventoryJson, json.Gold, json.EquipmentJson, json.EquippedAmmunitionAmount, json.NewPlayer, json.Health, json.IsVerified, json.PremiumEndDate, json.IsPremiumPlus, json.UnlockedBossHunter, json.UnlockedAutoLoadouts, json.Upgrades, json.CombatStyle, json.ArcheryCombatStyle, json.MagicCombatStyle, json.AutoEatPercentage, json.UsedBossKey, json.KronosAttackStyleWeakness, json.TutorialStage, json.GameMode, json.ConfigVersion, json.GuildName, json.Members, json.ActiveGuildApplications, json.VaultGold, json.GuildHouseId, json.ClanCredits, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.DailyCombatQuests, json.SkillingContributors, json.CombatContributors, json.UnlockedUpgrades, json.AccumulatedCredits, json.OfflineHours, json.SkillingOfflineProgress, json.CombatOfflineProgress, json.ItemsSoldOffline, json.SerializedPlayerToggleableSettings, json.AdsWatchedToday, json.LastAdWatchedTimestampTicks, json.AdBoostedSeconds, json.AdBoostPaused, json.PurchasedInventorySlots, json.ClanVaultSpacePurchased, json.ActivePotionEffects, json.SerializedItemEnchantments, json.GuildInvitations, json.UseInventoryConsumables, json.ShouldShowQuestsNotification, json.QuesterUnlocked, json.PetOfflineProgress, json.ActivePetSkill, json.PetTaskId, json.ItemsInWithdrawalBox, json.ExterminatingPoints, json.ActiveExterminatingAssignment, json.ExterminatorUnlocked, json.UnlockedExterminatingPurchases, json.PlayerRewards);
+		return new LoginDataMessage(json.Username, json.SkillExperiencesJson, json.InventoryJson, json.Gold, json.EquipmentJson, json.EquippedAmmunitionAmount, json.NewPlayer, json.Health, json.IsVerified, json.PremiumEndDate, json.IsPremiumPlus, json.UnlockedBossHunter, json.UnlockedAutoLoadouts, json.Upgrades, json.CombatStyle, json.ArcheryCombatStyle, json.MagicCombatStyle, json.AutoEatPercentage, json.UsedBossKey, json.KronosAttackStyleWeakness, json.TutorialStage, json.GameMode, json.ConfigVersion, json.GuildName, json.Members, json.ActiveGuildApplications, json.VaultGold, json.GuildHouseId, json.ClanCredits, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.DailyCombatQuests, json.SkillingContributors, json.CombatContributors, json.UnlockedUpgrades, json.AccumulatedCredits, json.OfflineHours, json.SkillingOfflineProgress, json.CombatOfflineProgress, json.ItemsSoldOffline, json.SerializedPlayerToggleableSettings, json.AdsWatchedToday, json.LastAdWatchedTimestampTicks, json.AdBoostedSeconds, json.AdBoostPaused, json.PurchasedInventorySlots, json.ClanVaultSpacePurchased, json.ActivePotionEffects, json.SerializedItemEnchantments, json.GuildInvitations, json.UseInventoryConsumables, json.ShouldShowQuestsNotification, json.QuesterUnlocked, json.PetOfflineProgress, json.ActivePetSkill, json.PetTaskId, json.ItemsInWithdrawalBox, json.ExterminatingPoints, json.ActiveExterminatingAssignment, json.ExterminatorUnlocked, json.UnlockedExterminatingPurchases, json.PlayerRewards, json.Stats, json.PvmBestTimes, json.AfkRaidInfo, json.UnlockedAFKRaids, json.PurchaseLimitCounts);
 	}
 }
 
@@ -510,6 +612,324 @@ export class UnequipItemMessage extends Packet {
 	}
 }
 
+export class AbortGuildDeletionMessage extends Packet {
+	public readonly MsgType: number = 266;
+	constructor() { super(); }
+
+	public static fromJson(json: any): AbortGuildDeletionMessage {
+		return new AbortGuildDeletionMessage();
+	}
+}
+
+export class AcceptGuildInviteMessage extends Packet {
+	public readonly MsgType: number = 37;
+	constructor(public GuildName: string) { super(); }
+
+	public static fromJson(json: any): AcceptGuildInviteMessage {
+		return new AcceptGuildInviteMessage(json.GuildName);
+	}
+}
+
+export class ClearAllGuildApplicationsMessage extends Packet {
+	public readonly MsgType: number = 132;
+	constructor() { super(); }
+
+	public static fromJson(json: any): ClearAllGuildApplicationsMessage {
+		return new ClearAllGuildApplicationsMessage();
+	}
+}
+
+export class CreateGuildMessage extends Packet {
+	public readonly MsgType: number = 32;
+	constructor(public GuildName: string, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null) { super(); }
+
+	public static fromJson(json: any): CreateGuildMessage {
+		return new CreateGuildMessage(json.GuildName, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.DailyCombatQuests);
+	}
+}
+
+export class DeleteGuildMessage extends Packet {
+	public readonly MsgType: number = 47;
+	constructor(public ViewingDeletionState: boolean) { super(); }
+
+	public static fromJson(json: any): DeleteGuildMessage {
+		return new DeleteGuildMessage(json.ViewingDeletionState);
+	}
+}
+
+export class GuildBulletinBoardEditResponseMessage extends Packet {
+	public readonly MsgType: number = 190;
+	constructor(public Success: boolean) { super(); }
+
+	public static fromJson(json: any): GuildBulletinBoardEditResponseMessage {
+		return new GuildBulletinBoardEditResponseMessage(json.Success);
+	}
+}
+
+export class GuildBulletinBoardInfoMessage extends Packet {
+	public readonly MsgType: number = 189;
+	constructor(public Message: string | null, public DiscordInvitationCode: string | null) { super(); }
+
+	public static fromJson(json: any): GuildBulletinBoardInfoMessage {
+		return new GuildBulletinBoardInfoMessage(json.Message, json.DiscordInvitationCode);
+	}
+}
+
+export class GuildDeletedMessage extends Packet {
+	public readonly MsgType: number = 49;
+	constructor() { super(); }
+
+	public static fromJson(json: any): GuildDeletedMessage {
+		return new GuildDeletedMessage();
+	}
+}
+
+export class GuildDeletionResponseMessage extends Packet {
+	public readonly MsgType: number = 265;
+	constructor(public EarliestPossibleDeletionDate: string) { super(); }
+
+	public static fromJson(json: any): GuildDeletionResponseMessage {
+		return new GuildDeletionResponseMessage(json.EarliestPossibleDeletionDate);
+	}
+}
+
+export class GuildLeaderLeftGuildMessage extends Packet {
+	public readonly MsgType: number = 124;
+	constructor(public NewLeader: string) { super(); }
+
+	public static fromJson(json: any): GuildLeaderLeftGuildMessage {
+		return new GuildLeaderLeftGuildMessage(json.NewLeader);
+	}
+}
+
+export class GuildMemberKickedMessage extends Packet {
+	public readonly MsgType: number = 51;
+	constructor(public PlayerName: string) { super(); }
+
+	public static fromJson(json: any): GuildMemberKickedMessage {
+		return new GuildMemberKickedMessage(json.PlayerName);
+	}
+}
+
+export class GuildMemberLoggedInMessage extends Packet {
+	public readonly MsgType: number = 42;
+	constructor(public GuildMemberName: string) { super(); }
+
+	public static fromJson(json: any): GuildMemberLoggedInMessage {
+		return new GuildMemberLoggedInMessage(json.GuildMemberName);
+	}
+}
+
+export class GuildMemberLoggedOutMessage extends Packet {
+	public readonly MsgType: number = 43;
+	constructor(public GuildMemberName: string) { super(); }
+
+	public static fromJson(json: any): GuildMemberLoggedOutMessage {
+		return new GuildMemberLoggedOutMessage(json.GuildMemberName);
+	}
+}
+
+export class GuildRequestResultMessage extends Packet {
+	public readonly MsgType: number = 41;
+	constructor(public AssociatedPlayer: string | null, public MessageType: GuildActionResponse) { super(); }
+
+	public static fromJson(json: any): GuildRequestResultMessage {
+		return new GuildRequestResultMessage(json.AssociatedPlayer, json.MessageType);
+	}
+}
+
+export class GuildUpdateMinimumTotalLevelRequirementMessage extends Packet {
+	public readonly MsgType: number = 216;
+	constructor(public MinimumTotalLevel: Int /* i32 */) { super(); }
+
+	public static fromJson(json: any): GuildUpdateMinimumTotalLevelRequirementMessage {
+		return new GuildUpdateMinimumTotalLevelRequirementMessage(json.MinimumTotalLevel);
+	}
+}
+
+export class GuildUpdatePrimaryLanguageMessage extends Packet {
+	public readonly MsgType: number = 214;
+	constructor(public Language: string) { super(); }
+
+	public static fromJson(json: any): GuildUpdatePrimaryLanguageMessage {
+		return new GuildUpdatePrimaryLanguageMessage(json.Language);
+	}
+}
+
+export class GuildUpdateRecruitmentMessageMessage extends Packet {
+	public readonly MsgType: number = 215;
+	constructor(public RecruitmentMessage: string) { super(); }
+
+	public static fromJson(json: any): GuildUpdateRecruitmentMessageMessage {
+		return new GuildUpdateRecruitmentMessageMessage(json.RecruitmentMessage);
+	}
+}
+
+export class GuildUpdateRecruitmentStateMessage extends Packet {
+	public readonly MsgType: number = 212;
+	constructor(public Value: boolean) { super(); }
+
+	public static fromJson(json: any): GuildUpdateRecruitmentStateMessage {
+		return new GuildUpdateRecruitmentStateMessage(json.Value);
+	}
+}
+
+export class GuildUpdateStatusMessage extends Packet {
+	public readonly MsgType: number = 213;
+	constructor(public Status: ClanCategory) { super(); }
+
+	public static fromJson(json: any): GuildUpdateStatusMessage {
+		return new GuildUpdateStatusMessage(json.Status);
+	}
+}
+
+export class GuildUpdateTagMessage extends Packet {
+	public readonly MsgType: number = 354;
+	constructor(public Tag: string | null) { super(); }
+
+	public static fromJson(json: any): GuildUpdateTagMessage {
+		return new GuildUpdateTagMessage(json.Tag);
+	}
+}
+
+export class GuildVaultMessage extends Packet {
+	public readonly MsgType: number = 219;
+	constructor(public Vault: { [key: Int /* i32 */]: Int /* i32 */ }) { super(); }
+
+	public static fromJson(json: any): GuildVaultMessage {
+		return new GuildVaultMessage(json.Vault);
+	}
+}
+
+export class KickGuildMemberMessage extends Packet {
+	public readonly MsgType: number = 50;
+	constructor(public Username: string) { super(); }
+
+	public static fromJson(json: any): KickGuildMemberMessage {
+		return new KickGuildMemberMessage(json.Username);
+	}
+}
+
+export class LeaveGuildMessage extends Packet {
+	public readonly MsgType: number = 46;
+	constructor() { super(); }
+
+	public static fromJson(json: any): LeaveGuildMessage {
+		return new LeaveGuildMessage();
+	}
+}
+
+export class PlayerJoinedGuildMessage extends Packet {
+	public readonly MsgType: number = 38;
+	constructor(public PlayerJoining: string, public IsPremium: boolean, public IsPremiumPlus: boolean, public IsOnline: boolean, public LogOutTime: string | null, public GuildName: string | null, public Members: { [key: string]: GuildMember } | null, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public SkillingContributors: Array<string> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null, public CombatContributors: Array<string> | null, public SkillExperiences: { [key: string /* Name of: Skill */]: Float /* f32 */ } | null, public OwnedHouseId: Int /* i32 */, public Vault: { [key: Int /* i32 */]: Int /* i32 */ } | null, public Gold: Double /* f64 */, public UnlockedUpgrades: Array<UpgradeType> | null, public ClanVaultSpacePurchased: Int /* i32 */, public Credits: Int /* i32 */, public SerializedEventStates: string | null, public SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ } | null, public SkillingPartyCompletions: Int /* i32 */, public Tag: string | null) { super(); }
+
+	public static fromJson(json: any): PlayerJoinedGuildMessage {
+		return new PlayerJoinedGuildMessage(json.PlayerJoining, json.IsPremium, json.IsPremiumPlus, json.IsOnline, json.LogOutTime, json.GuildName, json.Members, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.SkillingContributors, json.DailyCombatQuests, json.CombatContributors, json.SkillExperiences, json.OwnedHouseId, json.Vault, json.Gold, json.UnlockedUpgrades, json.ClanVaultSpacePurchased, json.Credits, json.SerializedEventStates, json.SkillingTickets, json.SkillingPartyCompletions, json.Tag);
+	}
+}
+
+export class PlayerLeftGuildMessage extends Packet {
+	public readonly MsgType: number = 48;
+	constructor(public PlayerName: string) { super(); }
+
+	public static fromJson(json: any): PlayerLeftGuildMessage {
+		return new PlayerLeftGuildMessage(json.PlayerName);
+	}
+}
+
+export class ReceiveGuildApplicationMessage extends Packet {
+	public readonly MsgType: number = 34;
+	constructor(public PlayerApplying: string, public Message: string, public PlayerTotalLevel: Int /* i32 */) { super(); }
+
+	public static fromJson(json: any): ReceiveGuildApplicationMessage {
+		return new ReceiveGuildApplicationMessage(json.PlayerApplying, json.Message, json.PlayerTotalLevel);
+	}
+}
+
+export class ReceiveGuildInviteMessage extends Packet {
+	public readonly MsgType: number = 36;
+	constructor(public PlayerInviting: string, public GuildName: string) { super(); }
+
+	public static fromJson(json: any): ReceiveGuildInviteMessage {
+		return new ReceiveGuildInviteMessage(json.PlayerInviting, json.GuildName);
+	}
+}
+
+export class ReceiveGuildStateMessage extends Packet {
+	public readonly MsgType: number = 60;
+	constructor(public SkillExperiences: { [key: string /* Name of: Skill */]: Float /* f32 */ }, public ClanCredits: Int /* i32 */, public EventStates: string, public SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ }, public SkillingPartyCompletions: Int /* i32 */, public IsRecruiting: boolean, public Status: ClanCategory, public PrimaryLanguage: string | null, public MinimumTotalLevelRequired: Int /* i32 */, public LocalPlayerHasClaimableLoot: boolean, public Tag: string | null) { super(); }
+
+	public static fromJson(json: any): ReceiveGuildStateMessage {
+		return new ReceiveGuildStateMessage(json.SkillExperiences, json.ClanCredits, json.EventStates, json.SkillingTickets, json.SkillingPartyCompletions, json.IsRecruiting, json.Status, json.PrimaryLanguage, json.MinimumTotalLevelRequired, json.LocalPlayerHasClaimableLoot, json.Tag);
+	}
+}
+
+/**
+ * <->
+ */
+export class RequestClanBossInfoMessage extends Packet {
+	public readonly MsgType: number = 337;
+	constructor(public BossType: ClanEventBossType, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ } | null, public PlayersInFight: Byte /* i8 */ | null, public ActiveModifiers: { [key: string /* Name of: ClanBossModifierType */]: Int /* i32 */ } | null) { super(); }
+
+	public static fromJson(json: any): RequestClanBossInfoMessage {
+		return new RequestClanBossInfoMessage(json.BossType, json.Stats, json.PlayersInFight, json.ActiveModifiers);
+	}
+}
+
+export class RequestClanPvmStatsMessage extends Packet {
+	public readonly MsgType: number = 323;
+	constructor(public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ } | null) { super(); }
+
+	public static fromJson(json: any): RequestClanPvmStatsMessage {
+		return new RequestClanPvmStatsMessage(json.Stats);
+	}
+}
+
+export class RequestGuildBulletinInfoMessage extends Packet {
+	public readonly MsgType: number = 188;
+	constructor() { super(); }
+
+	public static fromJson(json: any): RequestGuildBulletinInfoMessage {
+		return new RequestGuildBulletinInfoMessage();
+	}
+}
+
+export class RequestGuildStateMessage extends Packet {
+	public readonly MsgType: number = 59;
+	constructor() { super(); }
+
+	public static fromJson(json: any): RequestGuildStateMessage {
+		return new RequestGuildStateMessage();
+	}
+}
+
+export class RequestGuildVaultMessage extends Packet {
+	public readonly MsgType: number = 218;
+	constructor() { super(); }
+
+	public static fromJson(json: any): RequestGuildVaultMessage {
+		return new RequestGuildVaultMessage();
+	}
+}
+
+export class SendGuildApplicationMessage extends Packet {
+	public readonly MsgType: number = 33;
+	constructor(public GuildName: string, public Message: string) { super(); }
+
+	public static fromJson(json: any): SendGuildApplicationMessage {
+		return new SendGuildApplicationMessage(json.GuildName, json.Message);
+	}
+}
+
+export class SendGuildInviteMessage extends Packet {
+	public readonly MsgType: number = 35;
+	constructor(public PlayerReceivingInvite: string) { super(); }
+
+	public static fromJson(json: any): SendGuildInviteMessage {
+		return new SendGuildInviteMessage(json.PlayerReceivingInvite);
+	}
+}
+
 /*
  * Packet Registry
  * Mapping packet IDs to their respective classes.
@@ -525,6 +945,41 @@ const PacketRegistry: any = {
 	3: StartTaskMessage,
 	191: TaskStartedMessage,
 	14: UnequipItemMessage,
+	266: AbortGuildDeletionMessage,
+	37: AcceptGuildInviteMessage,
+	132: ClearAllGuildApplicationsMessage,
+	32: CreateGuildMessage,
+	47: DeleteGuildMessage,
+	190: GuildBulletinBoardEditResponseMessage,
+	189: GuildBulletinBoardInfoMessage,
+	49: GuildDeletedMessage,
+	265: GuildDeletionResponseMessage,
+	124: GuildLeaderLeftGuildMessage,
+	51: GuildMemberKickedMessage,
+	42: GuildMemberLoggedInMessage,
+	43: GuildMemberLoggedOutMessage,
+	41: GuildRequestResultMessage,
+	216: GuildUpdateMinimumTotalLevelRequirementMessage,
+	214: GuildUpdatePrimaryLanguageMessage,
+	215: GuildUpdateRecruitmentMessageMessage,
+	212: GuildUpdateRecruitmentStateMessage,
+	213: GuildUpdateStatusMessage,
+	354: GuildUpdateTagMessage,
+	219: GuildVaultMessage,
+	50: KickGuildMemberMessage,
+	46: LeaveGuildMessage,
+	38: PlayerJoinedGuildMessage,
+	48: PlayerLeftGuildMessage,
+	34: ReceiveGuildApplicationMessage,
+	36: ReceiveGuildInviteMessage,
+	60: ReceiveGuildStateMessage,
+	337: RequestClanBossInfoMessage,
+	323: RequestClanPvmStatsMessage,
+	188: RequestGuildBulletinInfoMessage,
+	59: RequestGuildStateMessage,
+	218: RequestGuildVaultMessage,
+	33: SendGuildApplicationMessage,
+	35: SendGuildInviteMessage,
 };
 
 /*
@@ -542,6 +997,41 @@ export enum PacketType {
 	StartTaskMessage = 3,
 	TaskStartedMessage = 191,
 	UnequipItemMessage = 14,
+	AbortGuildDeletionMessage = 266,
+	AcceptGuildInviteMessage = 37,
+	ClearAllGuildApplicationsMessage = 132,
+	CreateGuildMessage = 32,
+	DeleteGuildMessage = 47,
+	GuildBulletinBoardEditResponseMessage = 190,
+	GuildBulletinBoardInfoMessage = 189,
+	GuildDeletedMessage = 49,
+	GuildDeletionResponseMessage = 265,
+	GuildLeaderLeftGuildMessage = 124,
+	GuildMemberKickedMessage = 51,
+	GuildMemberLoggedInMessage = 42,
+	GuildMemberLoggedOutMessage = 43,
+	GuildRequestResultMessage = 41,
+	GuildUpdateMinimumTotalLevelRequirementMessage = 216,
+	GuildUpdatePrimaryLanguageMessage = 214,
+	GuildUpdateRecruitmentMessageMessage = 215,
+	GuildUpdateRecruitmentStateMessage = 212,
+	GuildUpdateStatusMessage = 213,
+	GuildUpdateTagMessage = 354,
+	GuildVaultMessage = 219,
+	KickGuildMemberMessage = 50,
+	LeaveGuildMessage = 46,
+	PlayerJoinedGuildMessage = 38,
+	PlayerLeftGuildMessage = 48,
+	ReceiveGuildApplicationMessage = 34,
+	ReceiveGuildInviteMessage = 36,
+	ReceiveGuildStateMessage = 60,
+	RequestClanBossInfoMessage = 337,
+	RequestClanPvmStatsMessage = 323,
+	RequestGuildBulletinInfoMessage = 188,
+	RequestGuildStateMessage = 59,
+	RequestGuildVaultMessage = 218,
+	SendGuildApplicationMessage = 33,
+	SendGuildInviteMessage = 35,
 }
 
 export function deserialize(json: any): Packet | null {

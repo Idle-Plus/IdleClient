@@ -15,8 +15,6 @@ const TaskProgressBar: React.FC<TaskProgressBarProps> = memo(({ currentTask }) =
 	const lastProgressRef = useRef(-1);
 	const taskRef = useRef<CurrentTask | null>(null);
 
-	console.log("Task changed!");
-
 	const draw = useCallback(() => {
 		const taskData = taskRef.current;
 		if (!taskData) return;

@@ -21,8 +21,60 @@ import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { useModal } from "@context/ModalContext.tsx";
 import GenericTextModal from "@components/modal/GenericTextModal.tsx";
 import { useSession } from "@context/SessionContext.tsx";
+import { ClanManager, ClanManagerType } from "@idleclient/game/manager/ClanManager.ts";
+import { ModalUtils } from "@utils/ModalUtils.tsx";
 
 const CONNECTING_LOADING_ID = "gameContext$connecting";
+
+const ERROR_TYPES_TO_LOCALIZATON_KEY = new Map<ErrorType, string>([
+	[ErrorType.UpdateInProgress, "client_build_ahead_of_server_info"],
+	[ErrorType.ConfigMismatch, "client_build_ahead_of_server_info"],
+	[ErrorType.TooManyLogins, "too_many_logged_in_clients"],
+	[ErrorType.DailyLoginLimitReached, "daily_login_limit_reached"],
+	[ErrorType.OtherPlayerOffline, "other_player_is_offline"],
+	[ErrorType.OtherPlayerInventoryFull, "other_player_inventory_is_full"],
+	[ErrorType.NotWhiteListed, "player_not_whitelisted"],
+	[ErrorType.UnknownError, "operation_couldnt_be_completed"],
+	[ErrorType.OtherPlayerIsBusy, "other_player_is_busy"],
+	[ErrorType.GroupIsFull, "party_is_full"],
+	[ErrorType.CantDoThatWhileInRaid, "cant_do_that_while_in_raid"],
+	[ErrorType.CantSendItemToIronman, "cant_send_item_to_ironman"],
+	[ErrorType.CantInviteIronmanToClan, "cant_invite_ironman_to_clan"],
+	[ErrorType.CantInviteIronmanToParty, "cant_invite_ironman_to_party"],
+	[ErrorType.IronmenCantDoThis, "cant_do_that_in_ironman"],
+	[ErrorType.CantJoinIronmanClan, "cant_join_ironman_clan"],
+	[ErrorType.EventIsCurrentlyRunning, "event_is_already_running"],
+	[ErrorType.NoGuildMembersAvailable, "no_online_guild_members"],
+	[ErrorType.EventOnCooldown, "event_is_on_cooldown"],
+	[ErrorType.DailyEventsAlreadyCompleted, "daily_events_already_completed"],
+	[ErrorType.CantJoinGuildEventBecauseOfGuildSwitch, "cant_join_guild_event_because_of_guild_change"],
+	[ErrorType.NeedToLeaveGuildEventToDoThis, "cant_do_that_while_in_clan_event"],
+	[ErrorType.LoadoutSaveSuccess, "loadout_save_successful"],
+	[ErrorType.LoadoutIsEmpty, "loadout_is_empty"],
+	[ErrorType.LoadoutAlreadyEquipped, "loadout_already_equipped"],
+	[ErrorType.InventoryTooFullToEquipLoadout, "inventory_too_full_to_equip_loadout"],
+	[ErrorType.InventoryTooFull, "inventory_is_full2"],
+	[ErrorType.LoadoutNameTaken, "loadout_name_taken"],
+	[ErrorType.ClanVaultFull, "vault_is_full"],
+	[ErrorType.ShopPurchaseFailed, "purchase_failed_server"],
+	[ErrorType.ApplicationExpired, "application_has_expired"],
+	[ErrorType.FeatureIsDisabled, "feature_is_disabled"],
+	[ErrorType.GenericFailure, "operation_couldnt_be_completed"],
+	[ErrorType.TooManyItemsSentToPlayer, "too_many_items_sent_to_player"],
+	[ErrorType.PlayerHasTooManyItemsInRetrievalService, "player_has_too_many_items_in_retrieval"],
+	[ErrorType.PlayerNotFound, "player_not_found_by_username"],
+	[ErrorType.OtherPlayerHasBlockedYou, "player_has_blocked_you"],
+	[ErrorType.ActionWouldPutPlayerAboveItemLimit, "doing_that_would_put_you_over_the_item_limit"],
+	[ErrorType.DailyExperienceCapReached, "daily_experience_cap_reached"],
+	[ErrorType.NameTaken, "that_name_is_taken"],
+	[ErrorType.PlayerAlreadyBlocked, "player_already_blocked"],
+	[ErrorType.PlayerNotBlocked, "player_not_blocked"],
+	[ErrorType.OtherPlayerNeedsToBeRegistered, "other_player_needs_to_be_registered"],
+	[ErrorType.RequestFailedToProcess, "request_couldnt_be_processed_try_again"],
+	[ErrorType.TagUpdateFailed, "tag_update_failed"],
+	[ErrorType.GenericCooldown, "please_wait_before_doing_that"]
+]);
+
 
 export enum GameState {
 	/**
@@ -59,6 +111,7 @@ export interface ManagerType {
 export interface ManagerStorage {
 
 	playerManager: PlayerManagerType | undefined;
+	clanManager: ClanManagerType | undefined;
 	skillManager: SkillManagerType | undefined;
 	inventoryManager: InventoryManagerType | undefined;
 	equipmentManager: EquipmentManagerType | undefined;
@@ -72,6 +125,7 @@ export interface ManagerStorage {
 function createManagerStorage(): ManagerStorage {
 	return {
 		playerManager: undefined,
+		clanManager: undefined,
 		skillManager: undefined,
 		inventoryManager: undefined,
 		equipmentManager: undefined,
@@ -95,6 +149,7 @@ export interface GameContextType {
 	setDummy: (value: number) => void;
 
 	player: PlayerManagerType;
+	clan: ClanManagerType;
 	skill: SkillManagerType;
 	inventory: InventoryManagerType;
 	equipment: EquipmentManagerType;
@@ -134,8 +189,8 @@ interface GameProviderProps {
 export const GameProvider = ({ children }: GameProviderProps) => {
 	GameData.initialize();
 
-	const VERSION = "1.5800";
-	const CONFIG_VERSION = 297;
+	const VERSION = "1.6103";
+	const CONFIG_VERSION = 323;
 
 	const loading = useLoading();
 	const sessions = useSession();
@@ -149,6 +204,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 	const _managers: ManagerStorage = createManagerStorage();
 
 	const _player: PlayerManagerType = createManager(PlayerManager(_managers), _managers);
+	const _clan: ClanManagerType = createManager(ClanManager(_managers), _managers);
 	const _skill: SkillManagerType = createManager(SkillManager(_managers), _managers);
 	const _inventory: InventoryManagerType = createManager(InventoryManager(_managers), _managers);
 	const _equipment: EquipmentManagerType = createManager(EquipmentManager(_managers), _managers);
@@ -241,7 +297,8 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 		// Mark ourselves as connected and initialize the managers.
 		_connectionStateRef.setContent(ConnectionState.CONNECTED);
 
-		_player.initialize(packet);
+		_player.initialize(packet)
+		_clan.initialize(packet);
 		_skill.initialize(packet);
 		_inventory.initialize(packet);
 		_equipment.initialize(packet);
@@ -271,14 +328,34 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 	}, [], PacketType.LoginDataMessage);
 
 	usePacket<ErrorMessage>(packet => {
-		// If we're not in the play state, then remove the connection loader.
 		if (_gameState.content() !== GameState.PLAY) {
 			loading.remove(CONNECTING_LOADING_ID);
 		}
 
-		if (!_connectionPromiseRef.current) return;
-		_connectionPromiseRef.current.resolve({ success: false, message: "error", error: packet.Error });
-		_connectionPromiseRef.current = null;
+		// Connection result
+		if (_connectionPromiseRef.current) {
+			_connectionPromiseRef.current.resolve({ success: false, message: "error", error: packet.Error });
+			_connectionPromiseRef.current = null;
+			return;
+		}
+
+		// Display the error message
+
+		// Prioritize using the localization key if it's available.
+		if (packet.LocKey !== null) {
+			openModal("gameContext$errorMessage", ModalUtils.generalTextModalLocalized(null, packet.LocKey));
+			return;
+		}
+
+		// Falling back to the error type.
+		const errorType = ERROR_TYPES_TO_LOCALIZATON_KEY.get(packet.Error);
+		if (errorType !== undefined) {
+			openModal("gameContext$errorMessage", ModalUtils.generalTextModalLocalized(null, errorType));
+			return;
+		}
+
+		// welp..
+		debug.warn(`Game: Received ErrorMessage containing unknown ErrorType: ${packet.Error}`);
 	}, [], PacketType.ErrorMessage);
 
 	/*
@@ -319,6 +396,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 		_connectionStateRef.setContent(ConnectionState.OFFLINE);
 
 		_player.cleanup();
+		_clan.cleanup();
 		_skill.cleanup();
 		_inventory.cleanup();
 		_equipment.cleanup();
@@ -356,6 +434,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 		setDummy: (value: number) => setDummy(value),
 
 		player: _player,
+		clan: _clan,
 		skill: _skill,
 		inventory: _inventory,
 		equipment: _equipment,

@@ -8,6 +8,7 @@ import useInventoryItemsWatcher from "@hooks/game/inventory/useInventoryItemsWat
 import TaskProgressBar from "@pages/game/task/components/tasks/TaskProgressBar.tsx";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import ItemTooltip from "@components/item/ItemTooltip.tsx";
+import { IdleClansMath } from "@idleclient/game/utils/IdleClansMath.ts";
 
 interface CraftingTaskProps {
 	task: JobTask
@@ -23,8 +24,11 @@ const CraftingTaskCard: React.FC<CraftingTaskProps> = ({ task }) => {
 
 	const taskName = GameData.localization().get(task.name);
 	const levelRequirement = task.levelRequirement;
+
 	const experience = task.getModifiedExperience(game).toFixed(1).replace(/[.,]0$/, "");
-	const time = toFixedNoRoundTrim(task.getModifiedTaskTime(game) / 1000, 1).replace(/[.,]0$/, "");
+	const time = IdleClansMath.get().safe_round_to_one_decimal(task.getModifiedTaskTime(game) / 1000)
+		.toFixed(1).replace(/[.,]0$/, "");
+
 	const iconDef = GameData.items().item(task.customIconId > 0 ? task.customIconId : task.itemReward);
 
 	const cost = task.getModifiedCosts(game);

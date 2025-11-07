@@ -5,7 +5,7 @@ import { useSession } from "@context/SessionContext.tsx";
 import { useLoading } from "@context/LoadingContext.tsx";
 import { useEffect, useRef, useState } from "react";
 import { IdleClansMath } from "@idleclient/game/utils/IdleClansMath.ts";
-import { InventoryPage, ProfilePage, TaskPage } from "@pages/game";
+import { ClanPage, InventoryPage, ProfilePage, TaskPage } from "@pages/game";
 import { useGame } from "@context/GameContext.tsx";
 import { PlayPage } from "@pages/public";
 import { useSpriteSheets } from "@context/SpriteSheetContext.tsx";
@@ -66,7 +66,7 @@ function App() {
 				<Route path="/game" element={<ProfilePage />}/>
 				<Route path="/game/inventory" element={<InventoryPage />}/>
 
-				<Route path="/game/clan" element={<div>Clan</div>}/>
+				<Route path="/game/clan" element={<ClanPage />}/>
 				<Route path="/game/local-market" element={<div>Local Market</div>}/>
 				<Route path="/game/player-market" element={<div>Player Market</div>}/>
 

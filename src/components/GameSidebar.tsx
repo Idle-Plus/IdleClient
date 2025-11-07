@@ -12,6 +12,8 @@ import { useSession } from "@context/SessionContext.tsx";
 import React, { JSX } from "react";
 import { SpriteIcon } from "@components/icon";
 import logo from "../assets/IdleClansLogo.svg";
+import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
+import { Skill } from "@idleclient/network/NetworkData.ts";
 
 const Icons = {
 	home: <FiHome />,
@@ -33,25 +35,26 @@ const navItems: (SidebarItemProps | string | (SidebarItemProps | string)[])[] = 
 	{ icon: <SpriteIcon icon={"home_page_32"} size={iconSize} />, title: 'Profile', href: '/game' },
 	{ icon: <SpriteIcon icon={"inventory_32"} size={iconSize} />, title: 'Inventory', href: '/game/inventory' },
 	"Community",
-	{ icon: <SpriteIcon icon={"clan_32"} size={iconSize} />, title: 'Clans', href: '/game/clan', disabled: true },
+	{ icon: <SpriteIcon icon={"clan_32"} size={iconSize} />, title: 'Clan', href: '/game/clan' },
 	{ icon: <SpriteIcon icon={"local_market_32"} size={iconSize} />, title: 'Local Market', href: '/game/local-market', disabled: true },
 	{ icon: <SpriteIcon icon={"auction_house_32"} size={iconSize} />, title: 'Player Market', href: '/game/player-market', disabled: true },
 	"Activities",
 	[
-		/*{ icon: <SpriteIcon icon={"skill_exterminating_32"} size={iconSize} />, title: 'Exterminating', href: '/game/skill/exterminating' },*/
-		{ icon: <SpriteIcon icon={"skill_crafting_32"} size={iconSize} />, title: 'Crafting', href: '/game/skill/crafting' },
-		/*{ icon: <SpriteIcon icon={"skill_plundering_32"} size={iconSize} />, title: 'Plundering', href: '/game/skill/plundering' },*/
-		{ icon: <SpriteIcon icon={"skill_woodcutting_32"} size={iconSize} />, title: 'Woodcutting', href: '/game/skill/woodcutting' },
-		{ icon: <SpriteIcon icon={"skill_fishing_32"} size={iconSize} />, title: 'Fishing', href: '/game/skill/fishing' },
-		{ icon: <SpriteIcon icon={"skill_mining_32"} size={iconSize} />, title: 'Mining', href: '/game/skill/mining' },
-		{ icon: <SpriteIcon icon={"skill_smithing_32"} size={iconSize} />, title: 'Smithing', href: '/game/skill/smithing' },
-		{ icon: <SpriteIcon icon={"skill_cooking_32"} size={iconSize} />, title: 'Cooking', href: '/game/skill/cooking' },
-		/*{ icon: <SpriteIcon icon={"skill_enchanting_32"} size={iconSize} />, title: 'Enchanting', href: '/game/skill/enchanting' },*/
-		{ icon: <SpriteIcon icon={"skill_foraging_32"} size={iconSize} />, title: 'Foraging', href: '/game/skill/foraging' },
-		{ icon: <SpriteIcon icon={"skill_farming_32"} size={iconSize} />, title: 'Farming', href: '/game/skill/farming' },
-		{ icon: <SpriteIcon icon={"skill_brewing_32"} size={iconSize} />, title: 'Brewing', href: '/game/skill/brewing' },
-		{ icon: <SpriteIcon icon={"skill_carpentry_32"} size={iconSize} />, title: 'Carpentry', href: '/game/skill/carpentry' },
-		/*{ icon: <SpriteIcon icon={"skill_agility_32"} size={iconSize} />, title: 'Agility', href: '/game/skill/agility' },*/
+		/*{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Exterminating, 32)} size={iconSize} />, title: 'Exterminating', href: '/game/skill/exterminating' },*/
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Crafting, 32)} size={iconSize} />, title: 'Crafting', href: '/game/skill/crafting' },
+		/*{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Plundering, 32)} size={iconSize} />, title: 'Plundering', href: '/game/skill/plundering' },*/
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Woodcutting, 32)} size={iconSize} />, title: 'Woodcutting', href: '/game/skill/woodcutting' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Fishing, 32)} size={iconSize} />, title: 'Fishing', href: '/game/skill/fishing' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Mining, 32)} size={iconSize} />, title: 'Mining', href: '/game/skill/mining' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Smithing, 32)} size={iconSize} />, title: 'Smithing', href: '/game/skill/smithing' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Cooking, 32)} size={iconSize} />, title: 'Cooking', href: '/game/skill/cooking' },
+		/*{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Enchanting, 32)} size={iconSize} />, title: 'Enchanting', href: '/game/skill/enchanting' },*/
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Foraging, 32)} size={iconSize} />, title: 'Foraging', href: '/game/skill/foraging' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Farming, 32)} size={iconSize} />, title: 'Farming', href: '/game/skill/farming' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Brewing, 32)} size={iconSize} />, title: 'Brewing', href: '/game/skill/brewing' },
+		{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Carpentry, 32)} size={iconSize} />, title: 'Carpentry', href: '/game/skill/carpentry' },
+		/*{ icon: <SpriteIcon icon={SkillUtils.getSpriteIconId(Skill.Agility, 32)} size={iconSize} />, title: 'Agility', href: '/game/skill/agility' },*/
+		{ icon: <SpriteIcon icon={"item_creation_32"} size={iconSize} />, title: 'Item Creation', href: '/game/skill/itemcreation' },
 	]
 ];
 

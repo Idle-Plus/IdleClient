@@ -19,10 +19,10 @@ export class ItemDatabase {
 
 	public static readonly GEMSTONES = new Set([225, 226, 227, 228, 229, 230, 787]);
 
-	public static readonly SKILLING_CAPES_TIER_1 = new Set([463, 456, 464, 454, 468, 457, 470, 453, 455, 462, 469, 467, 471, 461, 465, 458, 460, 459, 466]);
-	public static readonly SKILLING_CAPES_TIER_2 = new Set([479, 478, 477, 476, 472, 474, 473, 475, 481, 480, 483, 484, 485, 486, 487, 488, 489, 490, 482]);
-	public static readonly SKILLING_CAPES_TIER_3 = new Set([497, 496, 495, 491, 493, 492, 499, 494, 500, 498, 502, 508, 507, 506, 509, 504, 503, 501, 505]);
-	public static readonly SKILLING_CAPES_TIER_4 = new Set([516, 515, 514, 510, 512, 511, 518, 513, 519, 517, 521, 527, 526, 525, 528, 523, 522, 520, 524]);
+	public static readonly SKILLING_CAPES_TIER_1 = new Set([463, 456, 464, 454, 468, 457, 470, 453, 455, 462, 469, 467, 471, 461, 465, 458, 460, 459, 466, 930]);
+	public static readonly SKILLING_CAPES_TIER_2 = new Set([479, 478, 477, 476, 472, 474, 473, 475, 481, 480, 483, 484, 485, 486, 487, 488, 489, 490, 482, 931]);
+	public static readonly SKILLING_CAPES_TIER_3 = new Set([497, 496, 495, 491, 493, 492, 499, 494, 500, 498, 502, 508, 507, 506, 509, 504, 503, 501, 505, 932]);
+	public static readonly SKILLING_CAPES_TIER_4 = new Set([516, 515, 514, 510, 512, 511, 518, 513, 519, 517, 521, 527, 526, 525, 528, 523, 522, 520, 524, 933]);
 	public static readonly SKILLING_CAPES_BY_TIER = new Map<number, Set<number>>([
 		[1, ItemDatabase.SKILLING_CAPES_TIER_1], [2, ItemDatabase.SKILLING_CAPES_TIER_2],
 		[3, ItemDatabase.SKILLING_CAPES_TIER_3], [4, ItemDatabase.SKILLING_CAPES_TIER_4]
@@ -127,6 +127,10 @@ export class ItemDatabase {
 	 * {@link ItemDefinition#isUnknown}.
 	 */
 	public static get(id: ItemId | ItemStack): ItemDefinition {
+		return GameData.items().item(id);
+	}
+
+	public static item(id: ItemId | string | ItemStack): ItemDefinition {
 		return GameData.items().item(id);
 	}
 }

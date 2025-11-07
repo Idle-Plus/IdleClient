@@ -32,10 +32,10 @@ function getExtraInfo(item: ItemDefinition, game: GameContextType) {
 	}
 
 	if (item.isEnchanted()) {
-		const enchantments = game.player.enchantments.content().get(item.id) ?? [];
+		const enchantments = game.player.enchantments.content().get(item.getOriginalItemId()) ?? [];
 		const missingEnchantments = Object.keys(Skill).map(Number)
 			.filter(key => !isNaN(key) && !enchantments.includes(key))
-			.filter(key => key !== Skill.None && key !== Skill.Health && key !== Skill.Exterminating);
+			.filter(key => key !== Skill.None && key !== Skill.Health);
 
 
 		return (
@@ -112,7 +112,7 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 
 	const getStatHTML = (entry: { accuracy: number, strength: number, defence: number }) => {
 		return (
-			<div className="grid grid-cols-3 pl-1 gap-3 text-right text-white">
+			<div className="grid grid-cols-3 pl-1 gap-3 text-right text-white whitespace-nowrap">
 				<span className={statClass(entry.strength)}>
 					<span className="">{stat(entry.strength)} </span>
 					STR
@@ -195,7 +195,7 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 								<div className="pb-1 pt-0">
 									<span className="capitalize text-gray-200">
 										<SpriteIcon
-											icon={"skill_" + Skill[item.skillBoost!.skill].toLowerCase()}
+											icon={SkillUtils.getSpriteIconId(item.skillBoost!.skill, 32)}
 											canvas={true}
 											size={24}
 											className="mr-2 drop-shadow-black/50 drop-shadow-sm select-none"
@@ -223,7 +223,7 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 									{ item.meleeBonus && (
 										<div className="flex justify-center">
 											<SpriteIcon
-												icon={"skill_attack"}
+												icon={SkillUtils.getSpriteIconId(Skill.Rigour, 32)}
 												canvas={true}
 												size={24}
 												className="mr-1 drop-shadow-black/50 drop-shadow-sm select-none"
@@ -236,7 +236,7 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 									{ item.archeryBonus && (
 										<div className="flex justify-center">
 											<SpriteIcon
-												icon={"skill_archery"}
+												icon={SkillUtils.getSpriteIconId(Skill.Archery, 32)}
 												canvas={true}
 												size={24}
 												className="mr-1 drop-shadow-black/50 drop-shadow-sm select-none"
@@ -248,7 +248,7 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 									{ item.magicBonus && (
 										<div className="flex justify-center">
 											<SpriteIcon
-												icon={"skill_magic"}
+												icon={SkillUtils.getSpriteIconId(Skill.Magic, 32)}
 												canvas={true}
 												size={24}
 												className="mr-1 drop-shadow-black/50 drop-shadow-sm select-none"

@@ -4,13 +4,13 @@ import { SmartRef } from "./useSmartRef.ts";
 const useSmartRefWatcher = <T>(
 	ref: SmartRef<T>,
 ): T => {
-	const [_, setForceRender] = useState<number>(0);
-	const [value, setValue] = useState<T>(ref.content);
+	const [_, forceRender] = useState<number>(0);
+	const [value, setValue] = useState<T>(ref.content());
 
 	useEffect(() => {
 		const id = ref.subscribe(() => {
-			setValue(ref.content)
-			setForceRender(prevState => (prevState + 1) % 10_000);
+			setValue(ref.content());
+			forceRender(prev => prev + 1);
 		});
 		return () => ref.unsubscribe(id);
 	});

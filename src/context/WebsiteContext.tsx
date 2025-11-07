@@ -21,7 +21,7 @@ const WebsiteContext = createContext<WebsiteContextType | undefined>(undefined);
 export const WebsiteProvider: React.FC<{ children: React.ReactNode }> = ({children}) => {
 	const MIN_WIDTH = 1024;
 
-	const sidebarRef = useSmartRef(localStorage.getItem("sidebarCollapsed")?.includes("true") || false);
+	const sidebarRef = useSmartRef(!localStorage.getItem("sidebarCollapsed")?.includes("false") || false);
 	const mobileRef = useSmartRef(window.innerWidth < MIN_WIDTH);
 	const pageWidthRef = useSmartRef(window.innerWidth);
 	const pageHeightRef = useSmartRef(window.innerHeight);

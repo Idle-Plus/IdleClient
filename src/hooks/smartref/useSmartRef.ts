@@ -11,11 +11,11 @@ export interface SmartRef<T> {
 	 * @param   value
 	 *          The new value.
 	 */
-	setContent: (value: T | (() => T), trigger?: boolean) => void;
+	setContent: (value: T | ((current: T) => T), trigger?: boolean) => void;
 	/**
 	 * Trigger all subscribers.
 	 */
-	trigger: () => void;
+	trigger: (block?: (value: T) => void) => void;
 	/**
 	 * Subscribe to changes in the ref.
 	 *
@@ -41,15 +41,18 @@ const useSmartRef = <T>(
 
 	const content = () => ref.current;
 
-	const setContent = (value: T | (() => T), trigger: boolean = true) => {
-		if (typeof value === 'function') value = (value as () => T)();
+	const setContent = (value: T | ((current: T) => T), trigger: boolean = true) => {
+		if (typeof value === 'function') value = (value as (current: T) => T)(ref.current);
 
 		ref.current = value;
 		if (!trigger) return;
 		subscribers.current.forEach((callback) => callback());
 	}
 
-	const trigger = () => subscribers.current.forEach((callback) => callback());
+	const trigger = (block?: (value: T) => void) => {
+		if (block) block(ref.current);
+		subscribers.current.forEach((callback) => callback());
+	}
 
 	const subscribe = (callback: () => void) => {
 		const id = nextId.current++;

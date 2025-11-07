@@ -6,14 +6,17 @@ import { GameData } from "@idleclient/game/data/GameData.ts";
 import { ItemIcon, SpriteIcon } from "@components/icon";
 import TaskProgressBar from "@pages/game/task/components/tasks/TaskProgressBar.tsx";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
-import { toFixedNoRoundTrim } from "@idleclient/game/utils/numberUtils.ts";
 import ItemTooltip from "@components/item/ItemTooltip.tsx";
+import { IdleClansMath } from "@idleclient/game/utils/IdleClansMath.ts";
+import { useModal } from "@context/ModalContext.tsx";
+import GatheringCalculatorModal from "@pages/game/task/modals/GatheringCalculatorModal.tsx";
 
 interface GatheringTaskProps {
 	task: JobTask
 }
 
 const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
+	const modals = useModal();
 	const game = useGame();
 	const items = useInventoryItemsWatcher(game, [task.itemReward]);
 	const currentTask = useSmartRefWatcher(game.task.currentTask);
@@ -26,10 +29,13 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 	const canDoTask = game.skill.hasLevel(task.skill, levelRequirement);
 
 	const experience = task.getModifiedExperience(game).toFixed(1).replace(/[.,]0$/, "");
-	const time = toFixedNoRoundTrim(task.getModifiedTaskTime(game) / 1000, 1).replace(/[.,]0$/, "");
+	const time = IdleClansMath.get().safe_round_to_one_decimal(task.getModifiedTaskTime(game) / 1000)
+		.toFixed(1).replace(/[.,]0$/, "");
+
 	const iconDef = GameData.items().item(task.customIconId > 0 ? task.customIconId : task.itemReward);
 
 	const onTaskClicked = () => {
+		console.log("Clicked on task ", task, canDoTask);
 		if (!canDoTask) return;
 		game.task.activateTask(task);
 	}
@@ -40,10 +46,26 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 			className={`flex flex-col select-none transition-colors duration-200 bg-gradient-to-b from-ic-dark-200/85 ${canDoTask ? 
 				"to-ic-light-600/85 cursor-pointer hover:to-ic-light-500/85 active:to-ic-light-600/85" : 
 				"to-ic-red-600/85"} p-3 shadow-black/25 shadow-md`}
-			onClick={onTaskClicked}
+			onClick={event => {
+				if ((event as any).cancelled) return;
+				onTaskClicked();
+			}}
 		>
 			<div className="flex">
-				<div className="w-full ml-10 pb-3 text-center text-white font-medium text-2xl">
+				<div
+					className="text-white font-bold hover:underline"
+					onClick={e => {
+						(e as any).cancelled = true;
+						modals.openModal("gathering-calc",
+							<GatheringCalculatorModal task={task} />
+						);
+					}}
+				>
+					[TEST]
+				</div>
+
+				{/*ml-10*/}
+				<div className="w-full pb-3 text-center text-white font-medium text-2xl">
 					{taskName}
 				</div>
 				<div
