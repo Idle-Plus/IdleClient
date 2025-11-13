@@ -1,11 +1,11 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { InventoryArray, ItemId, ItemStack } from "@idleclient/types/gameTypes.ts";
 import {
 	Int,
 	InventoryItemSwapMessage,
 	LoginDataMessage,
-	PacketType,
+	PacketType, SellItemMessage,
 } from "@idleclient/network/NetworkData.ts";
 import useIndexEventListener, { IndexEventListener } from "@hooks/useIndexEventListener.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
@@ -17,6 +17,7 @@ import { useConsole } from "@context/ConsoleContext.tsx";
 import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
 
 const LOADING_SWITCH_ITEM = "inventoryManager$switchItem";
+const LOADING_SELL_ITEM = "inventoryManager$sellItem";
 
 export interface InventoryManagerType extends ManagerType {
 
@@ -43,11 +44,21 @@ export interface InventoryManagerType extends ManagerType {
 	 * Network functions
 	 */
 
-	/**
-	 * Move an item from one slot to another. Sending a move item packet to the
-	 * server.
-	 */
-	switchItem: (from: number, to: number) => void,
+	network: {
+		/**
+		 * Move an item from one slot to another. Sending a move item packet to the
+		 * server.
+		 */
+		switchItem: (from: number, to: number) => void;
+		/**
+		 * Sell an item from the inventory. This will send a sell item packet to the
+		 * server.
+		 *
+		 * @param itemId The id of the item to sell.
+		 * @param amount The amount to sell.
+		 */
+		sellItem: (itemId: ItemId, amount: Int) => void;
+	};
 
 	/*
 	 * Functions
@@ -94,12 +105,6 @@ export interface InventoryManagerType extends ManagerType {
 
 	getItemStackInSlot: (slot: number) => ItemStack | null,
 	getItemDefinitionInSlot: (slot: number) => ItemDefinition | null,
-	//getEquippedItem: (slot: EquipmentSlot) => ItemDefinition | null,
-
-	/**
-	 * Check if the specified item is currently equipped.
-	 */
-	//isItemEquipped: (item: ItemId) => boolean,
 
 	/**
 	 * Initialize the inventory manager.
@@ -112,7 +117,7 @@ export interface InventoryManagerType extends ManagerType {
 	cleanup: () => void,
 }
 
-export const InventoryManager = (managers: ManagerStorage): InventoryManagerType => {
+export const InventoryManager = (context: ManagerContext): InventoryManagerType => {
 	const loading = useLoading();
 	const debug = useConsole();
 
@@ -124,13 +129,13 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 	//       mapping, so we can use that to get the index of an item, instead
 	//       of looping through the array.
 
-	const gold = useSmartRef<Int>(0);
+	const _goldRef = useSmartRef<Int>(0);
 
-	const inventory = useSmartRef<InventoryArray>(testInventory);
-	const inventorySize = useSmartRef<number>(inventory.content().length);
-	const inventoryListener = useIndexEventListener<ItemStack>(ctx => {
-		for (let i = 0; i < inventory.content().length; i++) {
-			const item = inventory.content()[i];
+	const _inventoryRef = useSmartRef<InventoryArray>(testInventory);
+	const inventorySize = useSmartRef<number>(_inventoryRef.content().length);
+	const _inventoryListener = useIndexEventListener<ItemStack>(ctx => {
+		for (let i = 0; i < _inventoryRef.content().length; i++) {
+			const item = _inventoryRef.content()[i];
 			if (item === null) continue;
 			ctx.set(item.id, item);
 		}
@@ -141,9 +146,9 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 	 */
 
 	const setInventory = (content: InventoryArray) => {
-		inventory.setContent(content);
+		_inventoryRef.setContent(content);
 		inventorySize.setContent(content.length);
-		inventoryListener.reinitialize(ctx => {
+		_inventoryListener.reinitialize(ctx => {
 			for (let i = 0; i < content.length; i++) {
 				const item = content[i];
 				if (item === null) continue;
@@ -156,8 +161,8 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 	 * Network functions
 	 */
 
-	const switchItem = (from: number, to: number) => {
-		const content = inventory.content();
+	const _switchItem = (from: number, to: number) => {
+		const content = _inventoryRef.content();
 		if (content.length <= 0) return; // We're not connected.
 		if (from < 0 || from >= content.length)
 			throw new Error(`Tried to switch item from invalid slot ${from}.`);
@@ -171,46 +176,33 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 		Network.send(new InventoryItemSwapMessage(from, to));
 	}
 
+	const _sellItem = (itemId: ItemId, amount: Int) => {
+		if (amount <= 0 || amount > _getItemCount(itemId))
+			throw new Error(`Tried to sell ${amount} of item ${itemId}, but only ${_getItemCount(itemId)} is available.`);
+
+		// Notify the server.
+		if (loading.is(LOADING_SELL_ITEM)) return;
+		debug.log(`Inventory: Selling ${amount} of item ${itemId}.`);
+		loading.set(LOADING_SELL_ITEM, "Selling item");
+		Network.send(new SellItemMessage(itemId, amount));
+	}
+
 	/*
 	 * Functions
 	 */
 
-	const addItem = (item: ItemId | ItemStack, amount?: number) => {
-		if (inventory.content().length <= 0) return; // If we aren't connected.
-		const content = inventory.content() as Array<ItemStack | null>;
+	const _addItem = (item: ItemId | ItemStack, amount?: number) => {
+		if (_inventoryRef.content().length <= 0) return; // If we aren't connected.
+		const content = _inventoryRef.content() as Array<ItemStack | null>;
 
 		// TODO: Drop support for using ItemStack's count as the amount.
 		amount = amount === undefined ? (typeof item === "number" ? 1 : item.count) : amount;
 		item = typeof item === "number" ? item : item.id;
 
 		if (item === ItemDatabase.GOLD_ITEM_ID) {
-			gold.setContent(gold.content() + amount);
+			_goldRef.setContent(_goldRef.content() + amount);
 			return;
 		}
-
-		// Check if we should add to a specific slot.
-		/*if (slot !== undefined) {
-			if (slot < 0 || slot >= content.length)
-				throw new Error(`Tried to add item to invalid slot ${slot}.`);
-			const current = content[slot];
-			if (current === null) {
-				content[slot] = item;
-				// Update Inventory - start
-				inventory.trigger();
-				inventoryListener.set(item.id, item);
-				// Update Inventory - end
-				return;
-			}
-
-			if (current.id !== item.id)
-				throw new Error(`Tried to add item to slot ${slot} with different item.`);
-			current.count += item.count;
-			// Update Inventory - start
-			inventory.trigger();
-			inventoryListener.set(item.id, current);
-			// Update Inventory - end
-			return;
-		}*/
 
 		// Try to find the item in the inventory.
 		for (let i = 0; i < content.length; i++) {
@@ -221,8 +213,8 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 			if (current.id !== item) continue;
 			current.count += amount;
 			// Update Inventory - start
-			inventory.trigger();
-			inventoryListener.set(item, current);
+			_inventoryRef.trigger();
+			_inventoryListener.set(item, current);
 			// Update Inventory - end
 			return;
 		}
@@ -233,8 +225,8 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 			const stack = { id: item, count: amount };
 			content[i] = stack;
 			// Update Inventory - start
-			inventory.trigger();
-			inventoryListener.set(item, stack);
+			_inventoryRef.trigger();
+			_inventoryListener.set(item, stack);
 			// Update Inventory - end
 			return;
 		}
@@ -243,14 +235,14 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 		console.error(`Tried to add item ${item} to inventory, but no empty slots were found.`);
 	}
 
-	const removeItem = (item: ItemId | ItemStack, amount?: number, ignorePlaceholder?: boolean) => {
-		if (inventory.content().length <= 0) return; // If we aren't connected.
-		const content = inventory.content() as Array<ItemStack | null>;
+	const _removeItem = (item: ItemId | ItemStack, amount?: number, ignorePlaceholder?: boolean) => {
+		if (_inventoryRef.content().length <= 0) return; // If we aren't connected.
+		const content = _inventoryRef.content() as Array<ItemStack | null>;
 		const id = typeof item === "number" ? item : item.id;
 		amount = amount === undefined ? 1 : amount;
 
 		if (id === ItemDatabase.GOLD_ITEM_ID) {
-			gold.setContent(gold.content() - amount);
+			_goldRef.setContent(_goldRef.content() - amount);
 			return;
 		}
 
@@ -259,6 +251,11 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 			if (current === null) continue;
 			if (current.id !== id) continue;
 			if (current.count <= amount) {
+				// Bug logging
+				if (current.count - amount < 0) {
+					console.error("InventoryManager: Trying to remove more items than available in inventory. " +
+						`Item: ${id}, Amount: ${amount}, Inventory Count: ${current.count}.`);
+				}
 
 				// Either remove the item or set the count to 0 if we have
 				// placeholders enabled.
@@ -266,16 +263,16 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 				else content[i] = null;
 
 				// Update Inventory - start
-				inventory.trigger();
-				if (usingPlaceholders && !ignorePlaceholder) inventoryListener.set(id, { id: id, count: 0 });
-				else inventoryListener.remove(id)
+				_inventoryRef.trigger();
+				if (usingPlaceholders && !ignorePlaceholder) _inventoryListener.set(id, { id: id, count: 0 });
+				else _inventoryListener.remove(id)
 				// Update Inventory - end
 				return;
 			}
 			current.count -= amount;
 			// Update Inventory - start
-			inventory.trigger();
-			inventoryListener.set(id, current);
+			_inventoryRef.trigger();
+			_inventoryListener.set(id, current);
 			// Update Inventory - end
 			return;
 		}
@@ -284,14 +281,14 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 		console.error(`Tried to remove item ${item} from inventory, but no item was found.`);
 	}
 
-	const hasItem = (item: ItemId | ItemStack, amount?: number) => {
-		if (inventory.content().length <= 0) return false; // If we aren't connected.
-		const content = inventory.content(); // Array<ItemStack | null>
+	const _hasItem = (item: ItemId | ItemStack, amount?: number) => {
+		if (_inventoryRef.content().length <= 0) return false; // If we aren't connected.
+		const content = _inventoryRef.content(); // Array<ItemStack | null>
 		const id = typeof item === "number" ? item : item.id;
 		amount = amount ?? 1;
 
 		if (id === ItemDatabase.GOLD_ITEM_ID) {
-			return gold.content() >= amount;
+			return _goldRef.content() >= amount;
 		}
 
 		for (const item of content) {
@@ -304,13 +301,13 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 		return false;
 	}
 
-	const getItemCount = (item: ItemId | ItemStack) => {
-		if (inventory.content().length <= 0) return 0; // If we aren't connected.
-		const content = inventory.content(); // Array<ItemStack | null>
+	const _getItemCount = (item: ItemId | ItemStack) => {
+		if (_inventoryRef.content().length <= 0) return 0; // If we aren't connected.
+		const content = _inventoryRef.content(); // Array<ItemStack | null>
 		const id = typeof item === "number" ? item : item.id;
 
 		if (id === ItemDatabase.GOLD_ITEM_ID) {
-			return gold.content();
+			return _goldRef.content();
 		}
 
 		let count = 0;
@@ -324,15 +321,15 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 		return count;
 	}
 
-	const getItemStackInSlot = (slot: number) => {
-		const content = inventory.content();
+	const _getItemStackInSlot = (slot: number) => {
+		const content = _inventoryRef.content();
 		if (slot < 0 || slot >= content.length)
 			throw new Error(`Tried to get item in invalid slot ${slot}.`);
 		return content[slot];
 	}
 
-	const getItemDefinitionInSlot = (slot: number) => {
-		const item = getItemStackInSlot(slot);
+	const _getItemDefinitionInSlot = (slot: number) => {
+		const item = _getItemStackInSlot(slot);
 		if (item === null) return null;
 		return GameData.items().item(item.id);
 	}
@@ -346,12 +343,12 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 			return { id: item.ItemId, count: item.Amount};
 		});
 
-		gold.setContent(data.Gold);
+		_goldRef.setContent(data.Gold);
 		setInventory(inventory);
 	}
 
 	const cleanup = () =>  {
-		gold.setContent(0);
+		_goldRef.setContent(0);
 		setInventory([]);
 	}
 
@@ -363,31 +360,48 @@ export const InventoryManager = (managers: ManagerStorage): InventoryManagerType
 		const from = packet.FromSlot;
 		const to = packet.ToSlot;
 
-		const content = inventory.content() as Array<ItemStack | null>;
+		const content = _inventoryRef.content() as Array<ItemStack | null>;
 		const temp = content[from];
 		content[from] = content[to];
 		content[to] = temp;
-		inventory.trigger();
+		_inventoryRef.trigger();
 
 		loading.remove(LOADING_SWITCH_ITEM);
 	}, [], PacketType.InventoryItemSwapMessage);
 
+	usePacket<SellItemMessage>(packet => {
+		const itemId = packet.ItemId;
+		const amount = packet.ItemAmount;
+
+		// Remove the item
+		_removeItem(itemId, amount);
+		// Add the gold
+		const itemDef = ItemDatabase.item(itemId);
+		const value = ItemDatabase.getSellValue(itemDef, context.game!);
+		_addItem(ItemDatabase.GOLD_ITEM_ID, amount * value);
+
+		loading.remove(LOADING_SELL_ITEM);
+	}, [], PacketType.SellItemMessage);
+
 	return {
 		$managerName: "inventoryManager",
 
-		gold: gold,
-		inventory: inventory,
-		inventoryListener: inventoryListener,
+		gold: _goldRef,
+		inventory: _inventoryRef,
+		inventoryListener: _inventoryListener,
 
-		switchItem: switchItem,
+		network: {
+			switchItem: _switchItem,
+			sellItem: _sellItem,
+		},
 
-		addItem: addItem,
-		removeItem: removeItem,
-		hasItem: hasItem,
-		getItemCount: getItemCount,
+		addItem: _addItem,
+		removeItem: _removeItem,
+		hasItem: _hasItem,
+		getItemCount: _getItemCount,
 
-		getItemStackInSlot: getItemStackInSlot,
-		getItemDefinitionInSlot: getItemDefinitionInSlot,
+		getItemStackInSlot: _getItemStackInSlot,
+		getItemDefinitionInSlot: _getItemDefinitionInSlot,
 
 		initialize: initialize,
 		cleanup: cleanup,

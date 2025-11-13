@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export interface BaseModalProps {
 	/**
@@ -17,7 +17,19 @@ export interface BaseModalProps {
 	 * instead, the onClose field on the .open() function should be used.
 	 */
 	onClose?: () => void;
+	/**
+	 * If the modal should animate in.
+	 */
+	animate?: boolean;
 
+	/**
+	 * The classes to insert onto the root element of the Modal.
+	 */
+	className?: string;
+	/**
+	 * The class name to insert onto the background element of the Modal.
+	 */
+	bgClassName?: string;
 	/**
 	 * Represents the child elements or components to be rendered inside a
 	 * parent component.
@@ -28,38 +40,59 @@ export interface BaseModalProps {
 	children?: React.ReactNode;
 }
 
-const BaseModal: React.FC<BaseModalProps> = ({ title, children, onClose, active }) => {
+const BaseModal: React.FC<BaseModalProps> = ({
+	active,
+	onClose,
+	animate = true,
+	className,
+	bgClassName,
+	children
+}) => {
+	const openTimeRef = useRef(Date.now());
+	const mouseDownRef = useRef(false);
+	const [stage, setStage] = useState(0);
+
+	useEffect(() => {
+		if (!animate) return;
+		setStage(1);
+		const timer = setTimeout(() => {
+			setStage(2);
+		}, 150);
+
+		return () => clearTimeout(timer);
+	}, []); // eslint-disable-line
+
 	if (!active) return null;
+
+	const handleMouseDown = (e: React.MouseEvent) => {
+		if (e.target !== e.currentTarget) return;
+		mouseDownRef.current = true;
+	};
+
+	const handleMouseUp = (e: React.MouseEvent) => {
+		// Wait until at least 100 ms has passed since the Modal was opened.
+		if (Date.now() - openTimeRef.current < 100) return;
+		if (e.target === e.currentTarget && mouseDownRef.current) onClose?.();
+		mouseDownRef.current = false;
+	};
 
 	return (
 		<div
-			className="fixed inset-0 bg-[#00000080] flex justify-center z-50"
-			onClick={onClose}
+			className={`fixed inset-0 bg-[#00000080] ${bgClassName ?? ""}`}
+			onMouseLeave={() => mouseDownRef.current = false}
 		>
 			<div
-				className="w-full bg-ic-dark-400 rounded-lg max-w-2xl overflow-y-auto"
-				onClick={(e) => e.stopPropagation()}
+				onMouseDown={handleMouseDown}
+				onMouseUp={handleMouseUp}
+				className={`fixed inset-0 flex flex-col justify-evenly items-center z-50 ${className ?? ""}`}
+				style={
+					animate ? {
+						transform: stage === 0 ? "scale(0)" : stage === 1 ? "scale(1)" : "",
+						transition: "transform 0.1s linear"
+					} : {}
+				}
 			>
-				{title && (
-					<>
-						<div className="flex justify-between items-center bg-ic-dark-100 p-6 pb-3 pt-3 border-b-ic-dark-600 border-b-4">
-							<div>
-								<h2 className="text-3xl font-bold text-white">{title}</h2>
-							</div>
-							<button
-								onClick={onClose}
-								className="text-ic-red-200 hover:text-ic-red-300"
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-								</svg>
-							</button>
-						</div>
-					</>
-				)}
-				<div className="space-y-6 p-6">
-					{children}
-				</div>
+				{ children }
 			</div>
 		</div>
 	);

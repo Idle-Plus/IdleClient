@@ -1,0 +1,1 @@
+Custom types used by the browser client, and not directly tied to Idle Clans.

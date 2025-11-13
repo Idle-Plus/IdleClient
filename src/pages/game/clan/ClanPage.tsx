@@ -28,12 +28,7 @@ const ClanPage: React.FC = () => {
 			{clan !== null ? (
 				<ClanView clan={clan} />
 			) : (
-				<NotInClanView
-					totalLevel={totalLevel} 
-					gold={gold} 
-					onCreateClan={handleCreateClan} 
-					onJoinClan={handleJoinClan} 
-				/>
+				<NotInClanView />
 			)}
 		</>
 	);

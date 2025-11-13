@@ -108,8 +108,7 @@ export interface ManagerType {
 	$managerName: string;
 }
 
-export interface ManagerStorage {
-
+export interface ManagerContext {
 	playerManager: PlayerManagerType | undefined;
 	clanManager: ClanManagerType | undefined;
 	skillManager: SkillManagerType | undefined;
@@ -122,7 +121,7 @@ export interface ManagerStorage {
 	game: GameContextType | undefined;
 }
 
-function createManagerStorage(): ManagerStorage {
+function createManagerStorage(): ManagerContext {
 	return {
 		playerManager: undefined,
 		clanManager: undefined,
@@ -137,7 +136,7 @@ function createManagerStorage(): ManagerStorage {
 	}
 }
 
-function createManager<T extends ManagerType>(value: T, storage: ManagerStorage): T {
+function createManager<T extends ManagerType>(value: T, storage: ManagerContext): T {
 	// @ts-expect-error - Yeah yeah, I know.
 	storage[value.$managerName] = value;
 	return value;
@@ -147,7 +146,7 @@ export interface GameContextType {
 
 	dummy: number;
 	setDummy: (value: number) => void;
-
+	
 	player: PlayerManagerType;
 	clan: ClanManagerType;
 	skill: SkillManagerType;
@@ -201,7 +200,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 	 * Managers
 	 */
 
-	const _managers: ManagerStorage = createManagerStorage();
+	const _managers: ManagerContext = createManagerStorage();
 
 	const _player: PlayerManagerType = createManager(PlayerManager(_managers), _managers);
 	const _clan: ClanManagerType = createManager(ClanManager(_managers), _managers);
@@ -314,7 +313,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 			sessions.updateStoredAccounts();
 		}
 
-		GameEvents.ConnectedPostEvent.fire();
+		GameEvents.ConnectedPostEvent.fire(packet);
 
 		if (_connectionPromiseRef.current) {
 			_connectionPromiseRef.current.resolve({ success: true });
@@ -432,7 +431,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 	const gameContext = {
 		dummy: dummy,
 		setDummy: (value: number) => setDummy(value),
-
+		
 		player: _player,
 		clan: _clan,
 		skill: _skill,

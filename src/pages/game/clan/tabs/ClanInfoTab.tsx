@@ -5,6 +5,12 @@ import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
 import { ItemIcon, SpriteIcon } from "@components/icon";
 import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
+import { IdleButton } from "@components/input/IdleButton.tsx";
+import { useGame } from "@context/GameContext.tsx";
+import { ModalUtils } from "@utils/ModalUtils.tsx";
+import { useModal } from "@context/ModalContext.tsx";
+import { ClanMember } from "@idleclient/types/clan/ClanMember.ts";
+import { RecruitmentCenterModal, RecruitmentCenterModalId } from "@pages/game/clan/modals/RecruitmentCenterModal.tsx";
 
 const ClanMembers: React.FC<{ clan: Clan }> = ({ clan }) => {
 	return (
@@ -130,16 +136,60 @@ const ClanPvmStats: React.FC<{ clan: Clan }> = ({ clan }) => {
 	)
 }
 
-const ClanInfoTab: React.FC<{ clan: Clan }> = ({ clan }) => {
+const LeaveClanButton = ({ clan, player }: { clan: Clan, player: ClanMember }) => {
+	const game = useGame();
+	const modals = useModal();
+	const action = clan.members.size === 1 ? "Delete" : "Leave";
 
-	const handlePvMStats = () => {}
-	const handleRecruitmentCenter = () => {}
-	const handleBulletinBoard = () => {}
-	const handleLeaveClan = () => {}
+	const getConfirmationText = () => {
+		if (player.rank === ClanRank.LEADER && clan.members.size === 1) return (
+			<>
+				Are you sure you want to <b>delete</b> your clan? All of its progress will be <b>lost</b>.
+				This cannot be undone.
+			</>
+		);
+
+		if (player.rank === ClanRank.LEADER) return (
+			<>
+				Are you sure you want to <b>leave</b> your clan? Since you're not alone in the clan,
+				leaving will kick you out and leadership will be passed onto someone else.
+				Deputy leaders will be prioritized.
+			</>
+		);
+
+		return <>Are you sure you want to <b>leave</b> your clan?</>;
+	}
+
+	const onClick = () => {
+		modals.openModal("leaveClanModal", ModalUtils.generalConfirmationModal(
+			getConfirmationText(), () => {
+				if (player.rank === ClanRank.LEADER) game.clan.network.deleteClan();
+				else {
+					// TODO: Leave clan.
+					// game.clan.network.leaveClan();
+				}
+			}, null, { confirmText: action, delay: 10 })
+		);
+	}
 
 	return (
-		<div className="w-full flex flex-col gap-4 p-4">
+		<IdleButton
+			title={`${action} clan`}
+			onClick={onClick}
+			bgColor="bg-ic-red-500"
+			bgColorHover="hover:bg-ic-red-400"
+			bgColorActive="active:bg-ic-red-400"
+		/>
+	);
+}
+
+const ClanInfoTab: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan, player }) => {
+	const modals = useModal();
+
+	return (
+		<div className="w-full flex flex-col gap-2 p-4">
 			<div className="flex justify-between">
+
 				{/*Clan Name*/}
 				<span className="text-3xl font-semibold text-white">
 					{clan.name}
@@ -148,39 +198,21 @@ const ClanInfoTab: React.FC<{ clan: Clan }> = ({ clan }) => {
 
 				{/*Buttons*/}
 				<div className="space-x-2 text-xl text-white">
-					{/*<button
-						className="px-4 py-1 bg-ic-light-500 hover:bg-ic-light-500/90 rounded-md"
-						onClick={handlePvMStats}
-					>
-						PvM stats
-					</button>*/}
+					<IdleButton
+						title="Recruitment center"
+						onClick={() => modals.openModal(RecruitmentCenterModalId, <RecruitmentCenterModal />)}
+					/>
 
-					<button
-						className="px-4 py-1 bg-ic-light-500 hover:bg-ic-light-500/90 rounded-full"
-						onClick={handleRecruitmentCenter}
-					>
-						Recruitment center
-					</button>
+					<IdleButton
+						title="Bulletin board"
+					/>
 
-					<button
-						className="px-4 py-1 bg-ic-light-500 hover:bg-ic-light-500/90 rounded-full"
-						onClick={handleBulletinBoard}
-					>
-						Bulletin board
-					</button>
-
-					<button
-						className="px-4 py-1 bg-ic-red-500 hover:bg-ic-red-500/90 rounded-full"
-						onClick={handleLeaveClan}
-					>
-						Leave clan
-					</button>
+					<LeaveClanButton clan={clan} player={player} />
 				</div>
 			</div>
 
 			{/* Members and Stats */}
-			{/*<div className="grid grid-cols-[1fr_1.5fr] items-start gap-8">*/}
-			<div className="h-full grid grid-cols-[1fr_1.5fr] items-start gap-8"> {/*h-full grow overflow-y-hidden*/}
+			<div className="h-full grid grid-cols-[1fr_1.5fr] items-start gap-4">
 
 				{/* Members */}
 				<div className="h-full relative">

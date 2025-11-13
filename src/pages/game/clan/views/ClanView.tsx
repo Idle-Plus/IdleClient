@@ -2,16 +2,10 @@ import React, { useEffect, useState } from "react";
 import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
 import { useGame } from "@/context/GameContext";
 import { Clan } from "@idleclient/types/clan/Clan.ts";
-import { ClanCategory, GameMode, Skill, UpgradeType } from "@idleclient/network/NetworkData.ts";
-import { ClanMember } from "@idleclient/types/clan/ClanMember.ts";
 import ClanInfoTab from "@pages/game/clan/tabs/ClanInfoTab.tsx";
 import ClanQuestsTab from "@pages/game/clan/tabs/ClanQuestsTab.tsx";
 import ClanPropertyTab from "@pages/game/clan/tabs/ClanPropertyTab.tsx";
 import ClanUpgradesTab from "@pages/game/clan/tabs/ClanUpgradesTab.tsx";
-import { IdleUsernameInput } from "@components/input/IdleUsernameInput.tsx";
-import { IdleButton } from "@components/input/IdleButton.tsx";
-import useSmartRef from "@hooks/smartref/useSmartRef.ts";
-import { IdleInputState } from "@components/input/IdleInputState.ts";
 import ClanManagementTab from "@pages/game/clan/tabs/ClanManagementTab.tsx";
 
 enum ClanViewTab {
@@ -39,7 +33,7 @@ export const ClanView: React.FC<{ clan: Clan }> = ({ clan }) => {
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
-		<div className="w-full h-full flex flex-col max-w-7xl mx-auto p-4"> {/*h-full*/}
+		<div className="w-full h-full flex flex-col max-w-7xl mx-auto">
 
 			{/* Tab List */}
 			<div className="bg-ic-dark-500/75 mb-2 text-xl">
@@ -64,8 +58,8 @@ export const ClanView: React.FC<{ clan: Clan }> = ({ clan }) => {
 			</div>
 
 			{/* Tab Content */}
-			<div className="h-full flex bg-ic-dark-500/75 overflow-y-auto ic-scrollbar"> {/* overflow-y-auto ic-scrollbar grow pr-1*/}
-				{ currentTab === ClanViewTab.Clan && (<ClanInfoTab clan={clan} />) }
+			<div className="h-full flex bg-ic-dark-500/75 overflow-y-auto ic-scrollbar-nr"> {/* overflow-y-auto ic-scrollbar grow pr-1*/}
+				{ currentTab === ClanViewTab.Clan && (<ClanInfoTab clan={clan} player={playerMember} />) }
 				{ currentTab === ClanViewTab.Quests && (<ClanQuestsTab clan={clan} />) }
 				{ currentTab === ClanViewTab.Property && (<ClanPropertyTab clan={clan} playerMember={playerMember} />) }
 				{ currentTab === ClanViewTab.Upgrades && (<ClanUpgradesTab clan={clan} playerMember={playerMember} />) }

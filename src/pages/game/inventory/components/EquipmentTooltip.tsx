@@ -8,6 +8,7 @@ import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 import { GameContextType, useGame } from "@context/GameContext.tsx";
 import { ToolbeltUtils } from "@idleclient/game/utils/ToolbeltUtils.ts";
 import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
+import { TextUtils } from "@idleclient/utils/TextUtils.tsx";
 
 interface EquipmentTooltipProps {
 	item: ItemDefinition;
@@ -129,7 +130,8 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 		);
 	}
 
-	const hasDescription = item.getLocalizedDescription() !== null && item.getLocalizedDescription()?.trim() !== "";
+	const description = item.getLocalizedDescription(game);
+	const hasDescription = description !== null && description.trim() !== "";
 	const hasSkillBoost = item.skillBoost !== null;
 	const hasCombatBonus = item.meleeBonus !== null || item.archeryBonus !== null || item.magicBonus !== null;
 
@@ -145,8 +147,6 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 
 				pointerEvents: 'none',
 				boxShadow: "0 0 8px -1px #00000080",
-				//left: "-1rem",
-				//display: visible ? "block" : "none",
 
 				transition: "transform 0.075s ease-out",
 				transformOrigin: "center right",
@@ -177,8 +177,7 @@ const EquipmentTooltip: React.FC<EquipmentTooltipProps> = ({ item, containerRef 
 							</div>
 
 							<div className="px-2 text-base text-gray-200 inline-block min-w-[16rem] max-w-full">
-								{item.getLocalizedDescription()?.replace("\n", "")}
-								{ !item.getLocalizedDescription()?.replace("\n", "").endsWith(".") ? "." : "" }
+								{TextUtils.getStyledMessage(description, {appendPeriod: true})}
 							</div>
 						</>
 					) }

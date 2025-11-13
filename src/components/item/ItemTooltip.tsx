@@ -7,12 +7,14 @@ import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 import { IdleClient } from "@idleclient/IdleClient.ts";
 import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
 import { useGame } from "@context/GameContext.tsx";
+import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase.ts";
+import { TextUtils } from "@idleclient/utils/TextUtils.tsx";
 
 interface ItemTooltipProps {
 	item: ItemDefinition;
 	count?: number;
 
-	positions: { x: number, y: number }[] | HTMLElement; // 0 = top, 1 = left, 2 = bottom.
+	positions?: { x: number, y: number }[] | HTMLElement; // 0 = top, 1 = left, 2 = bottom.
 
 	/**
 	 * The preferred side to show the tooltip on.
@@ -28,12 +30,29 @@ interface ItemTooltipProps {
 	 */
 	className?: string;
 	/**
+	 * Class name to add to the wrapper.
+	 */
+	classNameWrapper?: string;
+	/**
+	 * The style to apply to the wrapper.
+	 */
+	styleWrapper?: React.CSSProperties;
+	/**
 	 * The delay before the popup is displayed.
 	 */
 	delay?: number;
 }
 
-const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, preferredSide, positionPadding, className, delay }) => {
+const ItemTooltip: React.FC<ItemTooltipProps> = ({
+	item,
+	count,
+	positions,
+	preferredSide,
+	positionPadding,
+	className,
+	classNameWrapper,
+	styleWrapper,
+	delay }) => {
 	preferredSide = preferredSide ?? "top";
 
 	const game = useGame();
@@ -80,6 +99,8 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 	}, [draw, delay]);
 
 	const getPositionStyle = (index: number) => {
+		if (positions === undefined) return {};
+
 		if (index === 0) {
 			return {
 				transform: `translateX(calc(-50% - 40px)) translateY(-100%) scale(${stateRef.current >= 3 ? 1 : 0})`,
@@ -113,6 +134,8 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 	}
 
 	const getPosition = () => {
+		if (positions === undefined) return {};
+
 		// Get the size of the tooltip and see if it's too close to the edge.
 		const rect = tooltipRef.current?.getBoundingClientRect();
 
@@ -208,19 +231,8 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 		});
 	};
 
-	const getItemDescription = () => {
-		const description = item.getLocalizedDescription();
-		if (description === null) return "";
-
-		return description.split(/(\\n|<br>)/)
-			.map((line, index) => {
-				if (line === "\\n" || line === "<br>") return <br key={`br-${index}`}/>;
-				if (!line.endsWith(".") && line.length > 0) line += ".";
-				return parseStyledText(line);
-		});
-	}
-
-	const hasDescription = item.getLocalizedDescription() !== null && item.getLocalizedDescription()?.trim() !== "";
+	const localization = item.getLocalizedDescription(game);
+	const hasDescription = localization !== null && localization.trim() !== "";
 	const hasHealthOnConsume = item.healthAppliedOnConsume > 0;
 	const hasSkillBoost = item.skillBoost !== null;
 	const hasCombatBonus = item.meleeBonus !== null || item.archeryBonus !== null || item.magicBonus !== null ||
@@ -228,15 +240,16 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 
 	const tooltip = (
 		<div
-			className="fixed z-40 font-nunito"
+			className={`fixed z-40 font-nunito ${classNameWrapper ?? ""}`}
 			style={{
 				...getPosition(),
 				pointerEvents: 'none',
+				...(styleWrapper ?? {}),
 			}}
 		>
 			<div
 				ref={tooltipRef}
-				className={`relative bg-ic-dark-300 rounded-md max-w-[23rem] ${(className ?? "")}`}
+				className={`relative bg-ic-dark-300 rounded-md max-w-[23rem] ${className ?? ""}`}
 			>
 
 				<div className="flex flex-row">
@@ -283,7 +296,7 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 								<div className='mb-0.5 flex-1 border-b-2 border-ic-dark-000/75'/>
 
 								<div className="min-w-[16rem] max-w-full px-1 pb-0.5 text-base text-gray-200">
-									{getItemDescription()}
+									{TextUtils.getStyledMessage(localization, {appendPeriod: true})}
 								</div>
 							</>
 						) }
@@ -324,7 +337,7 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 											size={20}
 											className="mr-2 drop-shadow-black/50 drop-shadow-sm select-none"
 										/>
-										{Skill[item.skillBoost!.skill]}:
+										{ LocalizationDatabase.get(Skill[item.skillBoost!.skill].toLowerCase()) }:
 										<span className="ml-1 text-gray-200"> {item.skillBoost!.boostPercentage}%</span>
 									</div>
 								</div>
@@ -423,7 +436,7 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 										<div className="ml-auto flex items-center gap-1 italic text-sm">
 											{item.baseValue.toLocaleString()}
 											<ItemIcon
-												item={ItemDatabase.get(ItemDatabase.GOLD_ITEM_ID)}
+												item={ItemDatabase.item(ItemDatabase.GOLD_ITEM_ID)}
 												spriteSize={32}
 												canvas={false}
 												size={20}
@@ -450,6 +463,7 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({ item, count, positions, prefe
 		</div>
 	);
 
+	if (positions === undefined) return tooltip;
 	return ReactDOM.createPortal(tooltip, document.body);
 };
 

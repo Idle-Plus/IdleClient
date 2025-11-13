@@ -44,7 +44,7 @@ const CraftingTaskCard: React.FC<CraftingTaskProps> = ({ task }) => {
 	return (
 		<div
 			key={task.taskId}
-			className={`flex flex-col select-none transition-colors duration-200 bg-gradient-to-b from-ic-dark-200/85 ${canDoTask ?
+			className={`relative flex flex-col select-none transition-colors duration-200 bg-gradient-to-b from-ic-dark-200/85 ${canDoTask ?
 				"to-ic-light-600/85 cursor-pointer hover:to-ic-light-500/85 active:to-ic-light-600/85" :
 				"to-ic-red-600/85"} p-3 shadow-black/25 shadow-md`}
 			onClick={onTaskClicked}
@@ -59,7 +59,7 @@ const CraftingTaskCard: React.FC<CraftingTaskProps> = ({ task }) => {
 				</div>
 				<div
 					ref={infoContainerRef}
-					className="min-w-10 flex items-center justify-center mb-3"
+					className="min-w-10 z-2 flex items-center justify-center mb-3"
 					onMouseEnter={() => setHovering(true)}
 					onMouseLeave={() => setHovering(false)}
 				>
@@ -116,6 +116,15 @@ const CraftingTaskCard: React.FC<CraftingTaskProps> = ({ task }) => {
 					/>
 				) }
 			</div>
+
+			{ !hasLevel && (
+				<div
+					className={"absolute inset-0 flex z-1 items-center justify-center text-gray-100 text-center text-2xl " +
+						"font-semibold bg-black/65 select-none"}
+				>
+					<span>Unlocks at <span className="text-ic-light-200"><br/>level {levelRequirement}</span></span>
+				</div>
+			) }
 		</div>
 	)
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 interface IdleInputProps {
 	title?: string;
@@ -29,14 +29,14 @@ export const IdleInput: React.FC<IdleInputProps> = ({
 	inputClass = "",
 	className = "",
 }) => {
+	const idRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+
 	const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const input = e.target.value;
 		if (regex !== undefined && !regex.test(input)) return;
 		onValueChange(input);
 	}
 
-	//const style = "bg-ic-light-500 border-2 border-ic-light-400/50 text-gray-100 placeholder:text-white/75";
-	//const style = "bg-ic-light-600 border-2 border-ic-light-500/75 text-white/75 placeholder:text-white/75";
 	const style = disabled ?
 		"bg-ic-light-700 border-2 border-ic-light-500/50 text-white/75 placeholder:text-white/50 cursor-not-allowed" :
 		"bg-ic-light-500 border-2 border-ic-light-400/50 text-gray-100 placeholder:text-white/75";
@@ -44,13 +44,13 @@ export const IdleInput: React.FC<IdleInputProps> = ({
 	return (
 		<div className={`${className}`}>
 			<div className="flex items-end justify-between">
-				<label htmlFor="inputField" className={`block text-white/75 font-medium ${titleClass}`}>
+				<label htmlFor={`inputField_${idRef.current}`} className={`block text-white/75 font-medium ${titleClass}`}>
 					{ title }
 				</label>
 			</div>
 
 			<input
-				id="inputField"
+				id={`inputField_${idRef.current}`}
 				type="text"
 				value={value}
 				placeholder={placeholder}

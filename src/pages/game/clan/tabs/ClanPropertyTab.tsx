@@ -28,6 +28,9 @@ const CreditsContainer = ({clan}: {clan: Clan}) => {
 
 const VaultContainer = ({ clan }: { clan: Clan }) => {
 	const vault = clan.vault ?? new Map<ItemId, number>();
+	const maxVaultSpace = clan.isIronmanClan() ?
+		SettingsDatabase.shared().iapMaxPurchasableClanVaultSpaceIronman :
+		SettingsDatabase.shared().iapMaxPurchasableClanVaultSpace;
 
 	/*vault = new Map(vault);
 	for (let i = 0; i < (238); i++) {
@@ -36,14 +39,12 @@ const VaultContainer = ({ clan }: { clan: Clan }) => {
 
 	const purchasedSpace = (
 		<span className="text-gray-100">
-			{clan.purchasedVaultSpace} / {SettingsDatabase.shared().iapMaxPurchasableClanVaultSpace}
-			{/*148 / 200*/}
+			{clan.purchasedVaultSpace} / {maxVaultSpace}
 		</span>
 	);
 	const totalSpace = (
 		<span className="text-gray-100">
 			{ vault.size } / { clan.getTotalVaultSpace() }
-			{/*{ vaultTest.size } / { (30 + 8 + 148) }*/}
 		</span>
 	);
 
@@ -71,15 +72,15 @@ const VaultContainer = ({ clan }: { clan: Clan }) => {
 
 					<div className="flex items-center bg-ic-dark-200 px-2 py-2 text-xl rounded-md">
 						<ItemIcon
-							item={ItemDatabase.get(ItemDatabase.GOLD_ITEM_ID)}
+							item={ItemDatabase.item(ItemDatabase.GOLD_ITEM_ID)}
 							spriteSize={32}
 							canvas={false}
 							size={26}
 							className="drop-shadow-black/30 drop-shadow-sm select-none"
 						/>
 						<span className="w-24 pl-2 text-gray-100 tbox-trim-end">
-										{ toKMB(clan.gold, { minK: 100000, locale: null }) }
-									</span>
+							{ toKMB(clan.gold, { minK: 100000, locale: null }) }
+						</span>
 					</div>
 				</div>
 			</div>

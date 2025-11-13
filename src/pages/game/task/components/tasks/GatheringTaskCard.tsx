@@ -9,7 +9,6 @@ import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import ItemTooltip from "@components/item/ItemTooltip.tsx";
 import { IdleClansMath } from "@idleclient/game/utils/IdleClansMath.ts";
 import { useModal } from "@context/ModalContext.tsx";
-import GatheringCalculatorModal from "@pages/game/task/modals/GatheringCalculatorModal.tsx";
 
 interface GatheringTaskProps {
 	task: JobTask
@@ -26,7 +25,8 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 
 	const taskName = GameData.localization().get(task.name);
 	const levelRequirement = task.levelRequirement;
-	const canDoTask = game.skill.hasLevel(task.skill, levelRequirement);
+	const hasLevel = game.skill.hasLevel(task.skill, levelRequirement);
+	const canDoTask = hasLevel;
 
 	const experience = task.getModifiedExperience(game).toFixed(1).replace(/[.,]0$/, "");
 	const time = IdleClansMath.get().safe_round_to_one_decimal(task.getModifiedTaskTime(game) / 1000)
@@ -35,7 +35,6 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 	const iconDef = GameData.items().item(task.customIconId > 0 ? task.customIconId : task.itemReward);
 
 	const onTaskClicked = () => {
-		console.log("Clicked on task ", task, canDoTask);
 		if (!canDoTask) return;
 		game.task.activateTask(task);
 	}
@@ -43,7 +42,7 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 	return (
 		<div
 			key={task.taskId}
-			className={`flex flex-col select-none transition-colors duration-200 bg-gradient-to-b from-ic-dark-200/85 ${canDoTask ? 
+			className={`relative flex flex-col select-none transition-colors duration-200 bg-gradient-to-b from-ic-dark-200/85 ${canDoTask ? 
 				"to-ic-light-600/85 cursor-pointer hover:to-ic-light-500/85 active:to-ic-light-600/85" : 
 				"to-ic-red-600/85"} p-3 shadow-black/25 shadow-md`}
 			onClick={event => {
@@ -52,7 +51,7 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 			}}
 		>
 			<div className="flex">
-				<div
+				{/*<div
 					className="text-white font-bold hover:underline"
 					onClick={e => {
 						(e as any).cancelled = true;
@@ -62,15 +61,15 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 					}}
 				>
 					[TEST]
-				</div>
+				</div>*/}
 
 				{/*ml-10*/}
-				<div className="w-full pb-3 text-center text-white font-medium text-2xl">
+				<div className="w-full ml-10 pb-3 text-center text-white font-medium text-2xl">
 					{taskName}
 				</div>
 				<div
 					ref={infoContainerRef}
-					className="min-w-10 flex items-center justify-center mb-3"
+					className="min-w-10 z-2 flex items-center justify-center mb-3"
 					onMouseEnter={() => setHovering(true)}
 					onMouseLeave={() => setHovering(false)}
 				>
@@ -92,7 +91,7 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 			</div>
 
 			<div className="pb-4 text-center text-gray-200 text-lg/6">
-				<div className={!canDoTask ? "text-ic-red-200" : ""}>Level requirement: { levelRequirement }</div>
+				<div className={!hasLevel ? "text-ic-red-200" : ""}>Level requirement: { levelRequirement }</div>
 				<div>{ experience } XP / { task.baseTime > 0 ? `${time} Seconds` : "Instant" }</div>
 			</div>
 
@@ -117,6 +116,15 @@ const GatheringTaskCard: React.FC<GatheringTaskProps> = memo(({ task }) => {
 					/>
 				) }
 			</div>
+
+			{ !hasLevel && (
+				<div
+					className={"absolute inset-0 flex z-1 items-center justify-center text-gray-100 text-center text-2xl " +
+						"font-semibold bg-black/65 select-none"}
+				>
+					<span>Unlocks at <span className="text-ic-light-200"><br/>level {levelRequirement}</span></span>
+				</div>
+			) }
 		</div>
 	)
 });

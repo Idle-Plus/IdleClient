@@ -83,7 +83,7 @@ const ClanQuestsTab: React.FC<{ clan: Clan }> = ({ clan }) => {
 					<div className="pb-2 mx-auto text-center">
 						<p className="text-2xl text-gray-100">Combat</p>
 						<div className='h-0.5 my-1 bg-ic-dark-100/75'/>
-						<p className="text-lg text-gray-200">The townsfolk are in trouble! They need your clan to exterminate the following enemies.</p>
+						<p className="px-2 text-lg text-gray-200">The townsfolk are in trouble! They need your clan to exterminate the following enemies.</p>
 					</div>
 
 					<div className="grid grid-cols-[1fr_1fr] justify-center gap-4 mx-auto">
@@ -113,7 +113,7 @@ const ClanQuestsTab: React.FC<{ clan: Clan }> = ({ clan }) => {
 					<div className="pb-2 mx-auto text-center">
 						<p className="text-2xl text-gray-100">Skilling</p>
 						<div className='h-0.5 my-1 bg-ic-dark-100/75'/>
-						<p className="text-lg text-gray-200">The townsfolk have requested the following resources from your clan.</p>
+						<p className="px-2 text-lg text-gray-200">The townsfolk have requested the following resources from your clan.</p>
 					</div>
 
 					<div className="grid grid-cols-[1fr_1fr] justify-center gap-4 mx-auto">

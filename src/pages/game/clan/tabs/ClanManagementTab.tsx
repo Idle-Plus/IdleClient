@@ -161,7 +161,7 @@ const ClanManagementTab: React.FC<{ game: GameContextType, clan: Clan }> = ({ ga
 					{/* Category */}
 					<IdleDropdown
 						values={Categories.map(category => ({ value: ClanCategory[category] }))}
-						selected={Categories.indexOf(clan.category) ?? 0}
+						selected={Categories.indexOf(clan.category) === -1 ? 0 : Categories.indexOf(clan.category)}
 						onSelect={(_, index) => {
 							const category = Categories[index ?? 0];
 							game.clan.network.updateCategory(category);

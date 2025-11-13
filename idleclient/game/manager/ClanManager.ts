@@ -1,14 +1,20 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import {
 	ClanCategory,
 	ClearAllGuildApplicationsMessage,
-	CreateGuildMessage, GuildActionResponse,
+	CreateGuildMessage,
+	DeleteGuildMessage,
+	GuildActionResponse,
 	GuildDeletedMessage,
 	GuildLeaderLeftGuildMessage,
-	GuildMemberKickedMessage, GuildRequestResultMessage, GuildUpdateMinimumTotalLevelRequirementMessage,
-	GuildUpdatePrimaryLanguageMessage, GuildUpdateRecruitmentMessageMessage,
+	GuildMemberKickedMessage,
+	GuildRequestResultMessage,
+	GuildUpdateMinimumTotalLevelRequirementMessage,
+	GuildUpdatePrimaryLanguageMessage,
+	GuildUpdateRecruitmentMessageMessage,
 	GuildUpdateRecruitmentStateMessage,
-	GuildUpdateStatusMessage, GuildUpdateTagMessage,
+	GuildUpdateStatusMessage,
+	GuildUpdateTagMessage,
 	GuildVaultMessage,
 	Int,
 	LoginDataMessage,
@@ -19,7 +25,8 @@ import {
 	ReceiveGuildStateMessage,
 	RequestClanPvmStatsMessage,
 	RequestGuildStateMessage,
-	RequestGuildVaultMessage, SendGuildInviteMessage,
+	RequestGuildVaultMessage,
+	SendGuildInviteMessage,
 	UpgradeType
 } from "@idleclient/network/NetworkData.ts";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
@@ -32,6 +39,9 @@ import { useLoading } from "@context/LoadingContext.tsx";
 import { useModal } from "@context/ModalContext.tsx";
 import { ModalUtils } from "@utils/ModalUtils.tsx";
 import { useToast } from "@context/ToastContext.tsx";
+import { RefObject, useRef } from "react";
+import { ActiveClan } from "@/api/IdleClansAPI.ts";
+import { TextUtils } from "@idleclient/utils/TextUtils.tsx";
 
 const CLAN_MANAGEMENT_LOADING = "clan_management_loading";
 const CLAN_MANAGEMENT_LOADING_MESSAGE = "Updating clan...";
@@ -42,10 +52,25 @@ export interface ClanManagerType extends ManagerType {
 	 */
 	clan: SmartRef<Clan | null>;
 	hasClan: SmartRef<boolean>;
-
 	accumulatedCredits: SmartRef<Int>;
 
+	// General clan information.
+
+	/**
+	 * Cached clans that are recruiting.
+	 */
+	cachedRecruitingClans: RefObject<{ clans: ActiveClan[], time: Date } | undefined>;
+
 	network: {
+		/**
+		 * Create a new clan with the specified name.
+		 */
+		createClan: (name: string) => void;
+		/**
+		 * Delete the clan we're currently in.
+		 */
+		deleteClan: () => void;
+
 		/**
 		 * Requests an updated clan state from the server.
 		 */
@@ -123,7 +148,7 @@ export interface ClanManagerType extends ManagerType {
 	cleanup: () => void;
 }
 
-export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
+export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 	const debug = useConsole();
 	const loading = useLoading();
 	const modals = useModal();
@@ -131,8 +156,9 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 
 	const _clanRef = useSmartRef<Clan | null>(null);
 	const _hasClanRef = useSmartRef<boolean>(false);
-
 	const _accumulatedCreditsRef = useSmartRef<Int>(0);
+
+	const _cachedRecruitingClansRef = useRef<{ clans: ActiveClan[], time: Date } | undefined>(undefined);
 
 	const setClanRef = (value: Clan | null) => {
 		_clanRef.setContent(value);
@@ -152,6 +178,18 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 	/*
 	 * Network
 	 */
+
+	// Creation
+
+	const _createClan = (name: string) => {
+		if (_clanRef.content() !== null) return;
+		Network.send(new CreateGuildMessage(name, null, null, null));
+	}
+
+	const _deleteClan = () => {
+		if (_clanRef.content() === null) return;
+		Network.send(new DeleteGuildMessage(false));
+	}
 
 	// Basic
 
@@ -292,8 +330,8 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 		clan.onGuildUpdateRecruitmentStateMessage(packet);
 		_clanRef.trigger();
 
-		// TODO: Trigger an event / display a notification.
-
+		toasts.info("Clan", packet.Value ? "Your clan is now actively recruiting." :
+			"Your clan is no longer recruiting.");
 	}, [], PacketType.GuildUpdateRecruitmentStateMessage);
 
 	// Called when our clan category has been updated.
@@ -305,8 +343,8 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 		clan.onGuildUpdateStatusMessage(packet);
 		_clanRef.trigger();
 
-		// TODO: Trigger an event / display a notification.
-
+		const category = packet.Status === ClanCategory.None ? ClanCategory.Casual : packet.Status;
+		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's category has been updated to <b>${ClanCategory[category]}</b>.`) as any);
 	}, [], PacketType.GuildUpdateStatusMessage);
 
 	// Called when our clan language has been updated.
@@ -318,8 +356,7 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 		clan.onGuildUpdatePrimaryLanguageMessage(packet);
 		_clanRef.trigger();
 
-		// TODO: Trigger an event / display a notification.
-
+		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's language has been updated to <b>${packet.Language}</b>.`) as any);
 	}, [], PacketType.GuildUpdatePrimaryLanguageMessage);
 
 	// Called when our clan recruitment message has been updated.
@@ -331,8 +368,7 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 		clan.onGuildUpdateRecruitmentMessageMessage(packet);
 		_clanRef.trigger();
 
-		// TODO: Trigger an event / display a notification.
-
+		toasts.info("Clan", "Your clan's recruitment message has been updated.");
 	}, [], PacketType.GuildUpdateRecruitmentMessageMessage);
 
 	// Called when our clans' minimum total level requirement has been updated.
@@ -344,8 +380,7 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 		clan.onGuildUpdateMinimumTotalLevelRequirementMessage(packet);
 		_clanRef.trigger();
 
-		// TODO: Trigger an event / display a notification.
-
+		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's minimum total level requirement has been updated to <b>${packet.MinimumTotalLevel}</b>.`) as any);
 	}, [], PacketType.GuildUpdateMinimumTotalLevelRequirementMessage);
 
 	// Called when our clan tag has been updated.
@@ -545,10 +580,14 @@ export const ClanManager = (managers: ManagerStorage): ClanManagerType => {
 
 		clan: _clanRef,
 		hasClan: _hasClanRef,
-
 		accumulatedCredits: _accumulatedCreditsRef,
 
+		cachedRecruitingClans: _cachedRecruitingClansRef,
+
 		network: {
+			createClan: _createClan,
+			deleteClan: _deleteClan,
+
 			refreshClanState: _refreshClanState,
 			refreshClanVault: _refreshClanVault,
 			refreshClanPveStats: _refreshClanPveStats,

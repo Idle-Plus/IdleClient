@@ -1,4 +1,4 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { JobTask, TaskDatabase } from "@idleclient/game/data/TaskDatabase.ts";
 import usePacket from "@hooks/network/usePacket.ts";
@@ -18,6 +18,9 @@ import { IdleClansMath } from "@idleclient/game/utils/IdleClansMath.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
 import { LogType, useConsole } from "@context/ConsoleContext.tsx";
 import { Network } from "@idleclient/network/Network.ts";
+import { ItemStack } from "@idleclient/types/gameTypes.ts";
+import { useIdleEvent } from "@hooks/event/useIdleEvent.ts";
+import { GameEvents } from "@idleclient/event/GameEvents.ts";
 
 export interface CurrentTask {
 	task: JobTask,
@@ -50,7 +53,7 @@ export interface TaskManagerType extends ManagerType {
 	cleanup: () => void,
 }
 
-export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
+export const TaskManager = (context: ManagerContext): TaskManagerType => {
 
 	const debug = useConsole();
 	const currentTask = useSmartRef<CurrentTask | null>(null);
@@ -107,7 +110,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 		// Remove any consumables if we used any.
 		if (packet.UsedConsumableItemId > 0) {
 			debug.write(LogType.DEBUG, `TaskManager: Item Handling / Consumable item used ${packet.UsedConsumableItemId}.`);
-			managers.inventoryManager!.removeItem(packet.UsedConsumableItemId, 1);
+			context.inventoryManager!.removeItem(packet.UsedConsumableItemId, 1);
 		}
 
 		// Handle the cost.
@@ -120,7 +123,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 				continue;
 
 			if (itemId === ItemDatabase.GOLD_ITEM_ID && job.skill === Skill.Carpentry) {
-				const power = managers.playerManager!.getUpgradeBenefits(UpgradeType.upgrade_plank_cost);
+				const power = context.playerManager!.getUpgradeBenefits(UpgradeType.upgrade_plank_cost);
 				if (power > 0) {
 					const original = amount;
 					amount = IdleClansMath.get().multiply_by_percentage_float_float(amount, -power);
@@ -131,7 +134,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			}
 
 			if (job.skill === Skill.Crafting) {
-				if (managers.playerManager!.isUpgradeUnlocked(UpgradeType.upgrade_delicate_manufacturing) &&
+				if (context.playerManager!.isUpgradeUnlocked(UpgradeType.upgrade_delicate_manufacturing) &&
 					(itemId === 273 || itemId === 274 || itemId === 275)) {
 					// Magical flax, Enchanted flax & Cursed flax
 					const original = amount;
@@ -142,7 +145,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			}
 
 			if (job.skill === Skill.Brewing) {
-				if (managers.equipmentManager!.isItemEquipped(741)) {
+				if (context.equipmentManager!.isItemEquipped(741, true)) {
 					// Guardian's brewing spoon
 					const original = amount;
 					const itemDef = GameData.items().item(741);
@@ -161,7 +164,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 
 			debug.write(LogType.DEBUG, `TaskManager: CompleteTaskMessage / Removing ${amount} of item ${
 				GameData.items().item(itemId).name}.`);
-			managers.inventoryManager!.removeItem(itemId, amount);
+			context.inventoryManager!.removeItem(itemId, amount);
 		}
 
 		// If we didn't get any items, then stop here.
@@ -194,7 +197,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 
 				debug.write(LogType.DEBUG, `TaskManager: Item Handling / Woodcutting extra plank triggered, giving 1 ${
 					GameData.items().item(task.itemReward).name}.`);
-				managers.inventoryManager!.addItem(task.itemReward, 1);
+				context.inventoryManager!.addItem(task.itemReward, 1);
 				break;
 			}
 			case TaskUpgradeInteraction.LampExtraCoal: {
@@ -209,20 +212,20 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 					return;
 				}
 
-				const experience = task.getModifiedExperience(managers.game!);
+				const experience = task.getModifiedExperience(context.game!);
 
 				debug.write(LogType.DEBUG, `TaskManager: Item Handling / Lamp extra coal triggered, giving ${
 					task.itemAmount} ${GameData.items().item(task.itemReward).name} and ${experience} exp.`);
 
-				managers.inventoryManager!.addItem(task.itemReward, 1);
-				managers.skillManager!.addExperience(task.skill, experience);
+				context.inventoryManager!.addItem(task.itemReward, 1);
+				context.skillManager!.addExperience(task.skill, experience);
 			}
 		}
 
 		const amountToGive = packet.ItemAmount;
 		debug.write(LogType.DEBUG, `TaskManager: Item Handling / Giving ${amountToGive} ${
 			GameData.items().item(itemReward).name} as final reward item.`);
-		managers.inventoryManager!.addItem(itemReward, amountToGive);
+		context.inventoryManager!.addItem(itemReward, amountToGive);
 
 		if (packet.PotionInteraction !== TaskPotionInteraction.Trickery) {
 			return;
@@ -231,7 +234,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 		const itemDef = GameData.items().item(itemReward);
 		debug.write(LogType.DEBUG, `TaskManager: Item Handling / Trickery triggered, giving ${
 			itemDef.baseValue} gold.`)
-		managers.inventoryManager!.addItem(ItemDatabase.GOLD_ITEM_ID, itemDef.baseValue);
+		context.inventoryManager!.addItem(ItemDatabase.GOLD_ITEM_ID, itemDef.baseValue);
 
 	}, [], PacketType.CompleteTaskMessage);
 
@@ -248,7 +251,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			debug.warn(`TaskManager: Experience Handling / Received CompleteTaskMessage, but the task type or id doesn't match. Packet: ${packet}, current: ${current}.`);
 		}
 
-		let xp = job.getModifiedExperience(managers.game!);
+		let xp = job.getModifiedExperience(context.game!);
 		debug.debug(`TaskManager: Experience Handling / Original experience ${xp}.`);
 
 		if (packet.UsedConsumableItemId > 0) {
@@ -260,12 +263,12 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 		}
 
 		if (packet.ItemAmount < 2) {
-			managers.skillManager!.addExperience(job.skill, xp);
+			context.skillManager!.addExperience(job.skill, xp);
 			debug.debug(`TaskManager: Experience Handling / Received less than two items, giving ${
 				xp} ${Skill[job.skill]} exp.`);
 		} else if (job.taskType !== TaskType.Woodcutting && job.taskType !== TaskType.Fishing) {
 			// TODO: Refactor.
-			managers.skillManager!.addExperience(job.skill, xp);
+			context.skillManager!.addExperience(job.skill, xp);
 			debug.debug(`TaskManager: Experience Handling / Type is not woodcutting or fishing, giving ${
 				xp} ${Skill[job.skill]} exp.`);
 		} else {
@@ -281,13 +284,13 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 				return;
 			}
 
-			if (!managers.playerManager?.isUpgradeUnlocked(upgrade)) {
-				managers.skillManager!.addExperience(job.skill, xp);
+			if (!context.playerManager?.isUpgradeUnlocked(upgrade)) {
+				context.skillManager!.addExperience(job.skill, xp);
 				debug.debug(`TaskManager: Experience Handling / We didn't have the upgrade, giving ${xp} ${Skill[job.skill]} exp.`);
 			} else {
 				const original = xp;
 				xp = IdleClansMath.get().multiply_by_percentage_float_float(xp, 25);
-				managers.skillManager!.addExperience(job.skill, xp);
+				context.skillManager!.addExperience(job.skill, xp);
 				debug.debug(`TaskManager: Experience Handling / We had the upgrade, giving ${xp} ${Skill[job.skill]} exp, up from ${original}.`);
 			}
 		}
@@ -296,11 +299,11 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			return;
 		}
 
-		const itemDef = GameData.items().item(job.itemReward);
+		const itemDef = ItemDatabase.item(job.itemReward);
 		const cookedItemId = itemDef.itemCounterpartId;
 
 		debug.debug(`TaskManager: Experience Handling / Auto cooking triggered, item to give xp for is ${
-			ItemDatabase.get(cookedItemId).name}`);
+			ItemDatabase.item(cookedItemId).name}`);
 
 		// Find the cooking task that produces the cooked item.
 		const task = TaskDatabase
@@ -314,7 +317,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 		}
 
 
-		const level = managers.skillManager!.getLevel(task.skill);
+		const level = context.skillManager!.getLevel(task.skill);
 		if (task.levelRequirement > level) {
 
 			debug.debug(`TaskManager: Experience Handling / Auto cooking triggered, but we aren't high enough level to gain the experience. ${
@@ -323,8 +326,8 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 			return;
 		}
 
-		const exp = task.getModifiedExperience(managers.game!);
-		managers.skillManager!.addExperience(task.skill, exp);
+		const exp = task.getModifiedExperience(context.game!);
+		context.skillManager!.addExperience(task.skill, exp);
 		debug.debug(`TaskManager: Experience Handling / Auto cooking triggered, giving ${exp} exp to ${Skill[task.skill]}.`);
 	}, [], PacketType.CompleteTaskMessage);
 
@@ -342,7 +345,7 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 		}
 
 		// If we can't afford the task, stop it.
-		if (!job.canAfford(managers.game!)) {
+		if (!job.canAfford(context.game!)) {
 			// TODO: Notify the player somehow.
 			debug.debug(`TaskManager: Task Handling / Can't afford task, stopping current task.`);
 			currentTask.setContent(null);
@@ -356,11 +359,80 @@ export const TaskManager = (managers: ManagerStorage): TaskManagerType => {
 	}, [], PacketType.CompleteTaskMessage);
 
 	/*
+	 * Events
+	 */
+
+	useIdleEvent(GameEvents.ConnectedPostEvent, data => {
+		// Check if we need to continue a task.
+
+		// We do this in the ConnectedPostEvent as we need all managers to have
+		// been initialized.
+
+		const progress = data.SkillingOfflineProgress;
+		if (progress === null) return;
+
+		if (progress.TaskTypeToContinue !== TaskType.None) {
+			const type = progress.TaskTypeToContinue;
+			const id = progress.TaskIdToContinue;
+			const task = TaskDatabase.getTaskById(type, id);
+
+			if (task !== undefined && task.canAfford(context.game!)) {
+				currentTask.setContent({
+					task: task,
+					start: Date.now()
+				});
+				debug.debug(`TaskManager: initialize / Continuing task ${task.name} (type: ${type}, id: ${id})`);
+			} else if (task === undefined) {
+				debug.warn(`TaskManager: initialize / Failed to find task to continue for type ${type} and id ${id}.`);
+			}
+		}
+	});
+
+	/*
 	 * Initialization
 	 */
 
 	const initialize = (data: LoginDataMessage) => {
+		// Check if we need to handle skilling offline progress.
+		if (data.SkillingOfflineProgress !== null) {
+			const progress = data.SkillingOfflineProgress;
 
+			// Check if we gained any items while offline.
+			if (progress.ReceivedItemIds !== null) {
+				if (progress.ReceivedItemIds.length !== progress.ReceivedItemAmounts?.length)
+					debug.error("TaskManager: initialize / ReceivedItemAmounts and ReceivedItemIds are not the same length.");
+
+				progress.ReceivedItemIds.forEach((id, index) => {
+					const count = progress.ReceivedItemAmounts?.[index] ?? 0;
+					context.inventoryManager!.addItem(id, count);
+					debug.debug(`TaskManager: initialize / Received item ${ItemDatabase.item(id).name} x ${count}.`);
+				});
+			}
+
+			// Check if we lost any items while offline.
+			if (progress.ItemsLost !== null) {
+				if (progress.ItemsLost.length !== progress.ItemsLostAmounts?.length)
+					debug.error("TaskManager: initialize / ItemsLostAmounts and ItemsLost are not the same length.");
+
+				progress.ItemsLost.forEach((id, index) => {
+					const count = progress.ItemsLostAmounts?.[index] ?? 0;
+					context.inventoryManager!.removeItem(id, count);
+					debug.debug(`TaskManager: initialize / Lost item ${ItemDatabase.item(id).name} x ${count}.`);
+				});
+			}
+
+			// Check if we gained any experience while offline.
+			if (progress.OfflineProgressSkills !== null) {
+				if (progress.OfflineProgressSkills.length !== progress.OfflineExperiences?.length)
+					debug.error("TaskManager: initialize / OfflineExperiences and OfflineProgressSkills are not the same length.");
+
+				progress.OfflineProgressSkills.forEach((skill, index) => {
+					const exp = progress.OfflineExperiences?.[index] ?? 0;
+					context.skillManager!.addExperience(skill, exp);
+					debug.debug(`TaskManager: initialize / Gained ${exp} exp in skill ${Skill[skill]}.`);
+				});
+			}
+		}
 	}
 
 	const cleanup = () => {

@@ -11,6 +11,9 @@ import { WeaponEffectType } from "@idleclient/network/NetworkData.ts";
 import { toKMB } from "@idleclient/game/utils/numberUtils.ts";
 import ItemTooltip from "@components/item/ItemTooltip.tsx";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
+import { useToast } from "@context/ToastContext.tsx";
+import { useModal } from "@context/ModalContext.tsx";
+import { ItemInteractionModal, ItemInteractionModalId } from "@/modals/ItemInteractionModal.tsx";
 
 // TODO: Wouldn't animated effects be way cooler? :/
 const COSMETIC_SHADOWS = {
@@ -141,8 +144,11 @@ function InventorySectionComponent({
 	paddingLeft = 0,
 	paddingRight = 0,
 }: InventorySectionProps) {
+	const TOUCH_CLICK_THRESHOLD = 200;
 	const spriteSheets = useSpriteSheets();
 	const game = useGame();
+	const toast = useToast();
+	const modal = useModal();
 	const draggingSlotRef = useContext(InventoryCurrentlyDraggingContext);
 
 	const draggingSlot = useSmartRefWatcher(draggingSlotRef);
@@ -150,6 +156,7 @@ function InventorySectionComponent({
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const previousItems = useRef<(ItemStack | null | undefined)[]>([]);
 
+	const touchPressRef = useRef<{ slot: number, time: Date } | undefined>(undefined);
 	const hoveringRef = useRef<number | null>(null);
 	const [hovering, setHovering] = useState<number | null>(null);
 
@@ -485,13 +492,15 @@ function InventorySectionComponent({
 	 */
 
 	const handleLeftClick = (e: React.MouseEvent<HTMLElement>) => {
+		console.log(e);
 		const rect = e.currentTarget.getBoundingClientRect();
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
-		if (getItemFromXY(x, y) === null) return;
+		const item = getItemFromXY(x, y);
+		if (item === null) return;
 		e.preventDefault();
 
-		// TODO: Open item info popup?
+		modal.openModal(ItemInteractionModalId, <ItemInteractionModal item={item} />)
 	}
 
 	const handleRightClick = (e: React.MouseEvent<HTMLElement>) => {
@@ -502,16 +511,68 @@ function InventorySectionComponent({
 		if (item === null) return;
 		e.preventDefault();
 
-		const itemDef = ItemDatabase.get(item.id);
+		const itemDef = ItemDatabase.item(item.id);
 		if (itemDef === null) return;
 		if (itemDef.levelRequirement !== null && !game.skill.hasLevel(itemDef.levelRequirement)) {
-			// TODO: Display some kind of "not enough level" message.
+			toast.warn(null, "You don't have the required level to use this item.");
 			return;
 		}
 
 		e.preventDefault();
 		game.equipment.equipItem(item);
 	}
+
+	// Custom touch logic... draggable is so much fun.
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas) return;
+
+		const handleTouchStart = (e: TouchEvent) => {
+			const rect = canvas.getBoundingClientRect();
+			const touch = e.touches[0];
+			const x = touch.clientX - rect.left;
+			const y = touch.clientY - rect.top;
+			const slot = getSlotFromXY(x, y);
+			if (slot === null) return;
+
+			touchPressRef.current = {
+				slot: slot,
+				time: new Date()
+			};
+		};
+
+		const handleTouchEnd = (e: TouchEvent) => {
+			if (!touchPressRef.current) return;
+			const endTime = new Date();
+			const data = touchPressRef.current;
+			touchPressRef.current = undefined;
+
+			const timeDiff = endTime.getTime() - data.time.getTime();
+			if (timeDiff > TOUCH_CLICK_THRESHOLD) return;
+
+			const rect = canvas.getBoundingClientRect();
+			const touch = e.changedTouches[0];
+			const x = touch.clientX - rect.left;
+			const y = touch.clientY - rect.top;
+			const endSlot = getSlotFromXY(x, y);
+
+			// Make sure we ended in the same slot.
+			if (endSlot !== data.slot) return;
+			const item = getItemFromXY(x, y);
+			if (item === null) return;
+
+			modal.openModal(ItemInteractionModalId, <ItemInteractionModal item={item} />);
+		};
+
+		canvas.addEventListener('touchstart', handleTouchStart);
+		canvas.addEventListener('touchend', handleTouchEnd);
+
+		return () => {
+			canvas.removeEventListener('touchstart', handleTouchStart);
+			canvas.removeEventListener('touchend', handleTouchEnd);
+		};
+	}, [getItemFromXY, getSlotFromXY, modal]);
+
 
 	/*
 	 * Tooltip

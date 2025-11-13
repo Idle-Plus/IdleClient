@@ -1,5 +1,6 @@
 import { Int, PotionType } from "@idleclient/network/NetworkData.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
+import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
 
 export class PotionData {
 
@@ -13,8 +14,11 @@ export class PotionData {
 		Object.assign(this, entry);
 	}
 
+	get potionId(): Int { return this.PotionId; }
 	get potionType(): PotionType { return this.PotionType; }
-	get effectStrengthPercentage(): number { return this.EffectStrengthPercentage; }
+	get chanceOfTriggeringEffect(): Int { return this.ChanceOfTriggeringEffect; }
+	get effectStrengthPercentage(): Int { return this.EffectStrengthPercentage; }
+	get duration(): Int { return this.Duration; }
 
 }
 
@@ -36,6 +40,10 @@ export class PotionDatabase {
 	}
 
 	public static getPotion(type: PotionType): PotionData | undefined {
+		return GameData.potions().potions.get(type);
+	}
+
+	public static potion(type: PotionType): PotionData | undefined {
 		return GameData.potions().potions.get(type);
 	}
 }

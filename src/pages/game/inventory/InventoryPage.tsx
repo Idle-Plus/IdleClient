@@ -66,7 +66,7 @@ const InventoryPage: React.FC = () => {
 		const inventorySize = game.inventory.inventory.content().length;
 		if (from < 0 || from >= inventorySize) return;
 		if (to < 0 || to >= inventorySize) return;
-		game.inventory.switchItem(from, to);
+		game.inventory.network.switchItem(from, to);
 	}
 
 	const handleDragStart = (event: DragStartEvent) => {

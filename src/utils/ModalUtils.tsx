@@ -1,6 +1,7 @@
-import React from "react";
+import React, { JSX } from "react";
 import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase.ts";
 import GeneralTextModal from "@/modals/GeneralTextModal.tsx";
+import { GeneralConfirmationModal } from "@/modals/GeneralConfirmationModal.tsx";
 
 export class ModalUtils {
 
@@ -12,5 +13,22 @@ export class ModalUtils {
 	public static generalTextModalLocalized(title: string | undefined | null, key: string, args?: any[]) {
 		title = title ?? undefined;
 		return <GeneralTextModal title={title} message={LocalizationDatabase.get(key, args)}/>;
+	}
+
+	public static generalConfirmationModal(
+		message: string | JSX.Element,
+		onConfirm?: (() => void) | null,
+		onCancel?: (() => void) | null,
+		options?: { confirmText?: string, cancelText?: string, delay?: number }
+	) {
+		return <GeneralConfirmationModal
+			message={message}
+			onConfirm={onConfirm ?? undefined}
+			onCancel={onCancel ?? undefined}
+			delay={options?.delay !== undefined}
+			delayTimeSec={options?.delay}
+			confirmText={options?.confirmText}
+			cancelText={options?.cancelText}
+		/>;
 	}
 }

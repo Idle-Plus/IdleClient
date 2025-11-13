@@ -13,6 +13,7 @@ interface IdleButtonProps {
 
 	bgColor?: string;
 	bgColorHover?: string;
+	bgColorActive?: string;
 	bgColorDisabled?: string;
 	textColor?: string;
 	textColorHover?: string;
@@ -32,6 +33,7 @@ export const IdleButton: React.FC<IdleButtonProps> = ({
 
 	bgColor = "bg-ic-light-500",
 	bgColorHover = "hover:bg-ic-light-400/85",
+	bgColorActive = "active:bg-ic-light-400/85",
 	bgColorDisabled = "bg-ic-light-700",
 
 	textColor = "text-gray-100",
@@ -48,7 +50,7 @@ export const IdleButton: React.FC<IdleButtonProps> = ({
 
 	className = className ?? "";
 	const style = !disabled ?
-		`${textColor} ${textColorHover} ${bgColor} ${bgColorHover} cursor-pointer` :
+		`${textColor} ${textColorHover} ${bgColor} ${bgColorHover} ${bgColorActive} cursor-pointer` :
 		`${textColorDisabled} ${bgColorDisabled}`
 
 	return (

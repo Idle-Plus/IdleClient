@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 interface IdleUsernameInputProps {
 	title?: string;
@@ -23,6 +23,8 @@ export const IdleUsernameInput: React.FC<IdleUsernameInputProps> = ({
 	inputClass = "",
 	className = "",
 }) => {
+	const idRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+
 	const onUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const input = e.target.value;
 
@@ -42,13 +44,13 @@ export const IdleUsernameInput: React.FC<IdleUsernameInputProps> = ({
 	return (
 		<div className={className}>
 			<div className={`flex items-end justify-between`}>
-				<label htmlFor="playerName" className={`block text-white/75 font-medium ${titleClass}`}>
+				<label htmlFor={`playerName_${idRef.current}`} className={`block text-white/75 font-medium ${titleClass}`}>
 					{ title }
 				</label>
 			</div>
 
 			<input
-				id="playerName"
+				id={`playerName_${idRef.current}`}
 				type="text"
 				value={value}
 				placeholder={placeholder}

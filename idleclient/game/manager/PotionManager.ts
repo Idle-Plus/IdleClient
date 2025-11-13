@@ -1,4 +1,4 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import { LoginDataMessage, PotionType } from "@idleclient/network/NetworkData.ts";
 import useSmartRef from "@hooks/smartref/useSmartRef.ts";
 
@@ -16,7 +16,7 @@ export interface PotionManagerType extends ManagerType {
 	cleanup: () => void,
 }
 
-export const PotionManager = (managers: ManagerStorage): PotionManagerType => {
+export const PotionManager = (managers: ManagerContext): PotionManagerType => {
 	const _activePotions = useSmartRef(new Map<PotionType, number>);
 
 	/*

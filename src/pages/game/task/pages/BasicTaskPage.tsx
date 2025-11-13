@@ -52,7 +52,7 @@ const BasicTaskPage: React.FC<BasicTaskPageProps> = ({ type }) => {
 	}
 
 	return (
-		<div className="flex flex-col max-w-7xl mx-auto h-full p-4">
+		<div className="flex flex-col max-w-7xl mx-auto h-full">
 
 			{ skill !== Skill.None && (
 				<BasicTaskHeader skill={skill} />

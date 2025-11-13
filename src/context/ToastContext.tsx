@@ -1,4 +1,4 @@
-import React, { JSX, useContext, useState } from "react";
+import React, { JSX, useContext, useLayoutEffect, useRef, useState } from "react";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 
@@ -89,26 +89,36 @@ const Toast: React.FC<{
 
 const ToastContainer: React.FC<{ entriesRef: SmartRef<ToastEntry[]> }> = ({ entriesRef }) => {
 	const entries = useSmartRefWatcher(entriesRef);
+	const toastRefs = useRef<Record<number, HTMLDivElement | null>>({});
+	const [offsets, setOffsets] = useState<number[]>([]);
+
+	useLayoutEffect(() => {
+		const newOffsets: number[] = [];
+		let cumulativeOffset = 0;
+
+		for (let i = entries.length - 1; i >= 0; i--) {
+			newOffsets[i] = cumulativeOffset;
+			const el = toastRefs.current[entries[i].id];
+			if (el) cumulativeOffset += el.offsetHeight + 8; // 8px gap
+		}
+
+		setOffsets(newOffsets);
+	}, [entries]);
 
 	return (
-		<div
-			className="fixed bottom-4 left-4 pr-4 z-50"
-		>
-			{entries.map((entry, index) => {
-				const order = entries.length - 1 - index;
-				return (
-					<div
-						key={entry.id}
-						className="w-max absolute transition-transform duration-200 ease-in-out"
-						style={{
-							bottom: 0,
-							transform: `translateY(calc(-${order * 100}% - ${8 * order}px))`,
-						}}
-					>
-						<Toast entry={entry}/>
-					</div>
-				);
-			})}
+		<div className="fixed bottom-4 left-4 pr-4 z-50">
+			{entries.map((entry, index) => (
+				<div
+					key={entry.id}
+					ref={el => { toastRefs.current[entry.id] = el; }}
+					className="w-max absolute transition-all duration-200 ease-in-out"
+					style={{
+						bottom: offsets[index] ?? 0,
+					}}
+				>
+					<Toast entry={entry}/>
+				</div>
+			))}
 		</div>
 	);
 }
@@ -189,8 +199,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 			stateInfo.removeTimeout = setTimeout(() => remove(id), duration);
 		}
 
-		toastsRef.content().push(entry);
-		toastsRef.trigger();
+		toastsRef.setContent(c => [...c, entry]);
 
 		return id;
 	}
@@ -210,20 +219,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 			error: error,
 			remove: remove
 		}}>
-			{/*<div
-				className="text-white text-xl"
-				onClick={() => {
-					next++;
-					if (next % 3 == 0)
-						info("Player Market", "Another long message, no idea what to write yet, but I'll just keep going, then doing some more, maybe even a little after that, until the end of the sentence has been reached.");
-					else if (next % 3 == 1)
-						warn("Clan", "Another long message, no idea what to write yet, but I'll just keep going, then doing some more, maybe even a little after that, until the end of the sentence has been reached.");
-					else
-						error("Combat Group", "Another long message, no idea what to write yet, but I'll just keep going, then doing some more, maybe even a little after that, until the end of the sentence has been reached.");
-				}}
-			>
-				Click to test!
-			</div>*/}
 			<ToastContainer entriesRef={toastsRef} />
 			{children}
 		</ToastContext.Provider>

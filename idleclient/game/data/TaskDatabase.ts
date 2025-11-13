@@ -107,12 +107,11 @@ export class JobTask {
 		if (this.costs.length === 0) return true;
 
 		const cost = this.getModifiedCosts(game, multiplier);
-		const inventory = game.inventory;
 
 		for (const entry of cost) {
 			const itemId = entry.itemId;
 			const amount = entry.amount;
-			if (!inventory.hasItem(itemId, amount)) return false;
+			if (!game.inventory.hasItem(itemId, amount)) return false;
 		}
 
 		return true;
@@ -145,10 +144,10 @@ export class JobTask {
 			}
 
 			if (this.Skill === Skill.Brewing) {
-				if (game.equipment.isItemEquipped(741)) {
+				if (game.equipment.isItemEquipped(741, true)) {
 					// Guardian's brewing spoon
 
-					const itemDef = GameData.items().item(741);
+					const itemDef = ItemDatabase.item(741);
 					amount = IdleClansMath.get().multiply_by_percentage_int_float(amount, itemDef.procChance);
 				}
 			}
@@ -172,9 +171,9 @@ export class JobTask {
 				GameData.settings().shared().dailyAdsExperienceBoostPct);
 		}
 
-		if (this.Skill === Skill.Crafting && game.equipment.isVariantOrItemEquipped(744) &&
+		if (this.Skill === Skill.Crafting && game.equipment.isItemEquipped(744, true) &&
 			this.Costs.some(entry => ItemDatabase.GEMSTONES.has(entry.Item ?? 0))) {
-			const chisel = GameData.items().item(744);
+			const chisel = ItemDatabase.item(744);
 			exp = IdleClansMath.get().multiply_by_percentage_float_float(exp, chisel.procChance);
 		}
 

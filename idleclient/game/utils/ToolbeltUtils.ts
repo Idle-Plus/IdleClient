@@ -1,7 +1,6 @@
 import { EquipmentSlot, Skill, UpgradeType, WeaponType } from "@idleclient/network/NetworkData.ts";
 import { GameContextType } from "@context/GameContext.tsx";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
-import { GameData } from "@idleclient/game/data/GameData.ts";
 import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
 
 export class ToolbeltUtils {
@@ -55,7 +54,7 @@ export class ToolbeltUtils {
 			if (!entry || entry.count <= 0) continue;
 			if (!toolsBySkill?.has(entry.id)) continue;
 
-			const itemDef = ItemDatabase.get(entry.id);
+			const itemDef = ItemDatabase.item(entry.id);
 			if (itemDef.weaponType < highestFoundTier) continue;
 			if (itemDef.levelRequirement != null && !game.skill.hasLevel(itemDef.levelRequirement)) continue;
 

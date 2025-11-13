@@ -1,4 +1,4 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { SkillMap } from "@idleclient/types/gameTypes.ts";
 import useIndexEventListener, { IndexEventListener } from "@hooks/useIndexEventListener.ts";
@@ -58,7 +58,7 @@ export interface SkillManagerType extends ManagerType {
 	cleanup: () => void,
 }
 
-export const SkillManager = (managers: ManagerStorage): SkillManagerType => {
+export const SkillManager = (managers: ManagerContext): SkillManagerType => {
 	
 	const _skillsRef = useSmartRef<SkillMap>(new Map());
 	const _skillsListener = useIndexEventListener<number>();

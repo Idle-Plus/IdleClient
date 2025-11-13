@@ -33,7 +33,7 @@ const GatheringCalculatorModal: React.FC<GatheringCalculatorModalProps> = ({ act
 	const baseSpeed = task.getModifiedTaskTime(game);
 	const baseXp = task.getModifiedExperience(game);
 	let baseLoot = task.itemAmount;
-	if (game.equipment.isItemEquipped(871)) baseLoot *= 1.05;
+	if (game.equipment.isItemEquipped(871, true)) baseLoot *= 1.05;
 
 	const finalSpeed = (baseSpeed * amount) / 1000;
 	const finalXp = baseXp * amount;
@@ -53,7 +53,7 @@ const GatheringCalculatorModal: React.FC<GatheringCalculatorModalProps> = ({ act
 	const timeFinalSpeed = (baseSpeed * tasksInTime) / 1000;
 	const timeFinalXp = baseXp * tasksInTime;
 	let timeFinalLoot = baseLoot * tasksInTime;
-	if (game.equipment.isItemEquipped(871)) timeFinalLoot *= 1.05;
+	if (game.equipment.isItemEquipped(871, true)) timeFinalLoot *= 1.05;
 
 	const timeHours = Math.floor(timeFinalSpeed / 3600);
 	const timeMinutess = Math.floor((timeFinalSpeed % 3600) / 60);

@@ -27,6 +27,10 @@ export class LocalizationDatabase {
 		return GameData.localization().get(key, args);
 	}
 
+	public static loc(key: string, args?: any[]): string {
+		return GameData.localization().get(key, args);
+	}
+
 	get(key: string, args?: any[]): string {
 		let value = this.vanillaLocalization.get(key) || key;
 		if (!args) return value;

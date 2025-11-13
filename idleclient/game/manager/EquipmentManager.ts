@@ -1,4 +1,4 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { EquipmentMap, ItemId, ItemStack } from "@idleclient/types/gameTypes.ts";
 import useIndexEventListener, { IndexEventListener } from "@hooks/useIndexEventListener.ts";
@@ -17,6 +17,7 @@ import { useConsole } from "@context/ConsoleContext.tsx";
 import { Network } from "@idleclient/network/Network.ts";
 import { EquipmentEvents } from "@idleclient/event/EquipmentEvents.ts";
 import { ItemDefinition } from "@idleclient/game/data/item/ItemDefinition.ts";
+import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
 
 const LOADING_EQUIP_ITEM = "inventoryManager$equipItem";
 const LOADING_UNEQUIP_ITEM = "inventoryManager$unequipItem";
@@ -56,8 +57,7 @@ export interface EquipmentManagerType extends ManagerType {
 	 * Retrieves the equipment item definition for the specified equipment slot.
 	 */
 	getEquipment: (slot: EquipmentSlot) => ItemDefinition | null
-	isItemEquipped: (item: ItemId) => boolean,
-	isVariantOrItemEquipped: (item: ItemId) => boolean,
+	isItemEquipped: (item: ItemId, includeCosmetics: boolean) => boolean,
 
 
 
@@ -72,7 +72,7 @@ export interface EquipmentManagerType extends ManagerType {
 	cleanup: () => void,
 }
 
-export const EquipmentManager = (managers: ManagerStorage): EquipmentManagerType => {
+export const EquipmentManager = (managers: ManagerContext): EquipmentManagerType => {
 	const loading = useLoading();
 	const debug = useConsole();
 
@@ -92,7 +92,7 @@ export const EquipmentManager = (managers: ManagerStorage): EquipmentManagerType
 	const setEquipment = (content: EquipmentMap) => {
 
 		for (const [slot, item] of content) {
-			const itemDef = GameData.items().item(item);
+			const itemDef = ItemDatabase.item(item);
 			EquipmentEvents.ItemEquipEvent.fire(itemDef, slot);
 		}
 
@@ -143,24 +143,16 @@ export const EquipmentManager = (managers: ManagerStorage): EquipmentManagerType
 		const content = equipment.content();
 		const id = content.get(slot);
 		if (id === undefined) return null;
-		return GameData.items().item(id);
+		return ItemDatabase.item(id);
 	}
 
-	const isItemEquipped = (item: ItemId) => {
+	const isItemEquipped = (item: ItemId, includeCosmetics: boolean) => {
 		const content = equipment.content();
 		for (const [_, id] of content) {
 			if (id === item) return true;
-		}
-		return false;
-	}
-
-	const isVariantOrItemEquipped = (item: ItemId) => {
-		const content = equipment.content();
-		for (const [_, id] of content) {
-			const itemDef = GameData.items().item(id);
-			let itemId = itemDef.originalItemId;
-			if (itemId === null) itemId = itemDef.id;
-			if (itemId === item) return true;
+			if (!includeCosmetics) continue;
+			const itemDef = ItemDatabase.item(id);
+			if (itemDef.originalItemId === item) return true;
 		}
 		return false;
 	}
@@ -289,7 +281,6 @@ export const EquipmentManager = (managers: ManagerStorage): EquipmentManagerType
 
 		getEquipment: getEquipment,
 		isItemEquipped: isItemEquipped,
-		isVariantOrItemEquipped: isVariantOrItemEquipped,
 
 		initialize: initialize,
 		cleanup: cleanup

@@ -21,12 +21,16 @@ const parseStyledText = (text: string) => {
 
 export class TextUtils {
 
-	public static getStyledMessage(message: string) {
+	public static getStyledMessage(message: string, options?: { appendPeriod?: boolean, ignoreBr?: boolean }) {
 		if (message.length === 0) return [""];
 
 		return message.split(/(\\n|<br>)/)
 			.map((line, index) => {
-				if (line === "\\n" || line === "<br>") return <br key={`br-${index}`}/>;
+				if (options?.ignoreBr !== true && (line === "\\n" || line === "<br>"))
+					return <br key={`br-${index}`}/>;
+				if (options?.appendPeriod === true && !line.trim().endsWith(".") && line.trim().length > 0)
+					line += ".";
+
 				return parseStyledText(line);
 			});
 	}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 interface IdleNumberInputProps {
 	title?: string;
@@ -27,6 +27,8 @@ export const IdleNumberInput: React.FC<IdleNumberInputProps> = ({
 	inputClass = "",
 	className = "",
 }) => {
+	const idRef = useRef(Math.floor(Math.random() * 1_000_000_000));
+
 	const onNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const strInput = e.target.value;
 		if (strInput.length === 0) {
@@ -51,13 +53,13 @@ export const IdleNumberInput: React.FC<IdleNumberInputProps> = ({
 	return (
 		<div className={className}>
 			<div className={`flex items-end justify-between`}>
-				<label htmlFor="numberInput" className={`block text-white/75 font-medium ${titleClass}`}>
+				<label htmlFor={`numberInput_${idRef.current}`} className={`block text-white/75 font-medium ${titleClass}`}>
 					{ title }
 				</label>
 			</div>
 
 			<input
-				id="numberInput"
+				id={`numberInput_${idRef.current}`}
 				type="number"
 				placeholder={placeholder}
 				value={value}

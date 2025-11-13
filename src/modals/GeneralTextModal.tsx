@@ -1,10 +1,10 @@
 import { BaseModalProps } from "@components/modal/BaseModal.tsx";
-import React from "react";
+import React, { JSX } from "react";
 import { IdleButton } from "@components/input/IdleButton.tsx";
 
 interface GeneralTextModal extends BaseModalProps {
 	title?: string;
-	message: string;
+	message: string | JSX.Element;
 
 	titleClass?: string;
 	messageClass?: string;
@@ -45,7 +45,7 @@ const GeneralTextModal: React.FC<GeneralTextModal> = ({
 							<p className={`text-center pt-2 text-2xl text-white font-bold ${titleClass}`}>
 								{ title ?? "Testing Title" }
 							</p>
-							<div className='h-0.5 my-1 mb-1 bg-ic-dark-100/75'/>
+							<div className='h-0.5 my-1 mb-3 bg-ic-dark-100/75'/>
 						</>
 					) }
 					<p className={`px-1 text-gray-200 text-lg text-center ${title === undefined ? "pt-4" : ""} ${messageClass}`}>{ message }</p>

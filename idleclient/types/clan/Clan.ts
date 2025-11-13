@@ -7,11 +7,13 @@ import {
 	GameMode,
 	GuildLeaderLeftGuildMessage,
 	GuildMemberKickedMessage,
-	GuildRank, GuildUpdateMinimumTotalLevelRequirementMessage,
+	GuildRank,
+	GuildUpdateMinimumTotalLevelRequirementMessage,
 	GuildUpdatePrimaryLanguageMessage,
 	GuildUpdateRecruitmentMessageMessage,
 	GuildUpdateRecruitmentStateMessage,
-	GuildUpdateStatusMessage, GuildUpdateTagMessage,
+	GuildUpdateStatusMessage,
+	GuildUpdateTagMessage,
 	GuildVaultMessage,
 	Int,
 	LoginDataMessage,
@@ -26,13 +28,14 @@ import {
 } from "@idleclient/network/NetworkData.ts";
 import { ClanHouse, ClanHouseDatabase } from "@idleclient/game/data/ClanHouseDatabase.ts";
 import { ItemId } from "@idleclient/types/gameTypes.ts";
-import { ManagerStorage } from "@context/GameContext.tsx";
+import { ManagerContext } from "@context/GameContext.tsx";
 import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
 import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 
 export class Clan {
 
+	private readonly _mode: GameMode;
 	private readonly _name: string;
 	private readonly _members: Map<string, ClanMember> = new Map();
 
@@ -66,11 +69,12 @@ export class Clan {
 
 	private _pvmStats: { stats: Map<PvmStatType, Int>, refreshed: Date } | null = null;
 
-	constructor(name: string, members: Map<string, ClanMember>, credits: Int, gold: Int, purchasedVaultSpace: Int,
+	constructor(mode: GameMode, name: string, members: Map<string, ClanMember>, credits: Int, gold: Int, purchasedVaultSpace: Int,
 	            skillingQuests: DailyGuildQuest[], skillingContributors: string[], combatQuests: DailyGuildQuest[],
 	            combatContributors: string[], questResetDate: Date, houseId: Int, upgrades: Set<UpgradeType>,
 	            applications: ClanApplication[]) {
 
+		this._mode = mode;
 		this._name = name;
 		this._members = members;
 
@@ -89,6 +93,7 @@ export class Clan {
 		this._applications = applications;
 	}
 
+	get mode(): GameMode { return this._mode; }
 	get name(): string { return this._name; }
 	get members(): ReadonlyMap<string, ClanMember> { return this._members; }
 
@@ -116,6 +121,10 @@ export class Clan {
 	get tag(): string | null { return this._tag; }
 
 	get pvmStats(): { stats: Map<PvmStatType, Int>, refreshed: Date } | null { return this._pvmStats; }
+
+	public isIronmanClan(): boolean {
+		return this.mode === GameMode.Ironman;
+	}
 
 	public getTotalLevel(): Int {
 		let result = 0;
@@ -163,19 +172,24 @@ export class Clan {
 	 */
 
 	public onReceiveGuildStateMessage(packet: ReceiveGuildStateMessage) {
-		this._skills = new Map(Object.keys(packet.SkillExperiences).map(value => {
+		const skillExperiences = packet.SkillExperiences ?? {};
+		this._skills = new Map(Object.keys(skillExperiences).map(value => {
 			const skill = Skill[value as keyof typeof Skill]
 			if (skill === undefined) throw new Error(`Invalid skill ${value}`);
-			return [ skill, packet.SkillExperiences[value] ] as [ Skill, number ];
+			return [ skill, skillExperiences[value] ] as [ Skill, number ];
 		}));
+
 		// Inventory isn't included.
 
 		this._eventStates = packet.EventStates;
-		this._skillingTickets = new Map(Object.keys(packet.SkillingTickets).map(value => {
+
+		const skillingTickets = packet.SkillingTickets ?? {};
+		this._skillingTickets = new Map(Object.keys(skillingTickets).map(value => {
 			const skill = Skill[value as keyof typeof Skill]
 			if (skill === undefined) throw new Error(`Invalid skill ${value}`);
-			return [ skill, packet.SkillingTickets[value] ] as [ Skill, number ];
+			return [ skill, skillingTickets[value] ] as [ Skill, number ];
 		}))
+
 		this._skillingPartyCompletions = packet.SkillingPartyCompletions;
 		this._recruiting = packet.IsRecruiting;
 		this._category = packet.Status;
@@ -271,20 +285,21 @@ export class Clan {
 	 */
 
 	public static fromLoginPacket(data: LoginDataMessage): Clan {
+		const mode = data.GameMode ?? GameMode.NotSelected;
 		const name = data.GuildName ?? "?null?";
 		const members = new Map(Object.entries(data.Members || {})
 			.map(([name, member], _) =>
 				[name, ClanMember.fromGuildMember(name, member)]));
 
 		// TODO: Temp for testing.
-		if (members.size < 20) {
+		/*if (members.size < 20) {
 			const toFill = 10 - members.size;
 			for (let i = 0; i < toFill; i++) {
 				members.set(`test${i}`, new ClanMember(`test${i}`, GameMode.Default, Math.random() > 0.55,
 					Math.random() > 0.75, Math.random() > 0.85, Math.random() < 0.75 ? GuildRank.member : GuildRank.deputy,
 					false, new Date(), new Date()));
 			}
-		}
+		}*/
 
 		const credits = data.ClanCredits ?? 0;
 		const gold = data.VaultGold ?? 0;
@@ -303,7 +318,7 @@ export class Clan {
 			?.map(v => ({ name: v.ApplicantName, message: v.Message,
 				level: v.TotalLevelAtTimeOfApplication })) ?? [];
 
-		return new Clan(name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
+		return new Clan(mode, name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
 			combatContributors, questsResetDate, houseId, upgrades, applications);
 	}
 
@@ -314,6 +329,9 @@ export class Clan {
 		const members = new Map(Object.entries(data.Members || {})
 			.map(([name, member], _) =>
 				[name, ClanMember.fromGuildMember(name, member)]));
+		// Get the mode from the first member.
+		const mode = members.entries().next().value?.[1]?.mode ?? GameMode.NotSelected;
+
 
 		const credits = data.Credits ?? 0;
 		const gold = data.Gold ?? 0;
@@ -333,17 +351,18 @@ export class Clan {
 		//       until you relog.
 		const applications: ClanApplication[] = [];
 
-		return new Clan(name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
+		return new Clan(mode, name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
 			combatContributors, questsResetDate, houseId, upgrades, applications);
 	}
 
-	public static fromCreatePacket(managers: ManagerStorage, data: CreateGuildMessage): Clan {
-		const playerManager = managers.playerManager!;
+	public static fromCreatePacket(context: ManagerContext, data: CreateGuildMessage): Clan {
+		const playerManager = context.playerManager!;
 
+		const mode = playerManager.mode.content();
 		const name = data.GuildName;
-		const members = new Map([[playerManager.username.content()!, new ClanMember(
-			playerManager.username.content()!, playerManager.mode.content()!, true,
-			playerManager.premium.content(), playerManager.gilded.content(), GuildRank.member,
+		const members = new Map([[playerManager.username.content(), new ClanMember(
+			playerManager.username.content(), playerManager.mode.content(), true,
+			playerManager.premium.content(), playerManager.gilded.content(), GuildRank.leader,
 			true, new Date(), new Date()
 		)]]);
 
@@ -362,7 +381,7 @@ export class Clan {
 		const upgrades: Set<UpgradeType> = new Set();
 		const applications: ClanApplication[] = [];
 
-		return new Clan(name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
+		return new Clan(mode, name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
 			combatContributors, questsResetDate, houseId, upgrades, applications);
 	}
 }

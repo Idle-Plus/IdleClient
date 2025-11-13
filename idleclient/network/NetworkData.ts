@@ -300,6 +300,28 @@ export enum ItemActivatableType {
 	ExterminatingSupplyCrate,
 }
 
+export enum ItemCategory {
+	None,
+	Weapons,
+	Tools,
+	Armours,
+	Jewelry,
+	MasteryCapes,
+	SkillingOutfits,
+	Food,
+	Potions,
+	Consumables,
+	Gemstones,
+	Keys,
+	OresAndBars,
+	LogsAndPlanks,
+	SeedsAndHarvest,
+	EnchantmentScrolls,
+	Activatables,
+	Miscellaneous,
+	Pets,
+}
+
 export enum ItemEffectTriggerType {
 	None,
 	Lifesteal,
@@ -857,7 +879,7 @@ export class ReceiveGuildInviteMessage extends Packet {
 
 export class ReceiveGuildStateMessage extends Packet {
 	public readonly MsgType: number = 60;
-	constructor(public SkillExperiences: { [key: string /* Name of: Skill */]: Float /* f32 */ }, public ClanCredits: Int /* i32 */, public EventStates: string, public SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ }, public SkillingPartyCompletions: Int /* i32 */, public IsRecruiting: boolean, public Status: ClanCategory, public PrimaryLanguage: string | null, public MinimumTotalLevelRequired: Int /* i32 */, public LocalPlayerHasClaimableLoot: boolean, public Tag: string | null) { super(); }
+	constructor(public SkillExperiences: { [key: string /* Name of: Skill */]: Float /* f32 */ } | null, public ClanCredits: Int /* i32 */, public EventStates: string, public SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ } | null, public SkillingPartyCompletions: Int /* i32 */, public IsRecruiting: boolean, public Status: ClanCategory, public PrimaryLanguage: string | null, public MinimumTotalLevelRequired: Int /* i32 */, public LocalPlayerHasClaimableLoot: boolean, public Tag: string | null) { super(); }
 
 	public static fromJson(json: any): ReceiveGuildStateMessage {
 		return new ReceiveGuildStateMessage(json.SkillExperiences, json.ClanCredits, json.EventStates, json.SkillingTickets, json.SkillingPartyCompletions, json.IsRecruiting, json.Status, json.PrimaryLanguage, json.MinimumTotalLevelRequired, json.LocalPlayerHasClaimableLoot, json.Tag);
@@ -930,6 +952,15 @@ export class SendGuildInviteMessage extends Packet {
 	}
 }
 
+export class SellItemMessage extends Packet {
+	public readonly MsgType: number = 6;
+	constructor(public ItemId: Int /* i32 */, public ItemAmount: Int /* i32 */) { super(); }
+
+	public static fromJson(json: any): SellItemMessage {
+		return new SellItemMessage(json.ItemId, json.ItemAmount);
+	}
+}
+
 /*
  * Packet Registry
  * Mapping packet IDs to their respective classes.
@@ -980,6 +1011,7 @@ const PacketRegistry: any = {
 	218: RequestGuildVaultMessage,
 	33: SendGuildApplicationMessage,
 	35: SendGuildInviteMessage,
+	6: SellItemMessage,
 };
 
 /*
@@ -1032,6 +1064,7 @@ export enum PacketType {
 	RequestGuildVaultMessage = 218,
 	SendGuildApplicationMessage = 33,
 	SendGuildInviteMessage = 35,
+	SellItemMessage = 6,
 }
 
 export function deserialize(json: any): Packet | null {

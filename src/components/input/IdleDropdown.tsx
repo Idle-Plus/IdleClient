@@ -64,7 +64,6 @@ export const IdleDropdown = <T,>({
 }: IdleDropdownProps<T>) => {
 	const [dropdownId, _] = useState("idle-dropdown-" + Math.floor(Math.random() * 100000).toString(16));
 	const [open, setOpen] = useState(false);
-	//const [currentlySelected, setCurrentlySelected] = useState<number | undefined>(selected);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -82,7 +81,6 @@ export const IdleDropdown = <T,>({
 		if (canSelect && !canSelect(value, index)) return;
 		setOpen(false);
 		onSelect?.(value, index);
-		//setCurrentlySelected(index);
 	}
 
 	createElement = createElement ?? ((entry: { value: any, disabled?: boolean }, index: number) => {
@@ -114,7 +112,7 @@ export const IdleDropdown = <T,>({
 	const style = `transition-colors duration-200 ${open ? dropdownColorActive : dropdownColor} ${dropdownColorHover} text-gray-100`;
 
 	return (
-		<div className={`${dropdownId} w-full`}>
+		<div className={`${dropdownId} relative w-full`}>
 			<button
 				onClick={() => setOpen(!open)}
 				className={`w-full flex items-center justify-between px-4 py-2 text-lg rounded-md cursor-pointer ${style} ${dropdownClass}`}
@@ -137,13 +135,6 @@ export const IdleDropdown = <T,>({
 							{values.map((entry, index) =>
 								createElement(entry, index)
 							)}
-							{/*<div
-								className={`max-h-64 flex flex-col p-1 space-y-1 whitespace-nowrap select-none overflow-y-auto ic-scrollbar`}
-							>
-								{values.map((entry, index) =>
-									createElement(entry, index)
-								)}
-							</div>*/}
 						</div>
 					}
 				</AutoSizer>
@@ -151,28 +142,3 @@ export const IdleDropdown = <T,>({
 		</div>
 	)
 }
-
-/*
-<>
-	{ loadout?.locked ? (
-		<div
-			key={i}
-			className="rounded-md w-full px-2 py-1 text-left bg-ic-red-500"
-		>
-			{loadout.name}
-		</div>
-	) : (
-		<button
-			key={i}
-			onClick={() => {
-				setIsDropdownOpen(false);
-				// TODO: Handle select
-			}}
-			className="rounded-md w-full px-2 py-1 text-left bg-ic-orange-500
-					hover:bg-ic-orange-600"
-		>
-			{loadout.name}
-		</button>
-	) }
-</>
-*/

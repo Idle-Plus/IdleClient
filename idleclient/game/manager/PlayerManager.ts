@@ -1,8 +1,7 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import { GameMode, Int, LoginDataMessage, Skill, UpgradeType } from "@idleclient/network/NetworkData.ts";
 import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
 import { ItemId } from "@idleclient/types/gameTypes.ts";
-import { GameData } from "@idleclient/game/data/GameData.ts";
 import { UpgradeDatabase } from "@idleclient/game/data/UpgradeDatabase.ts";
 
 interface AdBoost {
@@ -46,7 +45,7 @@ export interface PlayerManagerType extends ManagerType {
 	cleanup: () => void;
 }
 
-export const PlayerManager = (managers: ManagerStorage): PlayerManagerType => {
+export const PlayerManager = (managers: ManagerContext): PlayerManagerType => {
 
 	const username = useSmartRef<string>("");
 	const mode = useSmartRef<GameMode>(GameMode.NotSelected);

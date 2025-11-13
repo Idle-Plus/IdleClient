@@ -85,12 +85,24 @@ class SharedSettings {
 	}
 
 	get baseClanVaultSpace(): Int { return this.BaseClanVaultSpace; }
+
+	get dailyAdsExperienceBoostPct(): Int { return this.DailyAdsExperienceBoostPct; }
+	get totalLevelRequirementForClanCreation(): Int { return this.TotalLevelRequirementForClanCreation; }
+	get goldCostForClanCreation(): Int { return this.GoldCostForClanCreation; }
+	get guildMinCharacters(): Int { return this.GuildMinCharacters; }
+	get guildMaxCharacters(): Int { return this.GuildMaxCharacters; }
+	get guildMaxMembers(): Int { return this.GuildMaxMembers; }
+
+	get iapInventorySpacePerPurchase(): Int { return this.IAPInventorySpacePerPurchase; }
+
 	get iapClanVaultSpacePerPurchase(): Int { return this.IAPClanVaultSpacePerPurchase; }
 	get iapMaxPurchasableClanVaultSpace(): Int { return this.IAPMaxPurchasableClanVaultSpace; }
-	get dailyAdsExperienceBoostPct(): Int { return this.DailyAdsExperienceBoostPct; }
-	get guildMaxMembers(): Int { return this.GuildMaxMembers; }
+	get iapMaxPurchasableClanVaultSpaceIronman(): Int { return this.IAPMaxPurchasableClanVaultSpaceIronman; }
+
 	get maxSkillLevel(): Int { return this.MaxSkillLevel; }
 	get maxPlayerSkillExperience(): Int { return this.MaxPlayerSkillExperience; }
+
+	get maxPlayerGold(): Float { return this.MaxPlayerGold; }
 }
 
 class ClientSettings {

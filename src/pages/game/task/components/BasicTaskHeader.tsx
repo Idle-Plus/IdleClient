@@ -41,14 +41,14 @@ const BasicTaskHeader: React.FC<BasicTaskHeaderProps> = ({ skill }) => {
 
 	return (
 		<div className="bg-ic-dark-500/75 p-4 mb-4 relative font-raleway">
-			<div className="grid grid-cols-3 gap-2 pb-2 text-center text-xl">
-				<span className="text-white {/*bg-red-400/20*/}">
+			<div className="grid grid-cols-1 lg:grid-cols-3 gap-2 pb-2 text-center text-xl">
+				<span className="text-white">
 					{Skill[skill]}
 				</span>
-				<span className="text-white text-center {/*bg-lime-400/20*/}">
+				<span className="text-white text-center">
 					Lv. {level}
 				</span>
-				<span className="text-white {/*bg-cyan-400/20*/}">
+				<span className="text-white">
 					<span className="text-gray-300">Exp: </span>
 					{currentExperienceFormatted}
 					<span className="text-gray-300"> / </span>

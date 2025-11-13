@@ -9,6 +9,9 @@
 	--font-montserrat: "Montserrat", sans-serif;
 	--font-nunito: "Nunito Sans", sans-serif;
 
+	--breakpoint-xs: 30rem;
+	--breakpoint-2xl: 100rem;
+
 	--color-ic-light-000: #b8ffe9;
 	--color-ic-light-100: #7cffdc;
 	--color-ic-light-200: #35f3c5;
@@ -71,7 +74,16 @@
 		from { opacity: 1; transform: translateX(0%); }
 		to { opacity: 0; transform: translateX(-100%); }
 	}
-	
+
+	/* - Beat, wait x seconds, repeat */
+	--animate-beat: beat 3s linear infinite;
+
+	@keyframes beat {
+		0% { transform: scale(1); }
+		5% { transform: scale(1.05); }
+		10% { transform: scale(1); }
+	}
+
 	/* - Wiggle, wait x seconds, repeat */
 	--animate-wiggle: wiggle 4s linear infinite;
 	
@@ -392,3 +404,28 @@ body {
 .color-pick {
 	background: #ca8d35;
 }
+
+/*
+ * Sliders
+ */
+
+.ic-slider {
+	@apply w-full h-2 bg-ic-light-500 rounded-lg appearance-none cursor-pointer;
+}
+
+.ic-slider::-webkit-slider-thumb {
+	@apply w-6 h-6 appearance-none bg-ic-light-200 rounded-full hover:bg-ic-light-100 transition-all duration-150;
+}
+
+.ic-slider::-moz-range-thumb {
+	@apply w-6 h-6 appearance-none bg-ic-light-200 rounded-full hover:bg-ic-light-100 transition-all duration-150;
+}
+
+.ic-slider::-webkit-slider-runnable-track {
+	@apply rounded-lg transition-all duration-150;
+}
+
+.ic-slider::-moz-range-track {
+	@apply rounded-lg transition-all duration-150;
+}
+

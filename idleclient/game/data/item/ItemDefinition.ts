@@ -4,19 +4,40 @@ import {
 	Float,
 	Int,
 	ItemActivatableType,
+	ItemCategory,
 	ItemEffectTriggerType,
 	MasteryCapeType,
 	PotionType,
 	Skill,
+	TaskType,
+	UpgradeType,
 	WeaponClassType,
 	WeaponEffectType,
-    WeaponType
+	WeaponType
 } from "@idleclient/network/NetworkData.ts";
 import { SheetIcon, SpriteSheet } from "@idleclient/game/sprite/SpriteSheet.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
 import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 import { ItemId } from "@idleclient/types/gameTypes";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
+import { GameContextType } from "@context/GameContext.tsx";
+import { PotionDatabase } from "@idleclient/game/data/PotionDatabase.ts";
+import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase.ts";
+import { EnchantmentScrollType } from "@idleclient/game/types/EnchantmentScrollType.ts";
+import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
+import { TaskDatabase } from "@idleclient/game/data/TaskDatabase.ts";
+
+// Safe "parsed" item objects
+
+interface ItemWeaponMonsterIdWeakness {
+	damageBoost: Int;
+	weakMonsters: Int[];
+}
+
+interface ItemWeaponMonsterWeakness {
+	damageBoost: Int;
+	weakMonsters: string[];
+}
 
 interface ItemStatBonus {
 	strength: Int;
@@ -35,9 +56,37 @@ export interface ItemLevelRequirement {
 }
 
 interface ItemTriggerEffect {
-	triggerType: ItemEffectTriggerType,
-	triggerChancePercentage: Int,
-	triggerPower: Float,
+	triggerType: ItemEffectTriggerType;
+	triggerChancePercentage: Int;
+	triggerPower: Float;
+}
+
+// Item objects
+
+interface WeaponMonsterIdWeakness {
+	DamageBoost?: Int;
+	WeakMonsters?: Int[];
+}
+
+interface WeaponMonsterWeakness {
+	DamageBoost?: Int;
+	WeakMonsters?: string[] | null;
+}
+
+interface SkillBoost {
+	Skill?: Skill;
+	BoostPercentage?: Float;
+}
+
+interface TriggerEffect {
+	TriggerType?: ItemEffectTriggerType;
+	TriggerChancePercentage?: Int;
+	TriggerPower?: Float;
+}
+
+interface LevelRequirement {
+	Skill?: Skill;
+	Level?: Int;
 }
 
 export class ItemDefinition {
@@ -47,6 +96,9 @@ export class ItemDefinition {
 	// removed. So, just to be on the safe side, getters should be
 	// provided instead.
 
+	private readonly ExtraBoostAgainstWeakEnemiesPercentage: Int = 0;
+	private readonly ExtraBoostPercentageAgainstQuestMonsters: Int = 0;
+	//
 	private readonly ItemId: ItemId;
 	private readonly Name: string;
 	private readonly DescriptionLocKey?: string;
@@ -61,6 +113,7 @@ export class ItemDefinition {
 	private readonly FlipSprite: boolean = false;
 	private readonly IsTool: boolean = false;
 	private readonly MasteryCapeType: MasteryCapeType = MasteryCapeType.None;
+	private readonly Category: ItemCategory = ItemCategory.None;
 	private readonly EquipmentSlot: EquipmentSlot = EquipmentSlot.None;
 	//
 	private readonly StrengthBonus: Int = 0;
@@ -75,8 +128,9 @@ export class ItemDefinition {
 	//
 	private readonly AttackInterval: Int = 0;
 	private readonly TwoHanded: boolean = false;
-
-	private readonly MonsterDefensiveBoost: object = {}; // TODO
+	private readonly NeverConsume: boolean = false;
+	private readonly WeaponMonsterWeakness?: WeaponMonsterIdWeakness; // ItemWeaponMonsterIdWeakness object
+	private readonly MonsterDefensiveBoost?: WeaponMonsterWeakness; // ItemWeaponMonsterWeakness object
 	private readonly Style: AttackStyle = AttackStyle.None;
 	private readonly WeaponType: WeaponType = WeaponType.None;
 	private readonly WeaponClass: WeaponClassType = WeaponClassType.None;
@@ -85,16 +139,17 @@ export class ItemDefinition {
 	private readonly PotionType: PotionType = PotionType.None;
 	private readonly PotionEffectDurationSeconds: Int = 0;
 	private readonly HealthAppliedOnConsume: Int = 0;
-	private readonly SkillBoost?: any; // SkillBoost object
-	private readonly TriggerEffects?: any[]; // TriggerEffect object
-	private readonly InventoryConsumableBoost?: any; // SkillBoost object
-	private readonly LevelRequirement?: any; // LevelRequirement object
-
+	private readonly SkillBoost?: SkillBoost; // ItemSkillBoost object
+	private readonly TriggerEffects?: TriggerEffect[]; // ItemTriggerEffect object
+	private readonly InventoryConsumableBoost?: SkillBoost; // ItemSkillBoost object
+	private readonly LevelRequirement?: LevelRequirement; // ItemLevelRequirement object
 	private readonly CosmeticScrollEffect: WeaponEffectType = WeaponEffectType.None;
-
+	//
+	private readonly UsableEnchantmentScroll: EnchantmentScrollType = EnchantmentScrollType.None;
 	private readonly EnchantedVersionItemId: Int = 0;
 	private readonly EnchantmentBoost: Float = 0;
-
+	private readonly EnchantingSkillType: Skill = Skill.None;
+	private readonly ScrollType: EnchantmentScrollType = EnchantmentScrollType.None;
 	private readonly ProcChance: Int = 0;
 
 	/*
@@ -105,6 +160,9 @@ export class ItemDefinition {
 	public readonly archeryBonus: ItemStatBonus | null;
 	public readonly magicBonus: ItemStatBonus | null;
 
+	public readonly weaponMonsterWeakness: ItemWeaponMonsterIdWeakness | null;
+	public readonly monsterDefensiveBoost: ItemWeaponMonsterWeakness | null;
+
 	public readonly skillBoost: ItemSkillBoost | null;
 	public readonly triggerEffects: ItemTriggerEffect[] | null;
 	public readonly inventoryConsumableBoost: ItemSkillBoost | null;
@@ -112,6 +170,10 @@ export class ItemDefinition {
 
 	public readonly originalItemId: ItemId | null;
 	public readonly cosmeticVariant: WeaponEffectType;
+
+	/*
+	 * Other
+	 */
 
 	private readonly cosmeticVariantIds: Partial<Record<WeaponEffectType, ItemId>> = {};
 	private readonly icon: SheetIcon | null = null;
@@ -162,6 +224,21 @@ export class ItemDefinition {
 			? { strength: this.MagicStrengthBonus ?? 0, accuracy: this.MagicAccuracyBonus ?? 0, defence: this.MagicDefenceBonus ?? 0 }
 			: null;
 
+		// Weapon monster weakness.
+		this.weaponMonsterWeakness = this.WeaponMonsterWeakness
+			? { damageBoost: this.WeaponMonsterWeakness.DamageBoost ?? 0, weakMonsters: this.WeaponMonsterWeakness.WeakMonsters ?? [] }
+			: null;
+
+		// Monster defensive boost.
+		// We only create the custom object if there is actually some data and
+		// not just an empty object.
+		if (this.MonsterDefensiveBoost) {
+			const damageBoost = this.MonsterDefensiveBoost.DamageBoost ?? 0;
+			const weakMonsters = this.MonsterDefensiveBoost.WeakMonsters ?? [];
+			if (damageBoost !== 0 && weakMonsters.length > 0) this.monsterDefensiveBoost = { damageBoost, weakMonsters };
+			else this.monsterDefensiveBoost = null;
+		} else this.monsterDefensiveBoost = null;
+
 		// Skill boost.
 		this.skillBoost = this.SkillBoost
 			? {skill: this.SkillBoost.Skill ?? Skill.None, boostPercentage: this.SkillBoost.BoostPercentage ?? 0}
@@ -196,7 +273,10 @@ export class ItemDefinition {
 	get discontinued(): boolean { return this.Discontinued; }
 	get itemCounterpartId(): Int { return this.ItemCounterpartId; }
 	get baseValue(): Int { return this.BaseValue; }
-
+	get associatedSkill(): Skill { return this.AssociatedSkill; }
+	get canNotBeSoldToGameShop(): boolean { return this.CanNotBeSoldToGameShop; }
+	get canNotBeTraded(): boolean { return this.CanNotBeTraded; }
+	get tradeableWithClan(): boolean { return this.TradeableWithClan; }
 	get flipSprite(): boolean { return this.FlipSprite; }
 	get isTool(): boolean { return this.IsTool; }
 	get masteryCapeType(): MasteryCapeType { return this.MasteryCapeType; }
@@ -220,6 +300,9 @@ export class ItemDefinition {
 	get attackStyle(): AttackStyle { return this.Style; }
 	get weaponType(): WeaponType { return this.WeaponType; }
 
+	get activatableType(): ItemActivatableType { return this.ActivatableType; }
+	get potionType(): PotionType { return this.PotionType; }
+	get potionEffectDurationSeconds(): Int { return this.PotionEffectDurationSeconds; }
 	get healthAppliedOnConsume(): Int { return this.HealthAppliedOnConsume; }
 
 	get enchantmentBoost(): Float { return this.EnchantmentBoost; }
@@ -238,9 +321,13 @@ export class ItemDefinition {
 		return this.originalItemId ?? this.id;
 	}
 
+	public isItem(itemId: ItemId): boolean {
+		return this.id === itemId || this.originalItemId === itemId;
+	}
+
 	public getLocalizedName(): string {
 		if (this.isCosmeticVariant()) {
-			const baseName = ItemDatabase.get(this.getOriginalItemId()).getLocalizedName();
+			const baseName = ItemDatabase.item(this.getOriginalItemId()).getLocalizedName();
 			return `${baseName} (${WeaponEffectType[this.cosmeticVariant]})`
 		}
 
@@ -252,13 +339,100 @@ export class ItemDefinition {
 		return GameData.localization().get(this.name);
 	}
 
-	public getLocalizedDescription(): string | null {
-		// Handle mastery capes.
-		if (this.MasteryCapeType !== MasteryCapeType.None) {
-			return this.getMasteryCapeLocalizedDescription();
+	public getLocalizedDescription(game?: GameContextType): string | null {
+		// Monster defensive boost
+		if (this.monsterDefensiveBoost !== null) {
+			const data = this.monsterDefensiveBoost;
+			// We don't need to check if the object contains empty / default data,
+			// as that is filtered in the constructor.
+			return LocalizationDatabase.loc(this.description ?? "",
+				[ data.damageBoost, LocalizationDatabase.loc(data.weakMonsters[0]) ]);
 		}
 
-		return this.description != null ? GameData.localization().get(this.description) : null;
+		// Quest monster boost
+		if (this.ExtraBoostPercentageAgainstQuestMonsters > 0 && (this.description?.length ?? 0) > 0)
+			return LocalizationDatabase.loc(this.description!, [this.ExtraBoostPercentageAgainstQuestMonsters]);
+
+		// Bloodmoon helmet
+		if (this.isItem(889)) {
+			let bloodmoonHelmetBonus = 6;
+			if (game?.player.isUpgradeUnlocked(UpgradeType.upgrade_bloodmoon_helmet_upgrade))
+				bloodmoonHelmetBonus *= 2;
+
+			return LocalizationDatabase.loc(this.description ?? "", [bloodmoonHelmetBonus]);
+		}
+
+		// Inventory and clan vault tokens
+		switch (this.id) {
+			case 600: // Inventory space token
+				return LocalizationDatabase.loc(this.description ?? "",
+					[SettingsDatabase.shared().iapInventorySpacePerPurchase]);
+			case 684: { // Clan vault space token
+				const clan = game?.clan?.clan?.content();
+				if (!clan) {
+					return LocalizationDatabase.loc("clan_vault_space_token_description_no_clan",
+						[SettingsDatabase.shared().iapClanVaultSpacePerPurchase]);
+				}
+
+				const purchasedSpace = clan.purchasedVaultSpace;
+				return LocalizationDatabase.loc(this.description ?? "", [
+					SettingsDatabase.shared().iapClanVaultSpacePerPurchase,
+					purchasedSpace,
+					clan.isIronmanClan() ? SettingsDatabase.shared().iapMaxPurchasableClanVaultSpaceIronman :
+						SettingsDatabase.shared().iapMaxPurchasableClanVaultSpace
+				]);
+			}
+			default:
+				break;
+		}
+
+		// Inventory consumable boost
+		if (this.inventoryConsumableBoost !== null)
+			return LocalizationDatabase.loc(this.description ?? "", [this.inventoryConsumableBoost.boostPercentage,
+				LocalizationDatabase.loc(SkillUtils.getLocalizedSkillName(this.inventoryConsumableBoost.skill))]);
+
+		// Belt localization is skipped as we're not adding skill icons.
+
+		// Mastery capes
+		if (this.MasteryCapeType !== MasteryCapeType.None)
+			return this.getMasteryCapeLocalizedDescription();
+
+		// Potion
+		if (this.potionType !== PotionType.None)
+			return this.getPotionDescription(game);
+
+		// Trigger effects
+		if ((this.triggerEffects?.length ?? 0) > 0)
+			return this.getTriggerEffectLocalizations();
+
+		// Boost against weak enemies
+		if (this.ExtraBoostAgainstWeakEnemiesPercentage > 0 && (this.description?.length ?? 0) > 0)
+			return LocalizationDatabase.loc(this.description!, [this.ExtraBoostAgainstWeakEnemiesPercentage]);
+
+		if ((this.description?.length ?? 0) === 0 && this.weaponMonsterWeakness !== null &&
+			this.weaponMonsterWeakness.weakMonsters.length > 0) {
+			const combatTasks = (TaskDatabase.getTaskCategories(TaskType.Combat) ?? [])
+				.flatMap(category => category.tasks);
+
+			const monsterNames = this.weaponMonsterWeakness.weakMonsters
+				.map(id => combatTasks.find(task => task.taskId === id)?.name)
+				.filter(task => task !== undefined)
+				.map(name => LocalizationDatabase.loc(name))
+				.join(", ");
+
+			if (this.ExtraBoostPercentageAgainstQuestMonsters > 0) {
+				const p1 = LocalizationDatabase.loc("strong_against_monster_item_with_boost_description",
+					[this.weaponMonsterWeakness.damageBoost, monsterNames]);
+				const p2 = LocalizationDatabase.loc("otherworldly_weapon_description",
+					[this.ExtraBoostPercentageAgainstQuestMonsters]);
+				return `${p1}.<br><br>${p2}`
+			}
+
+			return LocalizationDatabase.loc("strong_against_monster_item_with_boost_description",
+				[this.weaponMonsterWeakness.damageBoost, monsterNames]);
+		}
+
+		return this.description != null ? LocalizationDatabase.loc(this.description) : null;
 	}
 
 	/**
@@ -303,9 +477,15 @@ export class ItemDefinition {
 		}
 	}
 
+	public getMarketPrice(): { average: Int, sell: Int, buy: Int } | null {
+		return ItemDatabase.cachedItemPrices.get(this.id) ?? null;
+	}
+
 	/*
 	 * Private methods
 	 */
+
+	// Localizations
 
 	private getMasteryCapeLocalizedName(): string {
 		const index = this.name.indexOf("_tier_");
@@ -384,5 +564,31 @@ export class ItemDefinition {
 
 		if (!this.description) return "";
 		return GameData.localization().get(this.description);
+	}
+
+	private getPotionDescription(game?: GameContextType): string {
+		const potion = PotionDatabase.getPotion(this.potionType);
+		if (potion === undefined) return "";
+
+		const key = this.description ?? "";
+		const seconds = Math.trunc(this.potionEffectDurationSeconds / 60);
+
+		switch (potion.potionType) {
+			case PotionType.Swiftness:
+			case PotionType.Negotiation:
+			case PotionType.Resurrection:
+			case PotionType.GreatSight:
+			case PotionType.PurePower:
+			case PotionType.AncientKnowledge:
+			case PotionType.DragonfirePotion:
+				return LocalizationDatabase.get(key, [potion.effectStrengthPercentage, seconds]);
+			case PotionType.Forgery:
+			case PotionType.Trickery:
+				return LocalizationDatabase.get(key, [potion.chanceOfTriggeringEffect, seconds]);
+			case PotionType.DarkMagic:
+				return LocalizationDatabase.get(key, [potion.chanceOfTriggeringEffect, potion.effectStrengthPercentage, seconds]);
+			default:
+				return key;
+		}
 	}
 }

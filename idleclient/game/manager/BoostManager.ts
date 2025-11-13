@@ -1,4 +1,4 @@
-import { ManagerStorage, ManagerType } from "@context/GameContext.tsx";
+import { ManagerContext, ManagerType } from "@context/GameContext.tsx";
 import { LoginDataMessage, MasteryCapeType, Skill } from "@idleclient/network/NetworkData.ts";
 import { RefObject, useRef } from "react";
 import { useIdleEvent } from "@hooks/event/useIdleEvent.ts";
@@ -29,7 +29,7 @@ export interface BoostManagerType extends ManagerType {
 	cleanup: () => void,
 }
 
-export const BoostManager = (managers: ManagerStorage): BoostManagerType => {
+export const BoostManager = (managers: ManagerContext): BoostManagerType => {
 
 	const _skillBoostsRef = useRef(new Map<Skill, number>());
 	const _combatBoostsRef = useSmartRef<CombatBoosts>({
@@ -118,7 +118,7 @@ function handleCompletionistCapeBoost(item: ItemDefinition, equip: boolean, ref:
 	}
 
 	for (const capeId of capes) {
-		const cape = ItemDatabase.get(capeId);
+		const cape = ItemDatabase.item(capeId);
 		const capeBoost = cape.skillBoost;
 		if (capeBoost === null) continue;
 

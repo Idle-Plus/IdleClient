@@ -1,0 +1,1 @@
+Directory to store types used by Idle Clans, for example, types in gameData.json.

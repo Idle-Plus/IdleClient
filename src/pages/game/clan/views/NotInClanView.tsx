@@ -1,187 +1,229 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { IdleClansAPI } from "@/api/IdleClansAPI.ts";
+import { useGame } from "@context/GameContext.tsx";
+import AutoSizer from "react-virtualized-auto-sizer";
+import { IdleButton } from "@components/input/IdleButton.tsx";
+import { Loader } from "@components/Loader.tsx";
+import { IdleInput } from "@components/input/IdleInput.tsx";
+import { FaDiscord } from "react-icons/fa6";
+import { useModal } from "@context/ModalContext.tsx";
+import { RecruitmentCenterModal, RecruitmentCenterModalId } from "@pages/game/clan/modals/RecruitmentCenterModal.tsx";
+import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
+import { ModalUtils } from "@utils/ModalUtils.tsx";
 
-export const NotInClanView: React.FC<{
-	totalLevel: number,
-	gold: number,
-	onCreateClan: (name: string) => void,
-	onJoinClan: (name: string, message: string) => void
-}> = ({ totalLevel, gold, onCreateClan, onJoinClan }) => {
-
-	return null;
-
-	/*const [selectedOption, setSelectedOption] = useState<'create' | 'join' | null>(null);
-	const [clanName, setClanName] = useState("");
-	const [applicationMessage, setApplicationMessage] = useState("");
-	const [showApplicationPopup, setShowApplicationPopup] = useState(false);
-
-	const topClans = [
-	];
-
-	const canCreateClan = totalLevel >= 100 && gold >= 10000;
-
-	const handleCreateClan = () => {
-		if (!canCreateClan) return;
-		if (!clanName.trim()) return;
-		onCreateClan(clanName);
-	};
-
-	const handleJoinClanClick = () => {
-		if (!clanName.trim()) return;
-		setShowApplicationPopup(true);
-	};
-
-	const handleSubmitApplication = () => {
-		onJoinClan(clanName, applicationMessage);
-		setShowApplicationPopup(false);
-		setClanName("");
-		setApplicationMessage("");
-	};
+const JoinClanContainer = () => {
+	const [clan, setClan] = useState("");
 
 	return (
-		<div className="flex flex-col max-w-7xl mx-auto h-full p-4">
-			<div className="bg-ic-dark-500/75 p-4 mb-4">
-				<h1 className="text-2xl text-white font-bold mb-2">Clan</h1>
-				<p className="text-gray-300">Join an existing clan or create your own.</p>
-			</div>
+		<div className="w-full flex flex-col gap-1 items-center">
+			<p className="text-center text-3xl text-white font-bold">Join a clan</p>
+			<div className="w-full flex flex-col gap-4 p-4 bg-ic-dark-500/75 rounded-md">
 
-			<div className="flex gap-4 mb-4">
-				<button
-					className={`px-4 py-2 ${
-						selectedOption === 'create'
-							? "text-white bg-ic-light-500"
-							: "text-gray-300 hover:bg-ic-light-500/50 hover:text-gray-200 bg-ic-dark-500/75"
-					}`}
-					onClick={() => setSelectedOption('create')}
+				<div className="w-full flex flex-col xs:flex-row justify-center gap-4">
+					<IdleInput
+						value={clan}
+						onValueChange={value => setClan(value)}
+						placeholder={"Enter clan name..."}
+						regex={/^.{0,18}$/}
+						className="w-full"
+					/>
+					<IdleButton
+						title={"Search"}
+						disabled={!/^.{1,18}$/.test(clan)}
+						className="px-10!"
+					/>
+				</div>
+
+				<div
+					className="flex flex-col items-center p-1 bg-ic-dark-200 rounded-md cursor-pointer select-none"
+					onClick={() => {
+						// TODO:
+					}}
 				>
-					Create Clan
-				</button>
-				<button
-					className={`px-4 py-2 ${
-						selectedOption === 'join'
-							? "text-white bg-ic-light-500"
-							: "text-gray-300 hover:bg-ic-light-500/50 hover:text-gray-200 bg-ic-dark-500/75"
-					}`}
-					onClick={() => setSelectedOption('join')}
-				>
-					Join Clan
-				</button>
+					<p className="text-ic-light-300 text-2xl">Invitations</p>
+					<p className="text-gray-300 text-lg">You have <span className="text-ic-light-300">0</span> clan invitations</p>
+				</div>
 			</div>
-
-			{selectedOption === 'create' && (
-				<div className="bg-ic-dark-500/75 p-4 mb-4">
-					<h2 className="text-xl text-white mb-2">Create a Clan</h2>
-					{!canCreateClan && (
-						<div className="text-red-400 mb-2">
-							<p>Requirements to create a clan:</p>
-							<ul className="list-disc list-inside">
-								<li className={totalLevel >= 100 ? "text-green-400" : ""}>
-									Total Level: {totalLevel}/100
-								</li>
-								<li className={gold >= 10000 ? "text-green-400" : ""}>
-									Gold: {gold.toLocaleString()}/10,000
-								</li>
-							</ul>
-						</div>
-					)}
-					<div className="flex flex-col gap-2">
-						<label className="text-gray-300">
-							Clan Name:
-							<input
-								type="text"
-								className="ml-2 p-1 bg-ic-dark-400 text-white"
-								value={clanName}
-								onChange={(e) => setClanName(e.target.value)}
-							/>
-						</label>
-						<button
-							className={`px-4 py-2 ${
-								canCreateClan
-									? "bg-ic-light-500 text-white hover:bg-ic-light-600"
-									: "bg-ic-dark-400 text-gray-500 cursor-not-allowed"
-							}`}
-							onClick={handleCreateClan}
-							disabled={!canCreateClan}
-						>
-							Create Clan
-						</button>
-					</div>
-				</div>
-			)}
-
-			{selectedOption === 'join' && (
-				<div className="bg-ic-dark-500/75 p-4 mb-4">
-					<h2 className="text-xl text-white mb-2">Join a Clan</h2>
-					<div className="flex flex-col gap-2">
-						<label className="text-gray-300">
-							Clan Name:
-							<input
-								type="text"
-								className="ml-2 p-1 bg-ic-dark-400 text-white"
-								value={clanName}
-								onChange={(e) => setClanName(e.target.value)}
-							/>
-						</label>
-						<button
-							className="px-4 py-2 bg-ic-light-500 text-white hover:bg-ic-light-600"
-							onClick={handleJoinClanClick}
-							disabled={!clanName.trim()}
-						>
-							Join Clan
-						</button>
-					</div>
-				</div>
-			)}
-
-			<div className="bg-ic-dark-500/75 p-4 flex-grow">
-				<h2 className="text-xl text-white mb-2">Top Active Clans</h2>
-				{topClans.length > 0 ? (
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-						{topClans.map((clan, index) => (
-							<div key={index} className="bg-ic-dark-400 p-3">
-								{/!* Clan info would go here *!/}
-							</div>
-						))}
-					</div>
-				) : (
-					<p className="text-gray-400">
-						No clans available. API endpoint for retrieving top clans is not implemented yet.
-					</p>
-				)}
-			</div>
-
-			{/!* Application Popup *!/}
-			{showApplicationPopup && (
-				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-					<div className="bg-ic-dark-500 p-4 max-w-md w-full">
-						<h2 className="text-xl text-white mb-2">Apply to Join {clanName}</h2>
-						<div className="mb-4">
-							<label className="text-gray-300 block mb-1">
-								Application Message (Optional):
-							</label>
-							<textarea
-								className="w-full p-2 bg-ic-dark-400 text-white"
-								rows={4}
-								value={applicationMessage}
-								onChange={(e) => setApplicationMessage(e.target.value)}
-							/>
-						</div>
-						<div className="flex justify-end gap-2">
-							<button
-								className="px-4 py-2 bg-ic-dark-400 text-gray-300 hover:bg-ic-dark-300"
-								onClick={() => setShowApplicationPopup(false)}
-							>
-								Cancel
-							</button>
-							<button
-								className="px-4 py-2 bg-ic-light-500 text-white hover:bg-ic-light-600"
-								onClick={handleSubmitApplication}
-							>
-								Submit Application
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
 		</div>
-	);*/
+	);
+}
+
+const CreateClanContainer = () => {
+	const game = useGame();
+	const modals = useModal();
+	const [name, setName] = useState("");
+
+	const totalLevelRequirement = SettingsDatabase.shared().totalLevelRequirementForClanCreation;
+	const goldCost = SettingsDatabase.shared().goldCostForClanCreation;
+
+	const hasTotalLevel = game.skill.getTotalLevel() >= totalLevelRequirement;
+	const hasGold = game.inventory.gold.content() >= goldCost;
+	const canCreate = hasTotalLevel && hasGold;
+
+	return (
+		<div className="w-full flex flex-col gap-1 items-center">
+			<p className="text-center text-3xl text-white font-bold">Create a clan</p>
+			<div className="w-full space-y-4 px-4 pb-4 pt-2 bg-ic-dark-500/75 rounded-md">
+				<div className="grid grid-cols-2">
+					<div className="text-gray-100 text-xl font-semibold">Requirements</div>
+					<div className="text-gray-100 text-xl font-semibold">Cost</div>
+					<div className="text-gray-300 text-lg">
+						Total level:
+						<span className={!hasTotalLevel ? "text-ic-red-100" : ""}> {totalLevelRequirement.toLocaleString()}</span>
+					</div>
+					<div className="text-gray-300 text-lg">
+						Gold:
+						<span className={!hasGold ? "text-ic-red-100" : ""}> {goldCost.toLocaleString()}</span>
+					</div>
+				</div>
+
+				<div className="flex justify-center flex-col xs:flex-row gap-4">
+					<IdleInput
+						value={name}
+						onValueChange={value => setName(value)}
+						placeholder={"Enter clan name..."}
+						regex={/^[a-zA-Z0-9]{0,18}$/}
+						className="w-full"
+					/>
+					<IdleButton
+						title={"Create"}
+						onClick={() => {
+							if (!/^[a-zA-Z0-9]{3,18}$/.test(name) || !canCreate) return;
+							modals.openModal("createClanModal", ModalUtils.generalConfirmationModal(
+								<>
+									Are you sure you want to create the clan '<b className="text-gray-100">{name}</b>'?
+									The name <b className="text-ic-red-100">cannot</b> be changed once created.
+								</>
+								, () => {
+									game.clan.network.createClan(name);
+								}, null, { confirmText: "Create", delay: 3 })
+							);
+						}}
+						disabled={!/^[a-zA-Z0-9]{3,18}$/.test(name) || !canCreate}
+						className="px-10!"
+					/>
+				</div>
+			</div>
+		</div>
+	);
+};
+
+export const NotInClanView: React.FC = () => {
+	const discord = "https://discord.gg/kcf2zP5vKa";
+	const game = useGame();
+	const modals = useModal();
+	const gameMode = game.player.mode.content();
+
+	const [recruitingClans, setRecruitingClans] = useState(game.clan.cachedRecruitingClans.current);
+	const updatingRef = useRef(false);
+
+	useEffect(() => {
+		let shouldUpdate = false;
+		if (recruitingClans === undefined) shouldUpdate = true;
+		else {
+			const date = recruitingClans.time;
+			// Check if it's been 10 minutes since the last update.
+			if (Date.now() - date.getTime() > 10 * 60 * 1000) shouldUpdate = true;
+		}
+
+		if (!shouldUpdate) return;
+		if (updatingRef.current) return;
+		updatingRef.current = true;
+
+		IdleClansAPI.Clan.getMostActive({ recruiting: true, gameMode: gameMode }).then(value => {
+			const result = { clans: value.clans ?? [], time: new Date() };
+			game.clan.cachedRecruitingClans.current = result;
+			setRecruitingClans(result);
+			console.log("Updated recruiting clans.");
+		}).finally(() => {
+			updatingRef.current = false;
+		});
+	});
+
+	return (
+		<div className="w-full h-full flex flex-col max-w-7xl mx-auto bg-ic-dark-500/75 overflow-y-auto ic-scrollbar-nr">
+			<div className="h-full grid xl:grid-cols-[2fr_1fr] gap-4">
+
+				<div className="flex flex-col items-center p-2 xs:p-4">
+					<div className="md:w-4/5 h-full flex flex-col space-y-8">
+						<div>
+							<p className="text-center text-3xl mb-2 text-white font-bold">Clan</p>
+							<div className="space-y-4 px-4 pb-3 pt-2 bg-ic-dark-500/75 text-gray-200 text-lg rounded-md">
+								Create or join a clan to unlock exclusive upgrades and content that enhance your
+								progress throughout the game.
+							</div>
+						</div>
+
+						<CreateClanContainer />
+						<JoinClanContainer />
+
+						<div className="flex flex-col gap-4 justify-end grow select-none">
+							<div className="flex flex-col md:flex-row items-center gap-4 p-4 py-2 bg-ic-dark-500/75 text-lg text-gray-300 rounded-md">
+								<a href={discord}>
+									<FaDiscord className="text-7xl text-[#e0e3ff]" />
+								</a>
+								<span>
+									Did you know that the <a className="text-ic-light-100 hover:text-ic-light-000" href={discord}>Idle Clans Discord</a> is
+									the best place to find a clan with like-minded players?
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div className="h-128 xl:h-full flex flex-col items-center p-4 select-none">
+					<div className="w-full md:w-4/5 xl:w-full flex flex-col h-full">
+						<div className="mb-2 text-center text-3xl text-white font-bold">
+							Active recruiting clans
+						</div>
+
+						<div className="h-full">
+							{ recruitingClans === undefined ? (
+								<div className="h-full flex items-center justify-center text-gray-200 text-xl">
+									<Loader
+										title="Fetching recruiting clans"
+										className="text-gray-200!"
+									/>
+								</div>
+							) : (
+								<AutoSizer>
+									{({width, height}) => (
+										<div className="space-y-2 px-2 overflow-y-auto ic-scrollbar-nr" style={{ width, height }}>
+											{ recruitingClans.clans.map((clan, index) => (
+												<div key={index} className="grid grid-cols-2 bg-ic-dark-400 px-3 py-1 rounded-md">
+													<div className="text-white text-lg font-semibold">{ clan.name }</div>
+													<div className="text-gray-300">
+														Members:
+														<span className="text-gray-100"> { clan.memberCount } </span>
+														/ 20
+													</div>
+													<div className="text-gray-300">
+														Activity:
+														<span className="text-gray-100"> { clan.activityScore } </span>
+														/ 100
+													</div>
+													<div className="text-gray-300">
+														Language:
+														<span className="text-gray-100"> { clan.language }</span>
+													</div>
+												</div>
+											)) }
+										</div>
+									)}
+								</AutoSizer>
+							) }
+						</div>
+
+						<div className="w-full mx-auto px-4 mt-4">
+							<IdleButton
+								onClick={() => modals.openModal(RecruitmentCenterModalId, <RecruitmentCenterModal />)}
+								title="Open Recruitment Center"
+								className="w-full!"
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 };
