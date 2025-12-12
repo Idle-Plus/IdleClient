@@ -43,7 +43,6 @@ export const GeneralConfirmationModal: React.FC<GeneralConfirmationModalProps> =
 		<BaseModal
 			active={active}
 			onClose={onClose}
-			className="p-4 justify-normal! pt-[30vh]"
 		>
 			<div className="w-full h-fit max-w-md px-4 pb-4 bg-ic-dark-500 shadow-black/25 shadow-md rounded-md">
 				<p className={`text-center pt-2 text-2xl text-white font-bold ${titleClass ?? ""}`}>

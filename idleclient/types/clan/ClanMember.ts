@@ -32,6 +32,7 @@ export class ClanMember {
 	get name(): string { return this._name; }
 	get mode(): GameMode { return this._mode; }
 	get online(): boolean { return this._online; }
+	set online(value: boolean) { this._online = value; }
 	get premium(): boolean { return this._premium; }
 	get gilded(): boolean { return this._gilded; }
 
@@ -42,6 +43,7 @@ export class ClanMember {
 
 	get joinDate(): Date { return this._joinDate; }
 	get logoutTime(): Date { return this._logoutTime; }
+	set logoutTime(value: Date) { this._logoutTime = value; }
 
 	/*
 	 * "Constructors"

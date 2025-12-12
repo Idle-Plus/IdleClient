@@ -84,7 +84,13 @@ class SharedSettings {
 		Object.assign(this, entry);
 	}
 
+	get requiredBuildVersion(): string { return this.RequiredBuildVersion; }
+	get latestBuildVersion(): string { return this.LatestBuildVersion; }
+	get configVersion(): Int { return this.ConfigVersion; }
+
 	get baseClanVaultSpace(): Int { return this.BaseClanVaultSpace; }
+
+	get tasksLockedBehindPremium(): Int[] { return this.TasksLockedBehindPremium; }
 
 	get dailyAdsExperienceBoostPct(): Int { return this.DailyAdsExperienceBoostPct; }
 	get totalLevelRequirementForClanCreation(): Int { return this.TotalLevelRequirementForClanCreation; }

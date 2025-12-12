@@ -289,6 +289,30 @@ body {
 	100% { background-color: hsl(360 100% 74% / 1); }
 }
 
+.jump {
+	display: inline-block;
+	animation: jump 300ms ease-out;
+}
+
+@keyframes jump {
+	0% { transform: translateY(0); }
+	30% { transform: translateY(-8px); }
+	60% { transform: translateY(4px); }
+	100% { transform: translateY(0); }
+}
+
+.scale-pop {
+	display: inline-block;
+	animation: scalePop 200ms ease-out;
+}
+
+@keyframes scalePop {
+	0%   { transform: scale(1); }
+	30%  { transform: scale(1.25); }
+	60%  { transform: scale(0.9); }
+	100% { transform: scale(1); }
+}
+
 /* Hide scrollbar */
 
 .no-scrollbar::-webkit-scrollbar {

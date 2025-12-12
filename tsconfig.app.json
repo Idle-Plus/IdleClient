@@ -29,6 +29,7 @@
       "@/*": [ "src/*" ],
       "@assets/*": [ "src/assets/*" ],
       "@components/*": [ "src/components/*" ],
+      "@layouts/*": [ "src/layouts/*" ],
       "@context/*": [ "src/context/*" ],
       "@pages/*": [ "src/pages/*" ],
       "@hooks/*": [ "src/hooks/*" ],

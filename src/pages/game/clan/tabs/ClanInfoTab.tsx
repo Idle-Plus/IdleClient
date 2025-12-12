@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { Clan } from "@idleclient/types/clan/Clan.ts";
-import { PvmStatType } from "@idleclient/network/NetworkData.ts";
+import { PvmStatType, Skill } from "@idleclient/network/NetworkData.ts";
 import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
 import { ItemIcon, SpriteIcon } from "@components/icon";
@@ -11,6 +11,14 @@ import { ModalUtils } from "@utils/ModalUtils.tsx";
 import { useModal } from "@context/ModalContext.tsx";
 import { ClanMember } from "@idleclient/types/clan/ClanMember.ts";
 import { RecruitmentCenterModal, RecruitmentCenterModalId } from "@pages/game/clan/modals/RecruitmentCenterModal.tsx";
+import Tooltip from "@components/Tooltip.tsx";
+import { GameData } from "@idleclient/game/data/GameData.ts";
+import {
+	toFixedNoRoundLocale,
+	toFixedNoRoundTrim,
+	toFixedNoRoundTrimLocale
+} from "@idleclient/game/utils/numberUtils.ts";
+import { ClanInfoModal, ClanInfoModalId } from "@pages/game/clan/modals/ClanInfoModal.tsx";
 
 const ClanMembers: React.FC<{ clan: Clan }> = ({ clan }) => {
 	return (
@@ -65,19 +73,53 @@ const ClanMembers: React.FC<{ clan: Clan }> = ({ clan }) => {
 	)
 }
 
+const ClanSkill: React.FC<{ clan: Clan, skill: Skill }> = ({ clan, skill }) => {
+	const level = SkillUtils.getLevelForExperience(clan.skills?.get(skill) ?? 0);
+	const progress = SkillUtils.getLevelProgress(clan.skills?.get(skill) ?? 0);
+
+	return (
+		<Tooltip
+			value={(
+				<div className="flex flex-col text-gray-300 text-base/5">
+					<p className="font-bold text-center text-white mb-1">{SkillUtils.getLocalizedSkillName(skill)}</p>
+					<p>Total: <span className="text-gray-100">{toFixedNoRoundTrimLocale(progress.totalXp, 1)}</span></p>
+					<p>
+						Current:
+						<span className="text-gray-100"> {toFixedNoRoundTrimLocale(progress.currentXp, 1)} </span>
+						/
+						<span className="text-gray-100"> {toFixedNoRoundTrimLocale(progress.targetXp, 1)}</span>
+					</p>
+					<p>
+						Remaining: <span className="text-gray-100">{toFixedNoRoundTrimLocale(progress.targetXp - progress.currentXp, 1)}</span>
+					</p>
+				</div>
+			)}
+			delay={300}
+			direction="bottom"
+			offset={4}
+			className="w-full flex flex-col items-center pt-2 pb-3 px-2 bg-ic-dark-200/50 rounded-md"
+		>
+			<SpriteIcon icon={SkillUtils.getSpriteIconId(skill, 32)} size={32} className="mb-1" />
+			<p className="text-gray-200">Lv. <span className="text-white"> {level}</span></p>
+			<div className="w-full relative">
+				<div className="absolute w-full h-1 bg-ic-light-700 rounded-md" />
+				<div className="absolute h-1 bg-ic-light-200 rounded-md" style={{ width: (progress.progress * 100) + "%" }} />
+			</div>
+		</Tooltip>
+	);
+}
+
 const ClanSkills: React.FC<{ clan: Clan }> = ({ clan }) => {
 	return (
-		<div className="space-y-1 p-4 pt-2 bg-ic-dark-500 text-gray-200 rounded-md">
-			<h1 className="text-2xl font-semibold pb-1">
-				Skills - Total level: {clan.getTotalLevel()}
-			</h1>
+		<div className="space-y-1 p-4 pt-2 bg-ic-dark-500 text-gray-300 rounded-md">
+			<div className="flex justify-between text-2xl pb-1">
+				<div className="font-semibold text-gray-100">Skills</div>
+				<div>Total level: <span className="text-gray-100">{clan.getTotalLevel()}</span></div>
+			</div>
 
-			<div className="grid grid-cols-5 gap-1">
+			<div className="grid grid-cols-5 gap-1 select-none">
 				{ SkillUtils.getSkills().map((skill, index) => (
-					<div key={index} className="flex flex-col items-center pt-2 bg-ic-dark-200/50 rounded-md">
-						<SpriteIcon icon={SkillUtils.getSpriteIconId(skill, 32)} size={32} />
-						Lv. {SkillUtils.getLevelForExperience(clan.skills?.get(skill) ?? 0)}
-					</div>
+					<ClanSkill key={index} clan={clan} skill={skill} />
 				)) }
 			</div>
 		</div>
@@ -164,10 +206,7 @@ const LeaveClanButton = ({ clan, player }: { clan: Clan, player: ClanMember }) =
 		modals.openModal("leaveClanModal", ModalUtils.generalConfirmationModal(
 			getConfirmationText(), () => {
 				if (player.rank === ClanRank.LEADER) game.clan.network.deleteClan();
-				else {
-					// TODO: Leave clan.
-					// game.clan.network.leaveClan();
-				}
+				else game.clan.network.leaveClan();
 			}, null, { confirmText: action, delay: 10 })
 		);
 	}

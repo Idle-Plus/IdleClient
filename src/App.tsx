@@ -1,6 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
-import GameLayout from "@components/GameLayout.tsx";
-import { Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { useSession } from "@context/SessionContext.tsx";
 import { useLoading } from "@context/LoadingContext.tsx";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +7,7 @@ import { ClanPage, InventoryPage, ProfilePage, TaskPage } from "@pages/game";
 import { useGame } from "@context/GameContext.tsx";
 import { PlayPage } from "@pages/public";
 import { useSpriteSheets } from "@context/SpriteSheetContext.tsx";
+import { GameLayout } from "@layouts/game";
 
 const LOADING_ID = "idleClient$app$loading";
 

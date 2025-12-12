@@ -10,9 +10,38 @@ import { useModal } from "@context/ModalContext.tsx";
 import { RecruitmentCenterModal, RecruitmentCenterModalId } from "@pages/game/clan/modals/RecruitmentCenterModal.tsx";
 import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 import { ModalUtils } from "@utils/ModalUtils.tsx";
+import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
+import { ClanInvitationsModal, ClanInvitationsModalId } from "@pages/game/clan/modals/ClanInvitationsModal.tsx";
+import { ClanInfoModal, ClanInfoModalId } from "@pages/game/clan/modals/ClanInfoModal.tsx";
 
 const JoinClanContainer = () => {
+	const game = useGame();
+	const modals = useModal();
 	const [clan, setClan] = useState("");
+	const invitations = useSmartRefWatcher(game.clan.clanInvitations);
+	const workingRef = useRef(false);
+
+	const search = () => {
+		if (workingRef.current) return;
+
+		IdleClansAPI.Clan.getRecruitment(clan)
+			.then(result => {
+				if (result.error === undefined) {
+					modals.openModal(ClanInfoModalId, <ClanInfoModal name={clan} value={result} />);
+					return;
+				}
+
+				modals.openModal("FailedToFindClan",
+					ModalUtils.generalTextModal("Error", "Failed to fetch clan, does it exist?"));
+			}).catch(_ => {
+			modals.openModal("FailedToFindClan",
+				ModalUtils.generalTextModal("Error", "Failed to fetch clan, does it exist?"));
+		}).finally(() => workingRef.current = false);
+	}
+
+	const openInvitations = () => {
+		modals.openModal(ClanInvitationsModalId, <ClanInvitationsModal />);
+	}
 
 	return (
 		<div className="w-full flex flex-col gap-1 items-center">
@@ -31,17 +60,23 @@ const JoinClanContainer = () => {
 						title={"Search"}
 						disabled={!/^.{1,18}$/.test(clan)}
 						className="px-10!"
+						onClick={() => search()}
 					/>
 				</div>
 
 				<div
-					className="flex flex-col items-center p-1 bg-ic-dark-200 rounded-md cursor-pointer select-none"
+					className={`flex flex-col items-center p-1 bg-ic-dark-200 rounded-md select-none ${
+						invitations.length > 0 ? "cursor-pointer" : ""}`}
 					onClick={() => {
-						// TODO:
+						if (invitations.length <= 0) return;
+						openInvitations();
 					}}
 				>
 					<p className="text-ic-light-300 text-2xl">Invitations</p>
-					<p className="text-gray-300 text-lg">You have <span className="text-ic-light-300">0</span> clan invitations</p>
+					<p className="text-gray-300 text-lg">You have
+						<span className="text-ic-light-300"> {invitations.length} </span>
+						clan invitation{invitations.length !== 1 ? "s" : ""}
+					</p>
 				</div>
 			</div>
 		</div>

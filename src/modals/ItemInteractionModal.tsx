@@ -1,4 +1,4 @@
-import BaseModal, { BaseModalProps } from "@components/modal/BaseModal.tsx";
+import BaseModal, { BaseModalCloseButton, BaseModalProps } from "@components/modal/BaseModal.tsx";
 import { ItemStack } from "@idleclient/types/gameTypes.ts";
 import React, { useState } from "react";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
@@ -12,6 +12,7 @@ import { GameContextType, useGame } from "@context/GameContext.tsx";
 import { IdleButton } from "@components/input/IdleButton.tsx";
 import { IdleNumberInput } from "@components/input/IdleNumberInput.tsx";
 import { toKMB } from "@idleclient/game/utils/numberUtils.ts";
+import Tooltip from "@components/Tooltip.tsx";
 
 interface ItemInteractionModalProps extends BaseModalProps {
 	item: ItemStack,
@@ -182,7 +183,7 @@ const ItemDisplay = React.memo(({ game, item, count }: { game: GameContextType, 
 
 				{/* Item value & level requirement */}
 				{ (item.baseValue || item.levelRequirement) && (
-					<div className="flex flex-col h-full">
+					<div className="flex flex-col h-full select-none">
 
 						<div className='mb-1.5 flex-1 border-b-2 border-ic-dark-000/75'/>
 
@@ -202,7 +203,7 @@ const ItemDisplay = React.memo(({ game, item, count }: { game: GameContextType, 
 							)}
 
 							{ (item.baseValue || !item.canNotBeTraded) && (
-								<div className="w-full flex flex-col items-end gap-y-0.75 italic text-sm">
+								<div className="w-full flex flex-col items-end gap-y-0.75 text-sm">
 									{ item.baseValue && (
 										<div className="flex gap-1">
 											{item.baseValue.toLocaleString()}
@@ -218,7 +219,22 @@ const ItemDisplay = React.memo(({ game, item, count }: { game: GameContextType, 
 
 									{ !item.canNotBeTraded && (
 										<div className="flex gap-1">
-											{ item.getMarketPrice()?.sell?.toLocaleString() ?? "N/A" }
+											{ item.getMarketPrice() !== null ? (
+												<Tooltip
+													value={(
+														<div className="text-gray-300">
+															<p>Average:<span className="text-gray-100"> {item.getMarketPrice()!.average.toLocaleString()}</span></p>
+															<p>Lowest sell:<span className="text-gray-100"> {item.getMarketPrice()!.sell.toLocaleString()}</span></p>
+															<p>Highest buy:<span className="text-gray-100"> {item.getMarketPrice()!.buy.toLocaleString()}</span></p>
+														</div>
+													)}
+													delay={300}
+													offset={4}
+													className="underline underline-offset-2 decoration-dashed"
+												>
+													{ item.getMarketPrice()!.sell.toLocaleString() }
+												</Tooltip>
+											) : "N/A" }
 											<SpriteIcon
 												icon={"auction_house_32"}
 												canvas={false}
@@ -283,7 +299,8 @@ const SellButton = ({
 	if (item.count < 1) return null;
 
 	const value = ItemDatabase.getSellValue(itemDef, game) * selected;
-	const title = value === 0 ? "Delete" : `Sell for ${toKMB(value, { minK: 100_000, locale: null })}`;
+	let title = value === 0 ? "Delete" : `Sell for ${toKMB(value, { minK: 100_000, locale: null })}`;
+	if (value > 2_000_000_000) title = "Can't sell for more than 2 billion";
 
 	return (
 		<IdleButton
@@ -292,9 +309,11 @@ const SellButton = ({
 				game.inventory.network.sellItem(item.id, selected);
 				onClose?.();
 			}}
+			disabled={value > 2_000_000_000}
 			bgColor="bg-ic-red-500"
 			bgColorHover="hover:bg-ic-red-400"
 			bgColorActive="active:bg-ic-red-400"
+			bgColorDisabled="bg-ic-red-500/75"
 			textColor="text-gray-200"
 			className="w-full"
 		/>
@@ -314,10 +333,13 @@ export const ItemInteractionModal: React.FC<ItemInteractionModalProps> = ({ acti
 		<BaseModal
 			active={active}
 			onClose={onClose}
-			className="p-4"
 		>
 			<div className="relative w-full max-w-lg flex flex-col gap-2 overflow-y-auto ic-scrollbar-nr">
 				<div className="p-4 space-y-4 bg-ic-dark-500 rounded-md">
+
+					<div className="absolute top-0.5 right-0.5 p-1.5 bg-ic-dark-500 rounded-md">
+						<BaseModalCloseButton close={onClose} />
+					</div>
 
 					<ItemDisplay game={game} item={itemDef} count={item.count} />
 

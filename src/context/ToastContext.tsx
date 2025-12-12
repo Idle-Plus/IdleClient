@@ -106,7 +106,7 @@ const ToastContainer: React.FC<{ entriesRef: SmartRef<ToastEntry[]> }> = ({ entr
 	}, [entries]);
 
 	return (
-		<div className="fixed bottom-4 left-4 pr-4 z-50">
+		<div className="fixed bottom-4 left-4 pr-4 z-5000">
 			{entries.map((entry, index) => (
 				<div
 					key={entry.id}

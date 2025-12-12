@@ -1,7 +1,10 @@
-import { ClanCategory, GameMode } from "@idleclient/network/NetworkData.ts";
+import { ClanCategory, GameMode, Skill, UpgradeType } from "@idleclient/network/NetworkData.ts";
+import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
+import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 
 const URL = "https://query.idleclans.com/api";
 
+const CLAN_RECRUITMENT = URL + "/Clan/recruitment/"
 const CLAN_MOST_ACTIVE = URL + "/Clan/most-active";
 
 const CHAT_RECENT = URL + "/Chat/recent";
@@ -40,6 +43,25 @@ type ClanLanguage = "Lithuanian" | "Scottish Gaelic" | "Romanian" | "Slovenian" 
 	"Irish" | "Bulgarian" | "Moldovan" | "Korean" | "Portuguese" | "Norwegian" | "Persian" | "Albanian" | "Greek" |
 	"French" | "Serbian" | "Latvian";
 
+export type ClanRecruitmentResult =
+	| { error: undefined; result: {
+		name: string;
+		tag: string;
+		members: { name: string, rank: ClanRank }[];
+		activityScore: number;
+
+		recruiting: boolean;
+		recruitmentMessage: string;
+		totalLevelRequirement: number;
+		language: ClanLanguage;
+		category: ClanCategory;
+		houseId: number;
+
+		skills: Record<Skill, number>;
+		upgrades: UpgradeType[];
+	} }
+	| { error: "not_found" | "rate_limit"; result: undefined; };
+
 export interface ActiveClan {
 	name: string;
 	activityScore: number;
@@ -68,7 +90,7 @@ export type AllItemPricesResult =
 
 // Implementation
 
-const chat$Recent = async (): Promise<ChatRecentResult> => {
+const chat_getRecent = async (): Promise<ChatRecentResult> => {
 	return new Promise((resolve, reject) => {
 		fetch(CHAT_RECENT, {
 			method: "GET",
@@ -92,6 +114,55 @@ const chat$Recent = async (): Promise<ChatRecentResult> => {
 /*
  * Clan
  */
+
+const clan_getRecruitment = async (name: string): Promise<ClanRecruitmentResult> => {
+	const url = CLAN_RECRUITMENT + encodeURIComponent(name);
+
+	try {
+		const response = await fetch(url, { method: "GET" });
+
+		// Not found
+		if (response.status === 404)
+			return { error: "not_found", result: undefined };
+		// Rate limit
+		if (response.status === 429)
+			return { error: "rate_limit", result: undefined };
+
+		if (!response.ok) {
+			console.error("Failed to fetch clan recruitment: ", response);
+			throw new Error("Failed to fetch clan recruitment");
+		}
+
+		const data = await response.json();
+		console.log(data);
+
+		return {
+			error: undefined,
+			result: {
+				name: data.clanName,
+				tag: data.tag,
+				members: (data.memberlist as any[]).map(value => ({ name: value.memberName, rank: value.rank })),
+				activityScore: data.activityScore,
+
+				recruiting: data.isRecruiting,
+				recruitmentMessage: data.recruitmentMessage,
+				totalLevelRequirement: data.minimumTotalLevelRequired,
+				language: data.language,
+				category: parseInt(data.category as string),
+				houseId: data.houseId,
+
+				skills: Object.fromEntries(
+					Object.entries(JSON.parse(data.serializedSkills) as Record<string, number>)
+						.map(value => [Skill[value[0] as keyof typeof Skill] ?? Skill.None, value[1]])
+				) as Record<Skill, number>,
+				upgrades: data.serializedUpgrades.length <= 0 ? [] : JSON.parse(data.serializedUpgrades) as UpgradeType[],
+			}
+		};
+	} catch (error) {
+		console.error("Error while fetching clan recruitment:", error);
+		throw error;
+	}
+}
 
 const clan_getMostActive = async (options?: {
 	minActivityScore?: number,
@@ -180,10 +251,13 @@ const playerMarket_getItemPrices = async (): Promise<AllItemPricesResult> => {
 
 export const IdleClansAPI = {
 	Clan: {
+		getRecruitment: clan_getRecruitment,
 		getMostActive: clan_getMostActive,
 	},
 	PlayerMarket: {
 		getItemPrices: playerMarket_getItemPrices,
 	},
-	chat$Recent: chat$Recent
+	Chat: {
+		getRecent: chat_getRecent,
+	}
 }

@@ -4,7 +4,12 @@ import useSmartRef from "@hooks/smartref/useSmartRef.ts";
 import { IdleInputState } from "@components/input/IdleInputState.ts";
 import { IdleUsernameInput } from "@components/input/IdleUsernameInput.tsx";
 import { IdleButton } from "@components/input/IdleButton.tsx";
-import { ClanCategory, Int } from "@idleclient/network/NetworkData.ts";
+import {
+	ClanCategory,
+	GuildRequestRecruitmentMessageMessage,
+	Int,
+	PacketType
+} from "@idleclient/network/NetworkData.ts";
 import { IdleDropdown } from "@components/input/IdleDropdown.tsx";
 import { IdleNumberInput } from "@components/input/IdleNumberInput.tsx";
 import { IdleInput } from "@components/input/IdleInput.tsx";
@@ -12,6 +17,9 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { GameContextType } from "@context/GameContext.tsx";
 import { useModal } from "@context/ModalContext.tsx";
 import { ModalUtils } from "@utils/ModalUtils.tsx";
+import { Network } from "@idleclient/network/Network.ts";
+import usePacket from "@hooks/network/usePacket.ts";
+import { EditRecruitmentMessageModal } from "@pages/game/clan/modals/EditRecruitmentMessageModal.tsx";
 
 const Languages = [
 	"Lithuanian",
@@ -111,6 +119,11 @@ const ClanManagementTab: React.FC<{ game: GameContextType, clan: Clan }> = ({ ga
 	const [clanTag, setClanTag] = useState<string>(clan.tag ?? "");
 	useEffect(() => setMinLevel(clan.minTotalLevel), [clan.minTotalLevel]);
 	useEffect(() => setClanTag(clan.tag ?? ""), [clan.tag]);
+
+	usePacket<GuildRequestRecruitmentMessageMessage>(packet => {
+		modals.openModal("clanManagement$editRecruitmentMessage",
+			<EditRecruitmentMessageModal message={packet.RecruitmentMessage ?? ""} />);
+	}, [], PacketType.GuildRequestRecruitmentMessageMessage);
 
 	const applications = clan.applications.concat(clan.applications)
 		.concat(clan.applications.concat(clan.applications))
@@ -218,6 +231,14 @@ const ClanManagementTab: React.FC<{ game: GameContextType, clan: Clan }> = ({ ga
 						/>
 					</div>
 
+					{/* Recruitment message */}
+					<IdleButton
+						title="Recruitment message"
+						onClick={() => {
+							Network.send(new GuildRequestRecruitmentMessageMessage(null));
+						}}
+					/>
+
 				</div>
 
 				{/* Clan Tag */}
@@ -302,7 +323,7 @@ const ClanManagementTab: React.FC<{ game: GameContextType, clan: Clan }> = ({ ga
 									)}
 								</AutoSizer>
 							) : (
-								<div className="h-full flex justify-center items-center px-4 text-center text-2xl text-gray-300">
+								<div className="h-full flex justify-center items-center px-4 text-center text-2xl text-gray-300 select-none">
 									There are currently no incoming applications
 								</div>
 							) }

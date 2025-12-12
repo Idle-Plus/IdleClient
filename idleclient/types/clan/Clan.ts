@@ -6,7 +6,7 @@ import {
 	DailyGuildQuest,
 	GameMode,
 	GuildLeaderLeftGuildMessage,
-	GuildMemberKickedMessage,
+	GuildMemberKickedMessage, GuildMemberLoggedInMessage, GuildMemberLoggedOutMessage,
 	GuildRank,
 	GuildUpdateMinimumTotalLevelRequirementMessage,
 	GuildUpdatePrimaryLanguageMessage,
@@ -242,6 +242,21 @@ export class Clan {
 
 	public onClearAllGuildApplicationsMessage(packet: ClearAllGuildApplicationsMessage) {
 		this._applications = [];
+	}
+
+	// General
+
+	public onGuildMemberLoggedInMessage(packet: GuildMemberLoggedInMessage) {
+		const member = this._members.get(packet.GuildMemberName);
+		if (member === undefined) return;
+		member.online = true;
+	}
+
+	public onGuildMemberLoggedOutMessage(packet: GuildMemberLoggedOutMessage) {
+		const member = this._members.get(packet.GuildMemberName);
+		if (member === undefined) return;
+		member.online = false;
+		member.logoutTime = new Date();
 	}
 
 	// Applications

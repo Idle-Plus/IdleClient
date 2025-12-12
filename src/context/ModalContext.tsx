@@ -4,6 +4,7 @@ export interface BaseModalTypeProps {
 	active?: boolean;
 	onOpen?: () => void;
 	onClose?: () => void;
+	zIndex?: number;
 }
 
 type ModalType = {
@@ -28,7 +29,7 @@ export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 	const openModal = (
 		id: string,
 		component: React.ReactElement<BaseModalTypeProps>,
-		props?: Partial<BaseModalTypeProps>
+		props?: Partial<BaseModalTypeProps>,
 	) => {
 		// Check if the modal already exists, if it does, update it.
 		if (modals.some(modal => modal.id === id)) {
@@ -83,18 +84,19 @@ export const ModalContainer: React.FC = () => {
 	const { modals, closeModal } = useModal();
 
 	return (
-		<>
-			{modals.map((modal) => (
+		<div>
+			{modals.map((modal, index) => (
 				<div key={modal.id}>
 					{React.isValidElement(modal.component) &&
 						React.cloneElement(modal.component, {
 							active: true,
 							onClose: () => closeModal(modal.id),
+							zIndex: 6000 + index,
 						})
 					}
 				</div>
 			))}
-		</>
+		</div>
 	);
 };
 

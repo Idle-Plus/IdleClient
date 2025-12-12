@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export const Loader: React.FC<{
 	title: string,
@@ -11,6 +11,19 @@ export const Loader: React.FC<{
 	className = "",
 	titleClass = "",
 }) => {
+	const [dots, setDots] = useState(0);
+
+	useEffect(() => {
+		if (!animateDots) return;
+
+		let current = 0;
+		const interval = setInterval(() => {
+			current = (++current % 4);
+			setDots(current);
+		}, 500);
+
+		return () => clearInterval(interval);
+	}, [animateDots]);
 
 	return (
 		<div className={`flex flex-col items-center gap-2 text-white ${className}`}>
@@ -19,7 +32,7 @@ export const Loader: React.FC<{
 				<div className="w-24 h-24 border-8 border-gray-100 border-b-transparent rounded-full animate-spin" />
 			</div>
 			<div className="flex flex-col items-center gap-0 h-fit">
-				{ title && <div className={titleClass}>{ title }</div> }
+				{ title && <div className={titleClass}>{ `${title}${dots > 0 ? ".".repeat(dots) : ""}` }</div> }
 			</div>
 		</div>
 	);

@@ -2,6 +2,8 @@ import React, { JSX } from "react";
 import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase.ts";
 import GeneralTextModal from "@/modals/GeneralTextModal.tsx";
 import { GeneralConfirmationModal } from "@/modals/GeneralConfirmationModal.tsx";
+import { TextUtils } from "@idleclient/utils/TextUtils.tsx";
+import { ClanInvitationsModal } from "@pages/game/clan/modals/ClanInvitationsModal.tsx";
 
 export class ModalUtils {
 
@@ -12,7 +14,8 @@ export class ModalUtils {
 
 	public static generalTextModalLocalized(title: string | undefined | null, key: string, args?: any[]) {
 		title = title ?? undefined;
-		return <GeneralTextModal title={title} message={LocalizationDatabase.get(key, args)}/>;
+		const message = TextUtils.getStyledMessage(LocalizationDatabase.get(key, args));
+		return <GeneralTextModal title={title} message={message}/>;
 	}
 
 	public static generalConfirmationModal(
@@ -30,5 +33,9 @@ export class ModalUtils {
 			confirmText={options?.confirmText}
 			cancelText={options?.cancelText}
 		/>;
+	}
+
+	public static clanInvitationModal() {
+		return <ClanInvitationsModal />;
 	}
 }

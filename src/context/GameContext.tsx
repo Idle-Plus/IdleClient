@@ -23,6 +23,7 @@ import GenericTextModal from "@components/modal/GenericTextModal.tsx";
 import { useSession } from "@context/SessionContext.tsx";
 import { ClanManager, ClanManagerType } from "@idleclient/game/manager/ClanManager.ts";
 import { ModalUtils } from "@utils/ModalUtils.tsx";
+import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 
 const CONNECTING_LOADING_ID = "gameContext$connecting";
 
@@ -188,8 +189,8 @@ interface GameProviderProps {
 export const GameProvider = ({ children }: GameProviderProps) => {
 	GameData.initialize();
 
-	const VERSION = "1.6103";
-	const CONFIG_VERSION = 323;
+	const VERSION = SettingsDatabase.shared().latestBuildVersion;
+	const CONFIG_VERSION = SettingsDatabase.shared().configVersion;
 
 	const loading = useLoading();
 	const sessions = useSession();
@@ -304,6 +305,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 		_potion.initialize(packet);
 		_task.initialize(packet);
 		_boost.initialize(packet);
+		document.title = `Idle Client - ${packet.Username}`;
 
 		// Update the stored account if we have it stored.
 		const storedAccount = sessions.storedAccounts.content()
@@ -402,6 +404,7 @@ export const GameProvider = ({ children }: GameProviderProps) => {
 		_potion.cleanup();
 		_task.cleanup();
 		_boost.cleanup();
+		document.title = "Idle Client";
 
 		let reasonMessage: string;
 		switch (reason) {

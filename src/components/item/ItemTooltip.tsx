@@ -212,25 +212,6 @@ const ItemTooltip: React.FC<ItemTooltipProps> = ({
 		);
 	}
 
-	const parseStyledText = (text: string) => {
-		return text.split(/(<\/?[bi]>)/).map((part, index) => {
-			if (part === "<b>") return null;
-			if (part === "</b>") return null;
-			if (part === "<i>") return null;
-			if (part === "</i>") return null;
-
-			const prevPart = index > 0 ? text.split(/(<\/?[bi]>)/)[index - 1] : "";
-			const isBold = prevPart === "<b>";
-			const isItalic = prevPart === "<i>";
-
-			return part && (
-				<span key={index} className={`${isBold ? "font-semibold" : ""} ${isItalic ? "italic" : ""}`}>
-					{part}
-				</span>
-			);
-		});
-	};
-
 	const localization = item.getLocalizedDescription(game);
 	const hasDescription = localization !== null && localization.trim() !== "";
 	const hasHealthOnConsume = item.healthAppliedOnConsume > 0;

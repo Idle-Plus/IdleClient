@@ -4,7 +4,7 @@ import { IdleInputState } from "@components/input/IdleInputState.ts";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 
 interface IdleButtonProps {
-	title: string;
+	title?: string;
 	className?: string;
 	disabled?: boolean;
 	onClick?: () => void;
@@ -24,7 +24,7 @@ interface IdleButtonProps {
 }
 
 export const IdleButton: React.FC<IdleButtonProps> = ({
-	title,
+	title = "",
 	className,
 	disabled = false,
 	onClick,

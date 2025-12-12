@@ -52,4 +52,24 @@ export class SkillUtils {
 		throw new Error("Invalid experience: " + xp);
 	}
 
+	public static getLevelProgress(xp: number): { level: number, totalXp: number, currentXp: number, targetXp: number, progress: number } {
+		const level = SkillUtils.getLevelForExperience(xp);
+		let current;
+		let target;
+		let progress;
+
+		if (level !== GameData.settings().shared().maxSkillLevel) {
+			const currentLevelExperience = SkillUtils.getExperienceForLevel(level);
+			target = SkillUtils.getExperienceForLevel(level + 1);
+			progress = (xp - currentLevelExperience) / (target - currentLevelExperience);
+			current = xp - currentLevelExperience;
+			target = target - currentLevelExperience;
+		} else {
+			current = xp;
+			target = GameData.settings().shared().maxPlayerSkillExperience;
+			progress = xp / GameData.settings().shared().maxPlayerSkillExperience;
+		}
+
+		return { level: level, totalXp: xp, currentXp: current, targetXp: target, progress: progress };
+	}
 }

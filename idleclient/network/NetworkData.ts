@@ -670,6 +670,15 @@ export class CreateGuildMessage extends Packet {
 	}
 }
 
+export class DeclineGuildInviteMessage extends Packet {
+	public readonly MsgType: number = 56;
+	constructor(public GuildName: string) { super(); }
+
+	public static fromJson(json: any): DeclineGuildInviteMessage {
+		return new DeclineGuildInviteMessage(json.GuildName);
+	}
+}
+
 export class DeleteGuildMessage extends Packet {
 	public readonly MsgType: number = 47;
 	constructor(public ViewingDeletionState: boolean) { super(); }
@@ -748,6 +757,15 @@ export class GuildMemberLoggedOutMessage extends Packet {
 
 	public static fromJson(json: any): GuildMemberLoggedOutMessage {
 		return new GuildMemberLoggedOutMessage(json.GuildMemberName);
+	}
+}
+
+export class GuildRequestRecruitmentMessageMessage extends Packet {
+	public readonly MsgType: number = 217;
+	constructor(public RecruitmentMessage: string | null) { super(); }
+
+	public static fromJson(json: any): GuildRequestRecruitmentMessageMessage {
+		return new GuildRequestRecruitmentMessageMessage(json.RecruitmentMessage);
 	}
 }
 
@@ -980,6 +998,7 @@ const PacketRegistry: any = {
 	37: AcceptGuildInviteMessage,
 	132: ClearAllGuildApplicationsMessage,
 	32: CreateGuildMessage,
+	56: DeclineGuildInviteMessage,
 	47: DeleteGuildMessage,
 	190: GuildBulletinBoardEditResponseMessage,
 	189: GuildBulletinBoardInfoMessage,
@@ -989,6 +1008,7 @@ const PacketRegistry: any = {
 	51: GuildMemberKickedMessage,
 	42: GuildMemberLoggedInMessage,
 	43: GuildMemberLoggedOutMessage,
+	217: GuildRequestRecruitmentMessageMessage,
 	41: GuildRequestResultMessage,
 	216: GuildUpdateMinimumTotalLevelRequirementMessage,
 	214: GuildUpdatePrimaryLanguageMessage,
@@ -1033,6 +1053,7 @@ export enum PacketType {
 	AcceptGuildInviteMessage = 37,
 	ClearAllGuildApplicationsMessage = 132,
 	CreateGuildMessage = 32,
+	DeclineGuildInviteMessage = 56,
 	DeleteGuildMessage = 47,
 	GuildBulletinBoardEditResponseMessage = 190,
 	GuildBulletinBoardInfoMessage = 189,
@@ -1042,6 +1063,7 @@ export enum PacketType {
 	GuildMemberKickedMessage = 51,
 	GuildMemberLoggedInMessage = 42,
 	GuildMemberLoggedOutMessage = 43,
+	GuildRequestRecruitmentMessageMessage = 217,
 	GuildRequestResultMessage = 41,
 	GuildUpdateMinimumTotalLevelRequirementMessage = 216,
 	GuildUpdatePrimaryLanguageMessage = 214,

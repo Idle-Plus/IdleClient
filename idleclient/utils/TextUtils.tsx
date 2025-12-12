@@ -1,4 +1,4 @@
-import React from "react";
+import React, { JSX } from "react";
 
 const parseStyledText = (text: string) => {
 	return text.split(/(<\/?[bi]>)/).map((part, index) => {
@@ -16,15 +16,19 @@ const parseStyledText = (text: string) => {
 				{part}
 			</span>
 		);
-	});
+	}).filter(value => value !== null);
 };
 
 export class TextUtils {
 
-	public static getStyledMessage(message: string, options?: { appendPeriod?: boolean, ignoreBr?: boolean }) {
-		if (message.length === 0) return [""];
+	public static getStyledMessage(
+		message: string,
+		options?: { appendPeriod?: boolean, ignoreBr?: boolean }
+	): string | JSX.Element | (string | JSX.Element)[] {
+		if (message.length === 0) return "";
 
-		return message.split(/(\\n|<br>)/)
+		return message
+			.split(/(\\n|<br>)/)
 			.map((line, index) => {
 				if (options?.ignoreBr !== true && (line === "\\n" || line === "<br>"))
 					return <br key={`br-${index}`}/>;
@@ -32,6 +36,7 @@ export class TextUtils {
 					line += ".";
 
 				return parseStyledText(line);
-			});
+			})
+			.flat();
 	}
 }

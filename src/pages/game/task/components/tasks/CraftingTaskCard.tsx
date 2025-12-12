@@ -1,5 +1,4 @@
 import { GameData } from "@idleclient/game/data/GameData.ts";
-import { toFixedNoRoundTrim } from "@idleclient/game/utils/numberUtils.ts";
 import { ItemIcon, SpriteIcon } from "@components/icon";
 import React, { useRef } from "react";
 import { JobTask } from "@idleclient/game/data/TaskDatabase.ts";

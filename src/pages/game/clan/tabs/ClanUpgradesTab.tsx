@@ -112,7 +112,11 @@ const ClanUpgrade: React.FC<{ upgrade: Upgrade, clan: Clan, playerMember: ClanMe
 								{ skillRequirements
 									.filter((req) => req.level > 0)
 									.map((req, index) => (
-										<div key={index} className="flex items-center gap-1">
+										<div
+											key={index}
+											className="flex items-center gap-1"
+											title={`Lv. ${req.level} ${SkillUtils.getLocalizedSkillName(req.skill)}`}
+										>
 											<SpriteIcon
 												icon={SkillUtils.getSpriteIconId(req.skill, 32)}
 												size={28}
@@ -176,10 +180,10 @@ const ClanUpgradesTab: React.FC<{ clan: Clan, playerMember: ClanMember }> = ({ c
 	const totalUnlocked = upgrades.filter(upgrade => clan.hasUpgrade(upgrade.type)).length;
 
 	return (
-		<div className="p-4 space-y-2">
+		<div className="space-y-2">
 
 			{/* Credits - Unlocked */}
-			<div className="flex justify-between">
+			<div className="flex justify-between p-4 pb-0">
 				<div className="w-fit px-2 py-1 bg-ic-dark-400 text-gray-300 text-lg rounded-md select-none">
 					Credits: <span className="text-gray-100">{clan.credits.toLocaleString()}</span>
 				</div>
@@ -195,7 +199,7 @@ const ClanUpgradesTab: React.FC<{ clan: Clan, playerMember: ClanMember }> = ({ c
 			</div>
 
 			{/* Upgrades */}
-			<div className="grid grid-cols-3 place-content-start place-items-center gap-4">
+			<div className="grid grid-cols-3 place-content-start place-items-center gap-4 p-4 pt-0">
 				{ upgrades.map((upgrade, index) => (
 					<ClanUpgrade key={index} upgrade={upgrade} clan={clan} playerMember={playerMember} />
 				)) }

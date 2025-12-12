@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { BaseModalProps } from "@components/modal/BaseModal.tsx";
+import React, { useEffect, useRef, useState } from "react";
+import BaseModal, { BaseModalCloseButton, BaseModalProps } from "@components/modal/BaseModal.tsx";
 import { IdleInput } from "@components/input/IdleInput.tsx";
 import { IdleButton } from "@components/input/IdleButton.tsx";
 import { IdleDropdown } from "@components/input/IdleDropdown.tsx";
@@ -8,6 +8,10 @@ import { useGame } from "@context/GameContext.tsx";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { ActiveClan, IdleClansAPI } from "@/api/IdleClansAPI.ts";
 import { Loader } from "@components/Loader.tsx";
+import { ClanInfoModal, ClanInfoModalId } from "@pages/game/clan/modals/ClanInfoModal.tsx";
+import { useModal } from "@context/ModalContext.tsx";
+import { ModalUtils } from "@utils/ModalUtils.tsx";
+import { useLoading } from "@context/LoadingContext.tsx";
 
 const Languages = [
 	"None",
@@ -87,7 +91,33 @@ const GameModes = [
 }*/
 
 const ClanLookup = () => {
+	const modals = useModal();
+	const loading = useLoading();
+
 	const [clanName, setClanName] = useState("");
+	const workingRef = useRef(false);
+
+	const search = async () => {
+		if (workingRef.current) return;
+		loading.set("RecruitmentCenterSearchingClan", "Searching");
+
+		IdleClansAPI.Clan.getRecruitment(clanName)
+			.then(result => {
+				if (result.error === undefined) {
+					modals.openModal(ClanInfoModalId, <ClanInfoModal name={clanName} value={result} />);
+					return;
+				}
+
+				modals.openModal("FailedToFindClan",
+					ModalUtils.generalTextModal("Error", "Failed to fetch clan, is it spelled correctly?"));
+			}).catch(_ => {
+				modals.openModal("FailedToFindClan",
+					ModalUtils.generalTextModal("Error", "Failed to fetch clan, is it spelled correctly?"));
+		}).finally(() => {
+			workingRef.current = false;
+			loading.remove("RecruitmentCenterSearchingClan");
+		});
+	}
 
 	return (
 		<div className="w-full flex flex-col xl:flex-row xl:gap-4 gap-y-4 p-4 bg-ic-dark-600/75 rounded-md">
@@ -103,6 +133,7 @@ const ClanLookup = () => {
 				title={"Look up"}
 				disabled={clanName.length < 3}
 				className="px-4! xl:px-6!"
+				onClick={() => search()}
 			/>
 		</div>
 	);
@@ -252,12 +283,60 @@ const SearchOptions = ({ loading, search }: { loading: boolean, search: (score: 
 	);
 }
 
-export const RecruitmentCenterModalId = "RecruitmentCenterModal";
-export const RecruitmentCenterModal: React.FC<BaseModalProps> = ({ active, onClose }) => {
-	const [isMouseDown, setIsMouseDown] = useState(false);
+const ClanList = ({ loading, error, clans }: { loading: boolean, error: string | undefined, clans: ActiveClan[] | undefined }) => {
+	const modals = useModal();
 
+	if (loading) {
+		return (
+			<div className="h-full flex justify-center items-center">
+				<Loader title="Loading" />
+			</div>
+		);
+	}
+
+	if (error !== undefined) {
+		return (
+			<div className="h-full flex justify-center items-center">
+				<p className="text-2xl text-ic-red-200">{error ?? "error"}</p>
+			</div>
+		);
+	}
+
+	return clans?.map((clan, index) => (
+		<div
+			key={index}
+			className="even:bg-ic-dark-300 odd:bg-ic-dark-400 text-gray-100 rounded-md cursor-pointer select-none truncate"
+			onClick={() => modals.openModal(ClanInfoModalId, <ClanInfoModal name={clan.name} />)}
+		>
+			<div className="hidden lg:grid grid-cols-8 p-2">
+				<div className="col-span-2 select-text">{clan.name}</div>
+				<div>{clan.activityScore}<span className="text-gray-300"> / 100</span></div>
+				<div>{clan.memberCount}<span className="text-gray-300"> / 20</span></div>
+				<div>{clan.minimumTotalLevel}</div>
+				<div>{clan.language}</div>
+				<div>{clan.isRecruiting ? "Yes" : "No"}</div>
+				<div>{ClanCategory[clan.category ?? 1]}</div>
+			</div>
+
+			<div className="lg:hidden p-2 text-gray-300">
+				<p className="text-center font-semibold text-gray-100">{clan.name} <span className="text-gray-300">({clan.memberCount} / 20)</span></p>
+				<div className="w-full">
+					<p>Activity: <span className="text-gray-100">{clan.activityScore}</span> / 100</p>
+					<div>Minimum level: <span className="text-gray-100">{clan.minimumTotalLevel}</span></div>
+					<div>Language: <span className="text-gray-100">{clan.language}</span></div>
+					<div>Recruiting: <span className="text-gray-100">{clan.isRecruiting ? "Yes" : "No"}</span></div>
+					<div>Category: <span className="text-gray-100">{ClanCategory[clan.category ?? 1]}</span></div>
+				</div>
+			</div>
+		</div>
+	))
+}
+
+export const RecruitmentCenterModalId = "RecruitmentCenterModal";
+export const RecruitmentCenterModal: React.FC<BaseModalProps> = ({ active, onClose, zIndex }) => {
 	const [clans, setClans] = useState<ActiveClan[] | undefined>(undefined);
 	const [loading, setLoading] = useState(true);
+	const [mounted, setMounted] = useState(false);
 	const [error, setError] = useState<string | undefined>(undefined);
 	
 	const search = (
@@ -301,51 +380,31 @@ export const RecruitmentCenterModal: React.FC<BaseModalProps> = ({ active, onClo
 		if (clans !== undefined) return;
 		search(0, [0, 2400], undefined, true, undefined, GameMode.Default);
 	});
-	
-	if (!active) return null;
-
-	const handleMouseDown = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget) setIsMouseDown(true);
-	};
-
-	const handleMouseUp = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget && isMouseDown) onClose?.();
-		setIsMouseDown(false);
-	};
 
 	return (
-		<div
-			className="fixed inset-0 bg-[#00000080] flex flex-col justify-evenly items-center z-50 p-4 lg:p-8 xl:px-10 2xl:px-28"
-			onMouseDown={handleMouseDown}
-			onMouseUp={handleMouseUp}
-			onMouseLeave={() => setIsMouseDown(false)}
+		<BaseModal
+			active={active}
+			onClose={onClose}
+			zIndex={zIndex}
+			onMounted={() => setMounted(true)}
+			className="xl:px-10! 2xl:px-48!"
 		>
 			<div className="w-full h-full bg-ic-dark-500 overflow-y-auto ic-scrollbar-nr">
-				<div className="h-full flex flex-col p-4 pb-0">
+				<div className="relative h-full flex flex-col p-4 pb-0">
 
-					<div className="relative w-full text-center mb-4">
+					<div className="w-full text-center mb-4">
 						<p className="text-gray-100 text-2xl font-bold text-center">Recruitment Center</p>
-						<div className="absolute top-0 right-0 bg-red-500/50 hover:bg-red-400/50 rounded-lg h-8 w-8">
-							<button
-								onClick={onClose}
-								className="text-ic-red-200 hover:text-ic-red-100"
-							>
-								<svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 cursor-pointer" fill="none"
-								     viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-									      d="M6 18L18 6M6 6l12 12"/>
-								</svg>
-							</button>
-						</div>
 					</div>
+
+					<BaseModalCloseButton close={onClose} className="absolute top-2 right-2" />
 
 					<div className="w-full grow flex flex-col-reverse lg:grid lg:grid-cols-[3fr_1fr] gap-4">
 
 						<div
-							className="h-126 lg:h-auto p-4 bg-ic-dark-600/75 rounded-md"
+							className="h-126 lg:h-auto flex flex-col p-4 bg-ic-dark-600/75 rounded-md"
 						>
 
-							<div className="w-full grid grid-cols-8 p-2 pr-4 text-white text-xl font-semibold select-none">
+							<div className="hidden w-full lg:grid grid-cols-8 p-2 pr-4 text-white text-xl font-semibold select-none">
 								<div className="col-span-2 truncate">Name</div>
 								<div className="truncate">Activity</div>
 								<div className="truncate">Members</div>
@@ -355,52 +414,25 @@ export const RecruitmentCenterModal: React.FC<BaseModalProps> = ({ active, onClo
 								<div className="truncate">Category</div>
 							</div>
 
-							<AutoSizer>
-								{({ width, height }) => (
-									<div
-										className="text-lg text-gray-200 space-y-1 overflow-y-auto ic-scrollbar-nr"
-										style={{ width, height: height - 44 }}
-									>
-
-										{ (() => {
-											if (loading) {
-												return (
-													<div className="h-full flex justify-center items-center">
-														<Loader title="Loading" />
-													</div>
-												);
-											}
-
-											if (error !== undefined) {
-												return (
-													<div className="h-full flex justify-center items-center">
-														<p className="text-2xl text-ic-red-200">{error}</p>
-													</div>
-												);
-											}
-
-											return clans?.map((clan, index) => (
-												<div
-													key={index}
-													className="grid grid-cols-8 p-2 even:bg-ic-dark-300
-													odd:bg-ic-dark-400 text-gray-100 rounded-md cursor-pointer select-none"
-													onClick={() => {
-														// TODO: Open clan info
-													}}
-												>
-													<div className="col-span-2 text-gray-100 select-text">{clan.name}</div>
-													<div>{clan.activityScore}<span className="text-gray-300"> / 100</span></div>
-													<div>{clan.memberCount}<span className="text-gray-300"> / 20</span></div>
-													<div>{clan.minimumTotalLevel}</div>
-													<div>{clan.language}</div>
-													<div>{clan.isRecruiting ? "Yes" : "No"}</div>
-													<div>{ClanCategory[clan.category ?? 1]}</div>
-												</div>
-											))
-										})() }
+							<div className="grow">
+								{ !mounted && (
+									<div className="h-full flex justify-center items-center">
+										<Loader title="Loading" />
 									</div>
-								)}
-							</AutoSizer>
+								) }
+								{ mounted && (
+									<AutoSizer>
+										{({ width, height }) => (
+											<div
+												className="text-lg text-gray-200 space-y-1 overflow-y-auto ic-scrollbar-nr"
+												style={{ width, height: height }}
+											>
+												<ClanList loading={loading} error={error} clans={clans} />
+											</div>
+										)}
+									</AutoSizer>
+								) }
+							</div>
 						</div>
 
 						<div className="h-fit flex flex-col gap-4">
@@ -412,6 +444,6 @@ export const RecruitmentCenterModal: React.FC<BaseModalProps> = ({ active, onClo
 					<div className="min-h-4"></div>
 				</div>
 			</div>
-		</div>
+		</BaseModal>
 	);
 }

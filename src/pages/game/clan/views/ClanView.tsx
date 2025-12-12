@@ -58,7 +58,7 @@ export const ClanView: React.FC<{ clan: Clan }> = ({ clan }) => {
 			</div>
 
 			{/* Tab Content */}
-			<div className="h-full flex bg-ic-dark-500/75 overflow-y-auto ic-scrollbar-nr"> {/* overflow-y-auto ic-scrollbar grow pr-1*/}
+			<div className="h-full flex bg-ic-dark-500/75 overflow-y-auto ic-scrollbar-nr">
 				{ currentTab === ClanViewTab.Clan && (<ClanInfoTab clan={clan} player={playerMember} />) }
 				{ currentTab === ClanViewTab.Quests && (<ClanQuestsTab clan={clan} />) }
 				{ currentTab === ClanViewTab.Property && (<ClanPropertyTab clan={clan} playerMember={playerMember} />) }
