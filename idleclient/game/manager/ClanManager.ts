@@ -5,7 +5,7 @@ import {
 	ClearAllGuildApplicationsMessage,
 	CreateGuildMessage, DeclineGuildInviteMessage,
 	DeleteGuildMessage,
-	GuildActionResponse,
+	GuildActionResponse, GuildBulletinBoardEditResponseMessage, GuildBulletinBoardInfoMessage,
 	GuildDeletedMessage, GuildInvitation,
 	GuildLeaderLeftGuildMessage,
 	GuildMemberKickedMessage, GuildMemberLoggedInMessage, GuildMemberLoggedOutMessage,
@@ -24,7 +24,7 @@ import {
 	PlayerLeftGuildMessage,
 	ReceiveGuildApplicationMessage, ReceiveGuildInviteMessage,
 	ReceiveGuildStateMessage,
-	RequestClanPvmStatsMessage,
+	RequestClanPvmStatsMessage, RequestGuildBulletinInfoMessage,
 	RequestGuildStateMessage,
 	RequestGuildVaultMessage,
 	SendGuildInviteMessage,
@@ -103,7 +103,15 @@ export interface ClanManagerType extends ManagerType {
 		 * Request the server to send us our pve stats.
 		 */
 		refreshClanPveStats: (force?: boolean) => void;
+		/**
+		 * Request the server to send us the bulletin board of the clan.
+		 */
+		refreshClanBulletinBoard: (force?: boolean) => void;
 
+		/**
+		 * Update the bulletin board of the clan.
+		 */
+		updateBulletinBoard: (message: string, discordCode: string) => void;
 		/**
 		 * Update the recruitment status of the clan.
 		 */
@@ -252,6 +260,25 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		Network.send(new RequestClanPvmStatsMessage(null));
 	}
 
+	const _refreshClanBulletinBoard = (force: boolean = false) => {
+		const clan = _clanRef.content();
+		if (clan === null) return;
+		if (clan.bulletinBoard !== null && !force) return;
+		Network.send(new RequestGuildBulletinInfoMessage());
+	}
+
+	// Update
+
+	const _updateBulletinBoard = (message: string, discordCode: string) => {
+		const clan = _clanRef.content();
+		if (clan === null) return;
+		if (clan.bulletinBoard?.message === message && clan.bulletinBoard?.discordCode === discordCode) return;
+		Network.send(new GuildBulletinBoardInfoMessage(message, discordCode));
+
+		clan.bulletinBoard = { message, discordCode };
+		_clanRef.trigger();
+	}
+
 	// Recruitment
 
 	const _updateRecruitmentStatus = (recruiting: boolean) => {
@@ -379,6 +406,13 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 			});
 	}, [], PacketType.ReceiveGuildInviteMessage);
 
+	// Update
+
+	usePacket<GuildBulletinBoardEditResponseMessage>(packet => {
+		toasts.info("Clan", packet.Success ? "Successfully updated your clan's bulletin board." :
+			"Failed to update your clan's bulletin board.");
+	}, [], PacketType.GuildBulletinBoardEditResponseMessage);
+
 	// Recruitment
 
 	// Called when our clans' recruitment status has been updated.
@@ -505,6 +539,15 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		clan.onRequestClanPvmStatsMessage(packet);
 		_clanRef.trigger();
 	}, [], PacketType.RequestClanPvmStatsMessage);
+
+	// Received clan bulletin info.
+	usePacket<GuildBulletinBoardInfoMessage>(packet => {
+		const clan = getClanOrWarn("Received GuildBulletinBoardInfoMessage without being in a clan.");
+		if (clan === null) return;
+
+		clan.onGuildBulletinBoardInfoMessage(packet);
+		_clanRef.trigger();
+	}, [], PacketType.GuildBulletinBoardInfoMessage);
 
 	// The clan leader (another member or us) left the clan.
 	usePacket<GuildLeaderLeftGuildMessage>(packet => {
@@ -676,7 +719,9 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 			refreshClanState: _refreshClanState,
 			refreshClanVault: _refreshClanVault,
 			refreshClanPveStats: _refreshClanPveStats,
+			refreshClanBulletinBoard: _refreshClanBulletinBoard,
 
+			updateBulletinBoard: _updateBulletinBoard,
 			updateRecruitmentStatus: _updateRecruitmentStatus,
 			updateCategory: _updateCategory,
 			updateLanguage: _updateLanguage,

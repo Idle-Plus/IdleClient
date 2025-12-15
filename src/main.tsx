@@ -24,9 +24,10 @@ createRoot(document.getElementById('root')!).render(
 									<GameProvider>
 										<SpriteSheetProvider>
 											<div className="page-background" />
-											<ModalBlur>
+											{/*<ModalBlur>
 												<App />
-											</ModalBlur>
+											</ModalBlur>*/}
+											<App />
 											<ModalContainer />
 										</SpriteSheetProvider>
 									</GameProvider>

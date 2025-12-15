@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, type ReactNode } from "react";
+import useSmartRef, { SmartRef } from "@hooks/smartref/useSmartRef.ts";
+import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 
 export interface BaseModalTypeProps {
 	active?: boolean;
@@ -14,7 +16,7 @@ type ModalType = {
 };
 
 export interface ModalContextType {
-	modals: ModalType[];
+	modals: SmartRef<ModalType[]>;
 	openModal: (id: string, component: React.ReactElement<BaseModalTypeProps>, props?: Partial<BaseModalTypeProps>) => void;
 	closeModal: (id: string) => void;
 	closeAllModals: () => void;
@@ -24,39 +26,42 @@ const ModalContext = createContext<ModalContextType | undefined>(undefined);
 const ModalBlurContext = createContext<boolean | undefined>(undefined);
 
 export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-	const [modals, setModals] = useState<ModalType[]>([]);
+	const modalsRef = useSmartRef<ModalType[]>([]);
 
 	const openModal = (
 		id: string,
 		component: React.ReactElement<BaseModalTypeProps>,
 		props?: Partial<BaseModalTypeProps>,
 	) => {
+		const modals = modalsRef.content();
+
 		// Check if the modal already exists, if it does, update it.
 		if (modals.some(modal => modal.id === id)) {
 			const updatedModals = modals.map(modal => modal.id === id ?
 				{ ...modal, component, props } :
 				modal);
-			setModals(updatedModals);
+			modalsRef.setContent(updatedModals);
 		} else {
 			// If it doesn't exist, then just add it.
-			setModals([...modals, { id, component, props }]);
+			modalsRef.setContent([...modals, { id, component, props }]);
 			if (props?.onOpen) props.onOpen();
 		}
 	};
 
 	const closeModal = (id: string) => {
+		const modals = modalsRef.content();
 		const modal = modals.find(m => m.id === id);
 		if (modal?.props?.onClose) modal.props.onClose();
-		setModals(modals.filter(modal => modal.id !== id));
+		modalsRef.setContent(modals.filter(modal => modal.id !== id));
 	};
 
 	const closeAllModals = () => {
-		setModals([]);
+		modalsRef.setContent([]);
 	};
 
 	return (
 		<ModalContext.Provider
-			value={{ modals, openModal, closeModal, closeAllModals }}
+			value={{ modals: modalsRef, openModal, closeModal, closeAllModals }}
 		>
 			{children}
 		</ModalContext.Provider>
@@ -65,7 +70,8 @@ export const ModalProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
 export const ModalBlur: React.FC<{ children: ReactNode }> = ({ children }) => {
 	const modal = useModal();
-	const blur = modal.modals.length > 0;
+	const modals = useSmartRefWatcher(modal.modals);
+	const blur = modals.length > 0;
 
 	return (
 		<ModalBlurContext.Provider value={blur}>
@@ -81,16 +87,17 @@ export const ModalBlur: React.FC<{ children: ReactNode }> = ({ children }) => {
 }
 
 export const ModalContainer: React.FC = () => {
-	const { modals, closeModal } = useModal();
+	const modal = useModal();
+	const modals = useSmartRefWatcher(modal.modals);
 
 	return (
 		<div>
-			{modals.map((modal, index) => (
-				<div key={modal.id}>
-					{React.isValidElement(modal.component) &&
-						React.cloneElement(modal.component, {
+			{modals.map((entry, index) => (
+				<div key={entry.id}>
+					{React.isValidElement(entry.component) &&
+						React.cloneElement(entry.component, {
 							active: true,
-							onClose: () => closeModal(modal.id),
+							onClose: () => modal.closeModal(entry.id),
 							zIndex: 6000 + index,
 						})
 					}

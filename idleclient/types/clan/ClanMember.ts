@@ -9,6 +9,7 @@ export class ClanMember {
 	private _premium: boolean;
 	private _gilded: boolean;
 
+	private _server: string | null = null;
 	private _rank: ClanRank;
 	private _vaultAccess: boolean;
 
@@ -35,6 +36,9 @@ export class ClanMember {
 	set online(value: boolean) { this._online = value; }
 	get premium(): boolean { return this._premium; }
 	get gilded(): boolean { return this._gilded; }
+
+	get server(): string | null { return this._server; }
+	set server(value: string) { this._server = value; }
 
 	get rank(): ClanRank { return this._rank; }
 	set rank(value: ClanRank) { this._rank = value; }

@@ -27,7 +27,7 @@ const Layout: React.FC = () => {
 			<Topbar setSidebar={() => setSidebar(!sidebar)} sidebar={sidebar} />
 			<Sidebar setSidebar={(value: boolean) => setSidebar(value)} sidebar={sidebar} />
 
-			<div className={`p-2 lg:p-4 overflow-x-hidden grow transition-all duration-300 mt-16 xl:ml-64`}>
+			<div className={`p-2 lg:p-4 overflow-x-hidden grow transition-all duration-300 mt-16 xl:ml-64`} style={{ scrollbarGutter: "stable" }}>
 				<div
 					onClick={() => setSidebar(false)}
 					className={`${!sidebar && "hidden"} xl:hidden fixed top-0 left-0 h-screen w-screen bg-black/50 z-2500`}

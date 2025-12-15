@@ -4,7 +4,7 @@ import {
 	ClearAllGuildApplicationsMessage,
 	CreateGuildMessage,
 	DailyGuildQuest,
-	GameMode,
+	GameMode, GuildBulletinBoardInfoMessage,
 	GuildLeaderLeftGuildMessage,
 	GuildMemberKickedMessage, GuildMemberLoggedInMessage, GuildMemberLoggedOutMessage,
 	GuildRank,
@@ -68,6 +68,7 @@ export class Clan {
 	private _tag: string | null = null;
 
 	private _pvmStats: { stats: Map<PvmStatType, Int>, refreshed: Date } | null = null;
+	private _bulletinBoard: { message: string, discordCode: string } | null = null;
 
 	constructor(mode: GameMode, name: string, members: Map<string, ClanMember>, credits: Int, gold: Int, purchasedVaultSpace: Int,
 	            skillingQuests: DailyGuildQuest[], skillingContributors: string[], combatQuests: DailyGuildQuest[],
@@ -121,6 +122,8 @@ export class Clan {
 	get tag(): string | null { return this._tag; }
 
 	get pvmStats(): { stats: Map<PvmStatType, Int>, refreshed: Date } | null { return this._pvmStats; }
+	get bulletinBoard(): { message: string, discordCode: string } | null { return this._bulletinBoard; }
+	set bulletinBoard(value: { message: string, discordCode: string } | null) { this._bulletinBoard = value; }
 
 	public isIronmanClan(): boolean {
 		return this.mode === GameMode.Ironman;
@@ -214,6 +217,13 @@ export class Clan {
 		};
 	}
 
+	public onGuildBulletinBoardInfoMessage(packet: GuildBulletinBoardInfoMessage) {
+		this._bulletinBoard = {
+			message: packet.Message ?? "",
+			discordCode: packet.DiscordInvitationCode ?? ""
+		};
+	}
+
 	public onGuildLeaderLeftGuildMessage(packet: GuildLeaderLeftGuildMessage) {
 		this._members.delete(this.getLeader().name);
 		const member = Array.from(this._members.values())
@@ -302,19 +312,44 @@ export class Clan {
 	public static fromLoginPacket(data: LoginDataMessage): Clan {
 		const mode = data.GameMode ?? GameMode.NotSelected;
 		const name = data.GuildName ?? "?null?";
-		const members = new Map(Object.entries(data.Members || {})
+		let members = new Map(Object.entries(data.Members || {})
 			.map(([name, member], _) =>
 				[name, ClanMember.fromGuildMember(name, member)]));
 
 		// TODO: Temp for testing.
-		/*if (members.size < 20) {
-			const toFill = 10 - members.size;
-			for (let i = 0; i < toFill; i++) {
-				members.set(`test${i}`, new ClanMember(`test${i}`, GameMode.Default, Math.random() > 0.55,
-					Math.random() > 0.75, Math.random() > 0.85, Math.random() < 0.75 ? GuildRank.member : GuildRank.deputy,
-					false, new Date(), new Date()));
+		if (members.size < 20) {
+			// Predefined members.
+			members.set("1maxHP", new ClanMember("1maxHP", GameMode.Default, true, false, true, GuildRank.deputy, true, new Date(), new Date()));
+			members.set("MsWildnoXYZ", new ClanMember("MsWildnoXYZ", GameMode.Default, true, true, true, GuildRank.deputy, true, new Date(), new Date()));
+			members.set("FRUndonyMana", new ClanMember("FRUndonyMana", GameMode.Default, true, false, false, GuildRank.deputy, false, new Date(), new Date()));
+			members.set("Fellinioo", new ClanMember("Fellinioo", GameMode.Default, false, true, true, GuildRank.deputy, false, new Date(), new Date()));
+			members.set("NoahTTV_1", new ClanMember("NoahTTV_1", GameMode.Default, false, true, false, GuildRank.deputy, true, new Date(), new Date()));
+
+			const toFill = 20 - members.size;
+			let deputies = 0;
+
+			const namesPre = [ "Pro", "Mr", "Ms", "x_", "xX_", "King", "", "Base", "Super", "1", "_", "Based", "Wondy", "Lux", "FR" ];
+			const namesMid = [ "rax", "max", "wildno", "Wild", "Sharee", "Undony", "grimes", "Andy", "noob", "qwartys", "Curtin", "Fredrik", "Guss", "Hannah", "Uno", "Viking" ];
+			const namesPost = [ "_Xx", "_x", "", "Randy", "man", "wom", "Mana", "HP", "TTV", "YT", "Work", "s", "1", "2", "3", "_", "XYZ", "HD" ];
+
+			const getName = () => {
+				const pre = namesPre[Math.floor(Math.random() * namesPre.length)];
+				const mid = namesMid[Math.floor(Math.random() * namesMid.length)];
+				const post = namesPost[Math.floor(Math.random() * namesPost.length)];
+				return pre + mid + post;
 			}
-		}*/
+
+			for (let i = 0; i < toFill; i++) {
+				const testName = getName();
+				const deputy = deputies > 0;
+				if (deputy) deputies--;
+				members.set(testName, new ClanMember(testName, GameMode.Default, Math.random() < 0.50,
+					Math.random() > 0.75, Math.random() > 0.55, !deputy ? GuildRank.member : GuildRank.deputy,
+					Math.random() > 0.75, new Date(), new Date()));
+			}
+
+			members = new Map([...members.entries()].sort((a, b) => b[1].rank - a[1].rank));
+		}
 
 		const credits = data.ClanCredits ?? 0;
 		const gold = data.VaultGold ?? 0;

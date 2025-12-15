@@ -194,11 +194,11 @@ export const NotInClanView: React.FC = () => {
 
 						<div className="flex flex-col gap-4 justify-end grow select-none">
 							<div className="flex flex-col md:flex-row items-center gap-4 p-4 py-2 bg-ic-dark-500/75 text-lg text-gray-300 rounded-md">
-								<a href={discord}>
+								<a href={discord} target="_blank" rel="noopener noreferrer">
 									<FaDiscord className="text-7xl text-[#e0e3ff]" />
 								</a>
 								<span>
-									Did you know that the <a className="text-ic-light-100 hover:text-ic-light-000" href={discord}>Idle Clans Discord</a> is
+									Did you know that the <a className="text-ic-light-100 hover:text-ic-light-000" href={discord} target="_blank" rel="noopener noreferrer">Idle Clans Discord</a> is
 									the best place to find a clan with like-minded players?
 								</span>
 							</div>

@@ -9,6 +9,7 @@
 	--font-montserrat: "Montserrat", sans-serif;
 	--font-nunito: "Nunito Sans", sans-serif;
 
+	--breakpoint-2xs: 25rem;
 	--breakpoint-xs: 30rem;
 	--breakpoint-2xl: 100rem;
 
@@ -34,7 +35,7 @@
 	--color-ic-blue-500: #226f92; /* Default */
 
 	/* Named colors */
-	--color-ic-orange-000: #ff9d6e;
+	--color-ic-orange-000: #ffb288;
 	--color-ic-orange-100: #ff8e5c;
 	--color-ic-orange-200: #f37e4c;
 	--color-ic-orange-300: #e67140;
@@ -406,6 +407,26 @@ body {
 	background: #ffffff70;
 }
 
+/* Generic Scrollbar */
+
+.generic-ic-scrollbar::-webkit-scrollbar {
+	width: 0.4rem !important;
+}
+
+.generic-ic-scrollbar::-webkit-scrollbar-track {
+	background: #35f3c530;
+	border-radius: 10rem;
+}
+
+.generic-ic-scrollbar::-webkit-scrollbar-thumb {
+	background: #35f3c5A0;
+	border-radius: 10rem;
+}
+
+.generic-ic-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #35f3c5;
+}
+
 /* Inventory Scrollbar */
 
 .inventory-scrollbar::-webkit-scrollbar {
@@ -453,3 +474,131 @@ body {
 	@apply rounded-lg transition-all duration-150;
 }
 
+/* Markdown - start */
+
+.markdown-container h1 {
+	font-size: var(--text-3xl);
+	line-height: var(--text-3xl--line-height);
+	font-weight: var(--font-weight-semibold);
+
+	padding-bottom: 0.25em;
+	/*noinspection CssUnresolvedCustomProperty*/
+	border-bottom: 2px solid var(--md-divider-color, #a0a0a060);
+	margin-bottom: 0.5em;
+}
+
+.markdown-container h2 {
+	font-size: var(--text-2xl);
+	line-height: var(--text-2xl--line-height);
+	font-weight: var(--font-weight-semibold);
+
+	padding-bottom: 0.25em;
+	/*noinspection CssUnresolvedCustomProperty*/
+	border-bottom: 2px solid var(--md-divider-color, #a0a0a060);
+	margin-bottom: 0.3em;
+}
+
+.markdown-container h3 {
+	font-size: var(--text-xl);
+	line-height: var(--text-xl--line-height);
+}
+
+.markdown-container h4 {
+	font-size: var(--text-lg);
+	line-height: var(--text-lg--line-height);
+}
+
+.markdown-container h5 {
+	font-size: var(--text-base);
+	line-height: var(--text-base--line-height);
+}
+
+.markdown-container h6 {
+	font-size: var(--text-sm);
+	line-height: var(--text-sm--line-height);
+}
+
+.markdown-container h3, .markdown-container h4, .markdown-container h5,
+.markdown-container h6 {
+	font-weight: var(--font-weight-semibold);
+	margin-bottom: 0.25em;
+}
+
+.markdown-container ul, .markdown-container ol { padding-left: 1.5em; margin-bottom: 0.5em; }
+.markdown-container ul { list-style-type: disc; }
+.markdown-container ol { list-style-type: decimal; }
+.markdown-container ol ol, .markdown-container ul ol { list-style-type: lower-roman; }
+.markdown-container ul ul ol, .markdown-container ul ol ol, .markdown-container ol ul ol, .markdown-container ol ol ol { list-style-type: lower-alpha; }
+.markdown-container :is(dir, menu, ol, ul) ul { list-style-type: circle; }
+.markdown-container :is(dir, menu, ol, ul) :is(dir, menu, ol, ul) ul { list-style-type: square; }
+.markdown-container li { display: list-item; unicode-bidi: isolate; }
+
+.markdown-container hr {
+	/*noinspection CssUnresolvedCustomProperty*/
+	border-top-color: var(--md-divider-color, #a0a0a060);
+	border-top-width: 2px;
+	margin: 0.5em 0;
+}
+
+.markdown-container a {
+	/*noinspection CssUnresolvedCustomProperty*/
+	color: var(--md-link-color, #4194ff);
+}
+
+.markdown-container a:hover {
+	/*noinspection CssUnresolvedCustomProperty*/
+	color: var(--md-link-color-hover, #7abaff);
+	text-decoration: underline;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.markdown-container blockquote {
+	padding-left: 1em;
+	border-left: 0.25em solid var(--md-blockquote-border-color, #a0a0a060);
+	color: var(--md-blockquote-color, #bdbdbd);
+	margin-bottom: 0.75em;
+}
+
+.markdown-container blockquote > :first-child { margin-top: 0; }
+.markdown-container blockquote > :last-child { margin-bottom: 0; }
+
+.markdown-container p {
+	margin-bottom: 0.75em;
+}
+
+.markdown-container pre {
+	padding: 1em;
+	overflow: auto;
+	font-size: 85%;
+	line-height: 1.45;
+	background-color: #00000040;
+	border-radius: 6px;
+	margin-bottom: 0.5em;
+}
+
+.markdown-container pre > code {
+	word-break: normal;
+	white-space: pre;
+	background: transparent;
+}
+
+.markdown-container pre code {
+	padding: 0;
+	margin: 0;
+	overflow: visible;
+	line-height: inherit;
+	word-wrap: normal;
+	font-size: 100%;
+}
+
+.markdown-container code {
+	background-color: #00000040;
+	margin: 0;
+	padding: 0.1em 0.4em;
+	border-radius: 4px;
+	font-size: 85%;
+	white-space: break-spaces;
+	font-family: "JetBrains Mono", monospace;
+}
+
+/* Markdown - end */
