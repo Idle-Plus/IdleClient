@@ -27,9 +27,8 @@ export const ClanView: React.FC<{ clan: Clan }> = ({ clan }) => {
 
 	// Refresh the clan state when we visit the clan page.
 	useEffect(() => {
-		game.clan.network.refreshClanState();
+		game.clan.network.refreshClanPage();
 		game.clan.network.refreshClanVault();
-		game.clan.network.refreshClanPveStats();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
@@ -63,7 +62,7 @@ export const ClanView: React.FC<{ clan: Clan }> = ({ clan }) => {
 				{ currentTab === ClanViewTab.Quests && (<ClanQuestsTab clan={clan} />) }
 				{ currentTab === ClanViewTab.Property && (<ClanPropertyTab clan={clan} playerMember={playerMember} />) }
 				{ currentTab === ClanViewTab.Upgrades && (<ClanUpgradesTab clan={clan} playerMember={playerMember} />) }
-				{ currentTab === ClanViewTab.Management && isDeputyOrHigher && (<ClanManagementTab game={game} clan={clan} />) }
+				{ currentTab === ClanViewTab.Management && isDeputyOrHigher && (<ClanManagementTab clan={clan} />) }
 			</div>
 		</div>
 	);

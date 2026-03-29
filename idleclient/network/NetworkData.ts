@@ -17,6 +17,7 @@ export interface ActiveExterminatingAssignment {
 	AssigningExpertId: Int /* i32 */;
 	KillsAcquired: Int /* i32 */;
 	KillsRequired: Int /* i32 */;
+	KillsToCompletion: Int /* i32 */;
 	MonsterName: string | null;
 }
 
@@ -32,43 +33,13 @@ export interface CombatOfflineProgressNetwork {
 	ExperiencesReceived: { [key: Byte /* i8 */]: Int /* i32 */ } | null;
 	ExterminatingPointsReceived: Int /* i32 */;
 	LevelsReceived: { [key: Byte /* i8 */]: Int /* i32 */ } | null;
+	LostItems: { [key: Int /* i32 */]: Int /* i32 */ } | null;
 	MonsterKillsByTaskId: { [key: Int /* i32 */]: Int /* i32 */ } | null;
 	PlayerDied: boolean;
 	ReceivedLoot: { [key: Int /* i32 */]: Int /* i32 */ } | null;
 	TaskId: Byte /* i8 */;
 	TimeOfDeathMilliseconds: Double /* f64 */;
 	UsedAmmoAmount: Int /* i32 */;
-}
-
-export interface DailyGuildQuest {
-	AmountContributed: Int /* i32 */;
-	EntityId: Int /* i32 */;
-	FullAmountRequired: Int /* i32 */;
-	IsCompleted: boolean;
-	Type: Int /* i32 */;
-}
-
-export interface GuildApplicationForLogin {
-	ApplicantName: string;
-	Message: string;
-	TotalLevelAtTimeOfApplication: Int /* i32 */;
-}
-
-export interface GuildInvitation {
-	Date: string;
-	GuildId: string | null;
-	GuildName: string | null;
-}
-
-export interface GuildMember {
-	GameMode: GameMode;
-	HasVaultAccess: boolean;
-	IsOnline: boolean;
-	IsPremium: boolean;
-	IsPremiumPlus: boolean;
-	JoinDate: string | null;
-	LogoutTime: string | null;
-	Rank: GuildRank;
 }
 
 export interface PetOfflineProgression {
@@ -99,6 +70,7 @@ export interface ShopListingItem {
 }
 
 export interface SkillingOfflineProgressNetwork {
+	ElapsedMs: Int /* i32 */;
 	ItemsLost: Array<Int /* i32 */> | null;
 	ItemsLostAmounts: Array<Int /* i32 */> | null;
 	OfflineExperiences: Array<Float /* f32 */> | null;
@@ -113,6 +85,169 @@ export interface WaveMilestoneRecord {
 	BestTimeMs: Long /* i64 */;
 	LastUpdatedUtc: string;
 	Wave: Int /* i32 */;
+}
+
+export enum HolidayEvent {
+	None,
+	Halloween,
+	Christmas,
+	Valentines,
+	Birthday,
+	Summer,
+}
+
+export enum ClanEventType {
+	None,
+	Gathering,
+	Crafting,
+	CombatBigExpDaily,
+	CombatBigLootDaily,
+	SkillingParty,
+}
+
+export interface DailyGuildQuest {
+	AmountContributed: Int /* i32 */;
+	EntityId: Int /* i32 */;
+	FullAmountRequired: Int /* i32 */;
+	IsCompleted: boolean;
+	Type: TaskType;
+}
+
+export interface GuildApplicationData {
+	ApplicantName: string;
+	Message: string;
+	TotalLevelAtTimeOfApplication: Int /* i32 */;
+}
+
+export interface GuildEventLobbyState {
+	EventIsCurrentlyRunning: boolean;
+	EventType: ClanEventType;
+	MembersInParty: Byte /* i8 */;
+}
+
+export interface GuildInvitation {
+	Date: string;
+	GuildId: string | null;
+	GuildName: string | null;
+}
+
+export interface GuildMember {
+	DisplayName: string;
+	GameMode: GameMode;
+	HasVaultAccess: boolean;
+	IsOnline: boolean;
+	IsPremium: boolean;
+	IsPremiumPlus: boolean;
+	JoinDate: string | null;
+	LogoutTime: string | null;
+	Rank: GuildRank;
+	ServerId: string | null;
+}
+
+export interface GuildMemberDto {
+	ActiveServerId: string | null;
+	GameMode: GameMode;
+	HasVaultAccess: boolean;
+	IsGilded: boolean;
+	IsPremium: boolean;
+	JoinDate: string;
+	LogoutTime: string | null;
+	Rank: GuildRank;
+	Username: string;
+}
+
+export interface GuildStateAdmin {
+	ActiveGuildApplications: Array<GuildApplicationData> | null;
+	Category: ClanCategory | null;
+	IsRecruiting: boolean | null;
+	MinimumTotalLevelRequired: Int /* i32 */ | null;
+	PrimaryLanguage: string | null;
+}
+
+export interface GuildStateChangeMessage {
+	Args: Array<string>;
+	LocalizationKey: string;
+}
+
+export interface GuildStateEconomy {
+	AccumulatedCredits: Int /* i32 */ | null;
+	ClanCredits: Int /* i32 */ | null;
+	InvokingPlayerHasClaimableLoot: boolean | null;
+	PurchasedVaultSlots: Int /* i32 */ | null;
+	UnlockedUpgrades: Array<UpgradeType> | null;
+}
+
+export interface GuildStateEvents {
+	Serialized: string | null;
+	SkillingPartyCompletions: Int /* i32 */ | null;
+	SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ } | null;
+}
+
+export interface GuildStateHouse {
+	GuildHouseId: Int /* i32 */ | null;
+}
+
+export interface GuildStateMembers {
+	Members: Array<GuildMemberDto> | null;
+}
+
+export interface GuildStateMeta {
+	CreationDate: string | null;
+	EarliestPossibleDeletionDate: string | null;
+	GuildName: string | null;
+	RecentlyCreated: boolean | null;
+	RecruitmentMessage: string | null;
+	Tag: string | null;
+}
+
+export interface GuildStateProgress {
+	Experiences: { [key: string /* Name of: Skill */]: Float /* f32 */ } | null;
+}
+
+export interface GuildStateQuests {
+	CombatContributors: Array<string> | null;
+	DailyCombatQuests: Array<DailyGuildQuest> | null;
+	DailySkillingQuests: Array<DailyGuildQuest> | null;
+	NextQuestGenerationTimestamp: string | null;
+	SkillingContributors: Array<string> | null;
+}
+
+export interface GuildStateVault {
+	Gold: Double /* f64 */ | null;
+}
+
+export interface ItemDelta {
+	Amount: Int /* i32 */;
+	ItemId: Int /* i32 */;
+}
+
+export interface PlayerActivity {
+	ActivityIdentifierId: Int /* i32 */;
+	StartTime: string | null;
+	TaskType: Int /* i32 */;
+	Type: PlayerActivityType;
+}
+
+export enum PlayerActivityType {
+	Unknown,
+	Idle,
+	Task,
+	ClanEvent,
+	ClanBoss,
+	Raid,
+	AFKRaid,
+	InLobby,
+}
+
+export interface QuestLoginObject {
+	AvailableDailyQuestCount: Int /* i32 */;
+	AvailableWeeklyQuestCount: Int /* i32 */;
+	HasAvailableQuests: boolean;
+}
+
+export interface ExpDelta {
+	Amount: Int /* i32 */;
+	Skill: Skill;
 }
 
 export enum AttackStyle {
@@ -273,6 +408,7 @@ export enum GuildActionResponse {
 	guild_not_recruiting,
 	guild_gamemode_mismatch,
 	guild_not_high_enough_rank,
+	application_accepted,
 }
 
 export enum GuildRank {
@@ -546,10 +682,13 @@ export enum WeaponType {
  */
 export class ActiveTaskCancelledMessage extends Packet {
 	public readonly MsgType: number = 192;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): ActiveTaskCancelledMessage {
-		return new ActiveTaskCancelledMessage();
+		const _data_ = new ActiveTaskCancelledMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
@@ -558,46 +697,61 @@ export class ActiveTaskCancelledMessage extends Packet {
  */
 export class CompleteTaskMessage extends Packet {
 	public readonly MsgType: number = 4;
-	constructor(public TaskType: TaskType, public TaskId: Byte /* i8 */, public ItemAmount: Int /* i32 */, public UpgradeInteraction: Byte /* i8 */, public PotionInteraction: Byte /* i8 */, public UsedConsumableItemId: Int /* i32 */) { super(); }
+	public OriginServerId: string | null = null;
+	constructor(public TaskType: TaskType, public TaskId: Byte /* i8 */, public ItemChanges: Array<ItemDelta>, public ExpChanges: Array<ExpDelta>) { super(); }
 
 	public static fromJson(json: any): CompleteTaskMessage {
-		return new CompleteTaskMessage(json.TaskType, json.TaskId, json.ItemAmount, json.UpgradeInteraction, json.PotionInteraction, json.UsedConsumableItemId);
+		const _data_ = new CompleteTaskMessage(json.TaskType, json.TaskId, json.ItemChanges, json.ExpChanges);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class EquipItemMessage extends Packet {
 	public readonly MsgType: number = 13;
+	public OriginServerId: string | null = null;
 	constructor(public ItemId: Int /* i32 */, public Amount: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): EquipItemMessage {
-		return new EquipItemMessage(json.ItemId, json.Amount);
+		const _data_ = new EquipItemMessage(json.ItemId, json.Amount);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class ErrorMessage extends Packet {
 	public readonly MsgType: number = 5;
+	public OriginServerId: string | null = null;
 	constructor(public Error: ErrorType, public LocKey: string | null) { super(); }
 
 	public static fromJson(json: any): ErrorMessage {
-		return new ErrorMessage(json.Error, json.LocKey);
+		const _data_ = new ErrorMessage(json.Error, json.LocKey);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class InventoryItemSwapMessage extends Packet {
 	public readonly MsgType: number = 69;
+	public OriginServerId: string | null = null;
 	constructor(public FromSlot: Int /* i32 */, public ToSlot: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): InventoryItemSwapMessage {
-		return new InventoryItemSwapMessage(json.FromSlot, json.ToSlot);
+		const _data_ = new InventoryItemSwapMessage(json.FromSlot, json.ToSlot);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class LoginDataMessage extends Packet {
 	public readonly MsgType: number = 1;
-	constructor(public Username: string | null, public SkillExperiencesJson: string | null, public InventoryJson: string | null, public Gold: Double /* f64 */, public EquipmentJson: string | null, public EquippedAmmunitionAmount: Int /* i32 */, public NewPlayer: boolean, public Health: Int /* i32 */, public IsVerified: boolean, public PremiumEndDate: string | null, public IsPremiumPlus: boolean, public UnlockedBossHunter: boolean, public UnlockedAutoLoadouts: boolean, public Upgrades: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null, public CombatStyle: Byte /* i8 */, public ArcheryCombatStyle: Byte /* i8 */, public MagicCombatStyle: Byte /* i8 */, public AutoEatPercentage: Byte /* i8 */, public UsedBossKey: Int /* i32 */, public KronosAttackStyleWeakness: AttackStyle, public TutorialStage: FTUEStage | null, public GameMode: GameMode | null, public ConfigVersion: Int /* i32 */, public GuildName: string | null, public Members: { [key: string]: GuildMember } | null, public ActiveGuildApplications: Array<GuildApplicationForLogin> | null, public VaultGold: Double /* f64 */, public GuildHouseId: Int /* i32 */, public ClanCredits: Int /* i32 */, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null, public SkillingContributors: Array<string> | null, public CombatContributors: Array<string> | null, public UnlockedUpgrades: Array<UpgradeType> | null, public AccumulatedCredits: Int /* i32 */, public OfflineHours: Byte /* i8 */, public SkillingOfflineProgress: SkillingOfflineProgressNetwork | null, public CombatOfflineProgress: CombatOfflineProgressNetwork | null, public ItemsSoldOffline: Array<ShopListingItem> | null, public SerializedPlayerToggleableSettings: string | null, public AdsWatchedToday: Byte /* i8 */, public LastAdWatchedTimestampTicks: Long /* i64 */, public AdBoostedSeconds: Int /* i32 */, public AdBoostPaused: boolean, public PurchasedInventorySlots: Int /* i32 */, public ClanVaultSpacePurchased: Int /* i32 */, public ActivePotionEffects: { [key: string /* Name of: PotionType */]: Int /* i32 */ } | null, public SerializedItemEnchantments: string | null, public GuildInvitations: Array<GuildInvitation> | null, public UseInventoryConsumables: boolean, public ShouldShowQuestsNotification: boolean, public QuesterUnlocked: boolean, public PetOfflineProgress: PetOfflineProgression | null, public ActivePetSkill: Skill | null, public PetTaskId: Byte /* i8 */, public ItemsInWithdrawalBox: boolean, public ExterminatingPoints: Int /* i32 */, public ActiveExterminatingAssignment: ActiveExterminatingAssignment | null, public ExterminatorUnlocked: boolean, public UnlockedExterminatingPurchases: Array<ExterminatingShopUnlockType> | null, public PlayerRewards: { [key: string /* Name of: PlayerRewardType */]: Int /* i32 */ } | null, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ }, public PvmBestTimes: { [key: string /* Name of: PvmStatType */]: PvmBestRecord } | null, public AfkRaidInfo: AfkRaidInfo | null, public UnlockedAFKRaids: Array<RaidType>, public PurchaseLimitCounts: Array<PurchaseLimitScopeCountDto>) { super(); }
+	public OriginServerId: string | null = null;
+	constructor(public Username: string | null, public SkillExperiencesJson: string | null, public InventoryJson: string | null, public Gold: Double /* f64 */, public EquipmentJson: string | null, public EquippedAmmunitionAmount: Int /* i32 */, public NewPlayer: boolean, public Health: Int /* i32 */, public IsVerified: boolean, public PremiumEndDate: string | null, public IsPremiumPlus: boolean, public UnlockedBossHunter: boolean, public UnlockedAutoLoadouts: boolean, public Upgrades: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null, public CombatStyle: Byte /* i8 */, public ArcheryCombatStyle: Byte /* i8 */, public MagicCombatStyle: Byte /* i8 */, public AutoEatPercentage: Byte /* i8 */, public UsedBossKey: Int /* i32 */, public KronosAttackStyleWeakness: AttackStyle, public TutorialStage: FTUEStage | null, public GameMode: GameMode | null, public ConfigVersion: Int /* i32 */, public GuildStateMessage: ReceiveGuildStateMessage | null, public GuildLobbyStates: Array<GuildEventLobbyState> | null, public OfflineTime: string, public SkillingOfflineProgress: SkillingOfflineProgressNetwork | null, public CombatOfflineProgress: CombatOfflineProgressNetwork | null, public ItemsSoldOffline: Array<ShopListingItem> | null, public SerializedPlayerToggleableSettings: string | null, public AdsWatchedToday: Byte /* i8 */, public LastAdWatchedTimestampTicks: Long /* i64 */, public AdBoostedSeconds: Int /* i32 */, public AdBoostPaused: boolean, public PurchasedInventorySlots: Int /* i32 */, public ClanVaultSpacePurchased: Int /* i32 */, public ActivePotionEffects: { [key: string /* Name of: PotionType */]: Int /* i32 */ } | null, public SerializedItemEnchantments: string | null, public GuildInvitations: Array<GuildInvitation> | null, public UseInventoryConsumables: boolean, public QuestLoginObject: QuestLoginObject, public QuesterUnlocked: boolean, public PetOfflineProgress: PetOfflineProgression | null, public ActivePetSkill: Skill | null, public PetTaskId: Byte /* i8 */, public ItemsInWithdrawalBox: boolean, public ExterminatingPoints: Int /* i32 */, public ActiveExterminatingAssignment: ActiveExterminatingAssignment | null, public ExterminatorUnlocked: boolean, public UnlockedExterminatingPurchases: Array<ExterminatingShopUnlockType> | null, public PlayerRewards: { [key: string /* Name of: PlayerRewardType */]: Int /* i32 */ } | null, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ }, public PvmBestTimes: { [key: string /* Name of: PvmStatType */]: PvmBestRecord } | null, public AfkRaidInfo: AfkRaidInfo | null, public UnlockedAFKRaids: Array<RaidType>, public PurchaseLimitCounts: Array<PurchaseLimitScopeCountDto>, public ServerId: string, public ActiveHolidayEvent: HolidayEvent, public IsInGuild: boolean) { super(); }
 
 	public static fromJson(json: any): LoginDataMessage {
-		return new LoginDataMessage(json.Username, json.SkillExperiencesJson, json.InventoryJson, json.Gold, json.EquipmentJson, json.EquippedAmmunitionAmount, json.NewPlayer, json.Health, json.IsVerified, json.PremiumEndDate, json.IsPremiumPlus, json.UnlockedBossHunter, json.UnlockedAutoLoadouts, json.Upgrades, json.CombatStyle, json.ArcheryCombatStyle, json.MagicCombatStyle, json.AutoEatPercentage, json.UsedBossKey, json.KronosAttackStyleWeakness, json.TutorialStage, json.GameMode, json.ConfigVersion, json.GuildName, json.Members, json.ActiveGuildApplications, json.VaultGold, json.GuildHouseId, json.ClanCredits, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.DailyCombatQuests, json.SkillingContributors, json.CombatContributors, json.UnlockedUpgrades, json.AccumulatedCredits, json.OfflineHours, json.SkillingOfflineProgress, json.CombatOfflineProgress, json.ItemsSoldOffline, json.SerializedPlayerToggleableSettings, json.AdsWatchedToday, json.LastAdWatchedTimestampTicks, json.AdBoostedSeconds, json.AdBoostPaused, json.PurchasedInventorySlots, json.ClanVaultSpacePurchased, json.ActivePotionEffects, json.SerializedItemEnchantments, json.GuildInvitations, json.UseInventoryConsumables, json.ShouldShowQuestsNotification, json.QuesterUnlocked, json.PetOfflineProgress, json.ActivePetSkill, json.PetTaskId, json.ItemsInWithdrawalBox, json.ExterminatingPoints, json.ActiveExterminatingAssignment, json.ExterminatorUnlocked, json.UnlockedExterminatingPurchases, json.PlayerRewards, json.Stats, json.PvmBestTimes, json.AfkRaidInfo, json.UnlockedAFKRaids, json.PurchaseLimitCounts);
+		const _data_ = new LoginDataMessage(json.Username, json.SkillExperiencesJson, json.InventoryJson, json.Gold, json.EquipmentJson, json.EquippedAmmunitionAmount, json.NewPlayer, json.Health, json.IsVerified, json.PremiumEndDate, json.IsPremiumPlus, json.UnlockedBossHunter, json.UnlockedAutoLoadouts, json.Upgrades, json.CombatStyle, json.ArcheryCombatStyle, json.MagicCombatStyle, json.AutoEatPercentage, json.UsedBossKey, json.KronosAttackStyleWeakness, json.TutorialStage, json.GameMode, json.ConfigVersion, json.GuildStateMessage, json.GuildLobbyStates, json.OfflineTime, json.SkillingOfflineProgress, json.CombatOfflineProgress, json.ItemsSoldOffline, json.SerializedPlayerToggleableSettings, json.AdsWatchedToday, json.LastAdWatchedTimestampTicks, json.AdBoostedSeconds, json.AdBoostPaused, json.PurchasedInventorySlots, json.ClanVaultSpacePurchased, json.ActivePotionEffects, json.SerializedItemEnchantments, json.GuildInvitations, json.UseInventoryConsumables, json.QuestLoginObject, json.QuesterUnlocked, json.PetOfflineProgress, json.ActivePetSkill, json.PetTaskId, json.ItemsInWithdrawalBox, json.ExterminatingPoints, json.ActiveExterminatingAssignment, json.ExterminatorUnlocked, json.UnlockedExterminatingPurchases, json.PlayerRewards, json.Stats, json.PvmBestTimes, json.AfkRaidInfo, json.UnlockedAFKRaids, json.PurchaseLimitCounts, json.ServerId, json.ActiveHolidayEvent, json.IsInGuild);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
@@ -606,10 +760,13 @@ export class LoginDataMessage extends Packet {
  */
 export class StartTaskMessage extends Packet {
 	public readonly MsgType: number = 3;
+	public OriginServerId: string | null = null;
 	constructor(public TaskType: TaskType, public TaskId: Int /* i32 */, public UseInventoryConsumables: boolean) { super(); }
 
 	public static fromJson(json: any): StartTaskMessage {
-		return new StartTaskMessage(json.TaskType, json.TaskId, json.UseInventoryConsumables);
+		const _data_ = new StartTaskMessage(json.TaskType, json.TaskId, json.UseInventoryConsumables);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
@@ -618,289 +775,369 @@ export class StartTaskMessage extends Packet {
  */
 export class TaskStartedMessage extends Packet {
 	public readonly MsgType: number = 191;
-	constructor(public TaskType: TaskType, public TaskId: Int /* i32 */) { super(); }
+	public OriginServerId: string | null = null;
+	constructor(public TaskType: TaskType, public TaskId: Int /* i32 */, public ElapsedMs: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): TaskStartedMessage {
-		return new TaskStartedMessage(json.TaskType, json.TaskId);
+		const _data_ = new TaskStartedMessage(json.TaskType, json.TaskId, json.ElapsedMs);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class UnequipItemMessage extends Packet {
 	public readonly MsgType: number = 14;
+	public OriginServerId: string | null = null;
 	constructor(public ItemId: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): UnequipItemMessage {
-		return new UnequipItemMessage(json.ItemId);
+		const _data_ = new UnequipItemMessage(json.ItemId);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class AbortGuildDeletionMessage extends Packet {
 	public readonly MsgType: number = 266;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): AbortGuildDeletionMessage {
-		return new AbortGuildDeletionMessage();
+		const _data_ = new AbortGuildDeletionMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class AcceptGuildInviteMessage extends Packet {
 	public readonly MsgType: number = 37;
+	public OriginServerId: string | null = null;
 	constructor(public GuildName: string) { super(); }
 
 	public static fromJson(json: any): AcceptGuildInviteMessage {
-		return new AcceptGuildInviteMessage(json.GuildName);
+		const _data_ = new AcceptGuildInviteMessage(json.GuildName);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class ClearAllGuildApplicationsMessage extends Packet {
 	public readonly MsgType: number = 132;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): ClearAllGuildApplicationsMessage {
-		return new ClearAllGuildApplicationsMessage();
+		const _data_ = new ClearAllGuildApplicationsMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class CreateGuildMessage extends Packet {
 	public readonly MsgType: number = 32;
+	public OriginServerId: string | null = null;
 	constructor(public GuildName: string, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null) { super(); }
 
 	public static fromJson(json: any): CreateGuildMessage {
-		return new CreateGuildMessage(json.GuildName, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.DailyCombatQuests);
+		const _data_ = new CreateGuildMessage(json.GuildName, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.DailyCombatQuests);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class DeclineGuildInviteMessage extends Packet {
 	public readonly MsgType: number = 56;
+	public OriginServerId: string | null = null;
 	constructor(public GuildName: string) { super(); }
 
 	public static fromJson(json: any): DeclineGuildInviteMessage {
-		return new DeclineGuildInviteMessage(json.GuildName);
+		const _data_ = new DeclineGuildInviteMessage(json.GuildName);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class DeleteGuildMessage extends Packet {
 	public readonly MsgType: number = 47;
+	public OriginServerId: string | null = null;
 	constructor(public ViewingDeletionState: boolean) { super(); }
 
 	public static fromJson(json: any): DeleteGuildMessage {
-		return new DeleteGuildMessage(json.ViewingDeletionState);
+		const _data_ = new DeleteGuildMessage(json.ViewingDeletionState);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildBulletinBoardEditResponseMessage extends Packet {
 	public readonly MsgType: number = 190;
+	public OriginServerId: string | null = null;
 	constructor(public Success: boolean) { super(); }
 
 	public static fromJson(json: any): GuildBulletinBoardEditResponseMessage {
-		return new GuildBulletinBoardEditResponseMessage(json.Success);
+		const _data_ = new GuildBulletinBoardEditResponseMessage(json.Success);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildBulletinBoardInfoMessage extends Packet {
 	public readonly MsgType: number = 189;
+	public OriginServerId: string | null = null;
 	constructor(public Message: string | null, public DiscordInvitationCode: string | null) { super(); }
 
 	public static fromJson(json: any): GuildBulletinBoardInfoMessage {
-		return new GuildBulletinBoardInfoMessage(json.Message, json.DiscordInvitationCode);
+		const _data_ = new GuildBulletinBoardInfoMessage(json.Message, json.DiscordInvitationCode);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildDeletedMessage extends Packet {
 	public readonly MsgType: number = 49;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): GuildDeletedMessage {
-		return new GuildDeletedMessage();
+		const _data_ = new GuildDeletedMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildDeletionResponseMessage extends Packet {
 	public readonly MsgType: number = 265;
+	public OriginServerId: string | null = null;
 	constructor(public EarliestPossibleDeletionDate: string) { super(); }
 
 	public static fromJson(json: any): GuildDeletionResponseMessage {
-		return new GuildDeletionResponseMessage(json.EarliestPossibleDeletionDate);
+		const _data_ = new GuildDeletionResponseMessage(json.EarliestPossibleDeletionDate);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
+/**
+ * Sent by the server to a guild leader when they left the clan. Only the leaving
+ * guild leader will receive the message, no one else.
+ */
 export class GuildLeaderLeftGuildMessage extends Packet {
 	public readonly MsgType: number = 124;
+	public OriginServerId: string | null = null;
 	constructor(public NewLeader: string) { super(); }
 
 	public static fromJson(json: any): GuildLeaderLeftGuildMessage {
-		return new GuildLeaderLeftGuildMessage(json.NewLeader);
-	}
-}
-
-export class GuildMemberKickedMessage extends Packet {
-	public readonly MsgType: number = 51;
-	constructor(public PlayerName: string) { super(); }
-
-	public static fromJson(json: any): GuildMemberKickedMessage {
-		return new GuildMemberKickedMessage(json.PlayerName);
+		const _data_ = new GuildLeaderLeftGuildMessage(json.NewLeader);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildMemberLoggedInMessage extends Packet {
 	public readonly MsgType: number = 42;
-	constructor(public GuildMemberName: string) { super(); }
+	public OriginServerId: string | null = null;
+	constructor(public GuildMemberName: string, public ActiveServerId: string) { super(); }
 
 	public static fromJson(json: any): GuildMemberLoggedInMessage {
-		return new GuildMemberLoggedInMessage(json.GuildMemberName);
+		const _data_ = new GuildMemberLoggedInMessage(json.GuildMemberName, json.ActiveServerId);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildMemberLoggedOutMessage extends Packet {
 	public readonly MsgType: number = 43;
+	public OriginServerId: string | null = null;
 	constructor(public GuildMemberName: string) { super(); }
 
 	public static fromJson(json: any): GuildMemberLoggedOutMessage {
-		return new GuildMemberLoggedOutMessage(json.GuildMemberName);
+		const _data_ = new GuildMemberLoggedOutMessage(json.GuildMemberName);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildRequestRecruitmentMessageMessage extends Packet {
 	public readonly MsgType: number = 217;
+	public OriginServerId: string | null = null;
 	constructor(public RecruitmentMessage: string | null) { super(); }
 
 	public static fromJson(json: any): GuildRequestRecruitmentMessageMessage {
-		return new GuildRequestRecruitmentMessageMessage(json.RecruitmentMessage);
+		const _data_ = new GuildRequestRecruitmentMessageMessage(json.RecruitmentMessage);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildRequestResultMessage extends Packet {
 	public readonly MsgType: number = 41;
+	public OriginServerId: string | null = null;
 	constructor(public AssociatedPlayer: string | null, public MessageType: GuildActionResponse) { super(); }
 
 	public static fromJson(json: any): GuildRequestResultMessage {
-		return new GuildRequestResultMessage(json.AssociatedPlayer, json.MessageType);
+		const _data_ = new GuildRequestResultMessage(json.AssociatedPlayer, json.MessageType);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildUpdateMinimumTotalLevelRequirementMessage extends Packet {
 	public readonly MsgType: number = 216;
+	public OriginServerId: string | null = null;
 	constructor(public MinimumTotalLevel: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): GuildUpdateMinimumTotalLevelRequirementMessage {
-		return new GuildUpdateMinimumTotalLevelRequirementMessage(json.MinimumTotalLevel);
+		const _data_ = new GuildUpdateMinimumTotalLevelRequirementMessage(json.MinimumTotalLevel);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildUpdatePrimaryLanguageMessage extends Packet {
 	public readonly MsgType: number = 214;
+	public OriginServerId: string | null = null;
 	constructor(public Language: string) { super(); }
 
 	public static fromJson(json: any): GuildUpdatePrimaryLanguageMessage {
-		return new GuildUpdatePrimaryLanguageMessage(json.Language);
+		const _data_ = new GuildUpdatePrimaryLanguageMessage(json.Language);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildUpdateRecruitmentMessageMessage extends Packet {
 	public readonly MsgType: number = 215;
+	public OriginServerId: string | null = null;
 	constructor(public RecruitmentMessage: string) { super(); }
 
 	public static fromJson(json: any): GuildUpdateRecruitmentMessageMessage {
-		return new GuildUpdateRecruitmentMessageMessage(json.RecruitmentMessage);
+		const _data_ = new GuildUpdateRecruitmentMessageMessage(json.RecruitmentMessage);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildUpdateRecruitmentStateMessage extends Packet {
 	public readonly MsgType: number = 212;
+	public OriginServerId: string | null = null;
 	constructor(public Value: boolean) { super(); }
 
 	public static fromJson(json: any): GuildUpdateRecruitmentStateMessage {
-		return new GuildUpdateRecruitmentStateMessage(json.Value);
+		const _data_ = new GuildUpdateRecruitmentStateMessage(json.Value);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildUpdateStatusMessage extends Packet {
 	public readonly MsgType: number = 213;
+	public OriginServerId: string | null = null;
 	constructor(public Status: ClanCategory) { super(); }
 
 	public static fromJson(json: any): GuildUpdateStatusMessage {
-		return new GuildUpdateStatusMessage(json.Status);
+		const _data_ = new GuildUpdateStatusMessage(json.Status);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildUpdateTagMessage extends Packet {
 	public readonly MsgType: number = 354;
+	public OriginServerId: string | null = null;
 	constructor(public Tag: string | null) { super(); }
 
 	public static fromJson(json: any): GuildUpdateTagMessage {
-		return new GuildUpdateTagMessage(json.Tag);
+		const _data_ = new GuildUpdateTagMessage(json.Tag);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class GuildVaultMessage extends Packet {
 	public readonly MsgType: number = 219;
+	public OriginServerId: string | null = null;
 	constructor(public Vault: { [key: Int /* i32 */]: Int /* i32 */ }) { super(); }
 
 	public static fromJson(json: any): GuildVaultMessage {
-		return new GuildVaultMessage(json.Vault);
+		const _data_ = new GuildVaultMessage(json.Vault);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class KickGuildMemberMessage extends Packet {
 	public readonly MsgType: number = 50;
+	public OriginServerId: string | null = null;
 	constructor(public Username: string) { super(); }
 
 	public static fromJson(json: any): KickGuildMemberMessage {
-		return new KickGuildMemberMessage(json.Username);
+		const _data_ = new KickGuildMemberMessage(json.Username);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class LeaveGuildMessage extends Packet {
 	public readonly MsgType: number = 46;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): LeaveGuildMessage {
-		return new LeaveGuildMessage();
+		const _data_ = new LeaveGuildMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
-export class PlayerJoinedGuildMessage extends Packet {
-	public readonly MsgType: number = 38;
-	constructor(public PlayerJoining: string, public IsPremium: boolean, public IsPremiumPlus: boolean, public IsOnline: boolean, public LogOutTime: string | null, public GuildName: string | null, public Members: { [key: string]: GuildMember } | null, public NextQuestGenerationTimestamp: string | null, public DailySkillingQuests: Array<DailyGuildQuest> | null, public SkillingContributors: Array<string> | null, public DailyCombatQuests: Array<DailyGuildQuest> | null, public CombatContributors: Array<string> | null, public SkillExperiences: { [key: string /* Name of: Skill */]: Float /* f32 */ } | null, public OwnedHouseId: Int /* i32 */, public Vault: { [key: Int /* i32 */]: Int /* i32 */ } | null, public Gold: Double /* f64 */, public UnlockedUpgrades: Array<UpgradeType> | null, public ClanVaultSpacePurchased: Int /* i32 */, public Credits: Int /* i32 */, public SerializedEventStates: string | null, public SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ } | null, public SkillingPartyCompletions: Int /* i32 */, public Tag: string | null) { super(); }
-
-	public static fromJson(json: any): PlayerJoinedGuildMessage {
-		return new PlayerJoinedGuildMessage(json.PlayerJoining, json.IsPremium, json.IsPremiumPlus, json.IsOnline, json.LogOutTime, json.GuildName, json.Members, json.NextQuestGenerationTimestamp, json.DailySkillingQuests, json.SkillingContributors, json.DailyCombatQuests, json.CombatContributors, json.SkillExperiences, json.OwnedHouseId, json.Vault, json.Gold, json.UnlockedUpgrades, json.ClanVaultSpacePurchased, json.Credits, json.SerializedEventStates, json.SkillingTickets, json.SkillingPartyCompletions, json.Tag);
-	}
-}
-
+/**
+ * Sent by the server to a player that left or was kicked from the clan. Only the
+ * player being removed will receive the message, no one else.
+ */
 export class PlayerLeftGuildMessage extends Packet {
 	public readonly MsgType: number = 48;
+	public OriginServerId: string | null = null;
 	constructor(public PlayerName: string) { super(); }
 
 	public static fromJson(json: any): PlayerLeftGuildMessage {
-		return new PlayerLeftGuildMessage(json.PlayerName);
+		const _data_ = new PlayerLeftGuildMessage(json.PlayerName);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class ReceiveGuildApplicationMessage extends Packet {
 	public readonly MsgType: number = 34;
+	public OriginServerId: string | null = null;
 	constructor(public PlayerApplying: string, public Message: string, public PlayerTotalLevel: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): ReceiveGuildApplicationMessage {
-		return new ReceiveGuildApplicationMessage(json.PlayerApplying, json.Message, json.PlayerTotalLevel);
+		const _data_ = new ReceiveGuildApplicationMessage(json.PlayerApplying, json.Message, json.PlayerTotalLevel);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class ReceiveGuildInviteMessage extends Packet {
 	public readonly MsgType: number = 36;
+	public OriginServerId: string | null = null;
 	constructor(public PlayerInviting: string, public GuildName: string) { super(); }
 
 	public static fromJson(json: any): ReceiveGuildInviteMessage {
-		return new ReceiveGuildInviteMessage(json.PlayerInviting, json.GuildName);
+		const _data_ = new ReceiveGuildInviteMessage(json.PlayerInviting, json.GuildName);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class ReceiveGuildStateMessage extends Packet {
 	public readonly MsgType: number = 60;
-	constructor(public SkillExperiences: { [key: string /* Name of: Skill */]: Float /* f32 */ } | null, public ClanCredits: Int /* i32 */, public EventStates: string, public SkillingTickets: { [key: string /* Name of: Skill */]: Int /* i32 */ } | null, public SkillingPartyCompletions: Int /* i32 */, public IsRecruiting: boolean, public Status: ClanCategory, public PrimaryLanguage: string | null, public MinimumTotalLevelRequired: Int /* i32 */, public LocalPlayerHasClaimableLoot: boolean, public Tag: string | null) { super(); }
+	public OriginServerId: string | null = null;
+	constructor(public IsPartialUpdate: boolean, public Meta: GuildStateMeta | null, public Progress: GuildStateProgress | null, public Members: GuildStateMembers | null, public Vault: GuildStateVault | null, public House: GuildStateHouse | null, public Economy: GuildStateEconomy | null, public Quests: GuildStateQuests | null, public Events: GuildStateEvents | null, public Message: GuildStateChangeMessage | null, public Admin: GuildStateAdmin | null) { super(); }
 
 	public static fromJson(json: any): ReceiveGuildStateMessage {
-		return new ReceiveGuildStateMessage(json.SkillExperiences, json.ClanCredits, json.EventStates, json.SkillingTickets, json.SkillingPartyCompletions, json.IsRecruiting, json.Status, json.PrimaryLanguage, json.MinimumTotalLevelRequired, json.LocalPlayerHasClaimableLoot, json.Tag);
+		const _data_ = new ReceiveGuildStateMessage(json.IsPartialUpdate, json.Meta, json.Progress, json.Members, json.Vault, json.House, json.Economy, json.Quests, json.Events, json.Message, json.Admin);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
@@ -909,73 +1146,97 @@ export class ReceiveGuildStateMessage extends Packet {
  */
 export class RequestClanBossInfoMessage extends Packet {
 	public readonly MsgType: number = 337;
+	public OriginServerId: string | null = null;
 	constructor(public BossType: ClanEventBossType, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ } | null, public PlayersInFight: Byte /* i8 */ | null, public ActiveModifiers: { [key: string /* Name of: ClanBossModifierType */]: Int /* i32 */ } | null) { super(); }
 
 	public static fromJson(json: any): RequestClanBossInfoMessage {
-		return new RequestClanBossInfoMessage(json.BossType, json.Stats, json.PlayersInFight, json.ActiveModifiers);
+		const _data_ = new RequestClanBossInfoMessage(json.BossType, json.Stats, json.PlayersInFight, json.ActiveModifiers);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class RequestClanPvmStatsMessage extends Packet {
 	public readonly MsgType: number = 323;
+	public OriginServerId: string | null = null;
 	constructor(public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ } | null) { super(); }
 
 	public static fromJson(json: any): RequestClanPvmStatsMessage {
-		return new RequestClanPvmStatsMessage(json.Stats);
+		const _data_ = new RequestClanPvmStatsMessage(json.Stats);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class RequestGuildBulletinInfoMessage extends Packet {
 	public readonly MsgType: number = 188;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): RequestGuildBulletinInfoMessage {
-		return new RequestGuildBulletinInfoMessage();
+		const _data_ = new RequestGuildBulletinInfoMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
-export class RequestGuildStateMessage extends Packet {
+export class RequestGuildPageInfoMessage extends Packet {
 	public readonly MsgType: number = 59;
-	constructor() { super(); }
+	public OriginServerId: string | null = null;
+	constructor(public PvmStats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ } | null, public ClanMemberActivities: { [key: string]: PlayerActivity } | null) { super(); }
 
-	public static fromJson(json: any): RequestGuildStateMessage {
-		return new RequestGuildStateMessage();
+	public static fromJson(json: any): RequestGuildPageInfoMessage {
+		const _data_ = new RequestGuildPageInfoMessage(json.PvmStats, json.ClanMemberActivities);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class RequestGuildVaultMessage extends Packet {
 	public readonly MsgType: number = 218;
+	public OriginServerId: string | null = null;
 	constructor() { super(); }
 
 	public static fromJson(json: any): RequestGuildVaultMessage {
-		return new RequestGuildVaultMessage();
+		const _data_ = new RequestGuildVaultMessage();
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class SendGuildApplicationMessage extends Packet {
 	public readonly MsgType: number = 33;
+	public OriginServerId: string | null = null;
 	constructor(public GuildName: string, public Message: string) { super(); }
 
 	public static fromJson(json: any): SendGuildApplicationMessage {
-		return new SendGuildApplicationMessage(json.GuildName, json.Message);
+		const _data_ = new SendGuildApplicationMessage(json.GuildName, json.Message);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class SendGuildInviteMessage extends Packet {
 	public readonly MsgType: number = 35;
+	public OriginServerId: string | null = null;
 	constructor(public PlayerReceivingInvite: string) { super(); }
 
 	public static fromJson(json: any): SendGuildInviteMessage {
-		return new SendGuildInviteMessage(json.PlayerReceivingInvite);
+		const _data_ = new SendGuildInviteMessage(json.PlayerReceivingInvite);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
 export class SellItemMessage extends Packet {
 	public readonly MsgType: number = 6;
+	public OriginServerId: string | null = null;
 	constructor(public ItemId: Int /* i32 */, public ItemAmount: Int /* i32 */) { super(); }
 
 	public static fromJson(json: any): SellItemMessage {
-		return new SellItemMessage(json.ItemId, json.ItemAmount);
+		const _data_ = new SellItemMessage(json.ItemId, json.ItemAmount);
+		_data_.OriginServerId = json.OriginServerId;
+		return _data_;
 	}
 }
 
@@ -1005,7 +1266,6 @@ const PacketRegistry: any = {
 	49: GuildDeletedMessage,
 	265: GuildDeletionResponseMessage,
 	124: GuildLeaderLeftGuildMessage,
-	51: GuildMemberKickedMessage,
 	42: GuildMemberLoggedInMessage,
 	43: GuildMemberLoggedOutMessage,
 	217: GuildRequestRecruitmentMessageMessage,
@@ -1019,7 +1279,6 @@ const PacketRegistry: any = {
 	219: GuildVaultMessage,
 	50: KickGuildMemberMessage,
 	46: LeaveGuildMessage,
-	38: PlayerJoinedGuildMessage,
 	48: PlayerLeftGuildMessage,
 	34: ReceiveGuildApplicationMessage,
 	36: ReceiveGuildInviteMessage,
@@ -1027,7 +1286,7 @@ const PacketRegistry: any = {
 	337: RequestClanBossInfoMessage,
 	323: RequestClanPvmStatsMessage,
 	188: RequestGuildBulletinInfoMessage,
-	59: RequestGuildStateMessage,
+	59: RequestGuildPageInfoMessage,
 	218: RequestGuildVaultMessage,
 	33: SendGuildApplicationMessage,
 	35: SendGuildInviteMessage,
@@ -1060,7 +1319,6 @@ export enum PacketType {
 	GuildDeletedMessage = 49,
 	GuildDeletionResponseMessage = 265,
 	GuildLeaderLeftGuildMessage = 124,
-	GuildMemberKickedMessage = 51,
 	GuildMemberLoggedInMessage = 42,
 	GuildMemberLoggedOutMessage = 43,
 	GuildRequestRecruitmentMessageMessage = 217,
@@ -1074,7 +1332,6 @@ export enum PacketType {
 	GuildVaultMessage = 219,
 	KickGuildMemberMessage = 50,
 	LeaveGuildMessage = 46,
-	PlayerJoinedGuildMessage = 38,
 	PlayerLeftGuildMessage = 48,
 	ReceiveGuildApplicationMessage = 34,
 	ReceiveGuildInviteMessage = 36,
@@ -1082,7 +1339,7 @@ export enum PacketType {
 	RequestClanBossInfoMessage = 337,
 	RequestClanPvmStatsMessage = 323,
 	RequestGuildBulletinInfoMessage = 188,
-	RequestGuildStateMessage = 59,
+	RequestGuildPageInfoMessage = 59,
 	RequestGuildVaultMessage = 218,
 	SendGuildApplicationMessage = 33,
 	SendGuildInviteMessage = 35,

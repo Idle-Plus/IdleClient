@@ -3,12 +3,18 @@ import {
 	AcceptGuildInviteMessage,
 	ClanCategory,
 	ClearAllGuildApplicationsMessage,
-	CreateGuildMessage, DeclineGuildInviteMessage,
+	CreateGuildMessage,
+	DeclineGuildInviteMessage,
 	DeleteGuildMessage,
-	GuildActionResponse, GuildBulletinBoardEditResponseMessage, GuildBulletinBoardInfoMessage,
-	GuildDeletedMessage, GuildInvitation,
+	GameMode,
+	GuildActionResponse,
+	GuildBulletinBoardEditResponseMessage,
+	GuildBulletinBoardInfoMessage,
+	GuildDeletedMessage,
+	GuildInvitation,
 	GuildLeaderLeftGuildMessage,
-	GuildMemberKickedMessage, GuildMemberLoggedInMessage, GuildMemberLoggedOutMessage,
+	GuildMemberLoggedInMessage,
+	GuildMemberLoggedOutMessage,
 	GuildRequestResultMessage,
 	GuildUpdateMinimumTotalLevelRequirementMessage,
 	GuildUpdatePrimaryLanguageMessage,
@@ -17,15 +23,17 @@ import {
 	GuildUpdateStatusMessage,
 	GuildUpdateTagMessage,
 	GuildVaultMessage,
-	Int, LeaveGuildMessage,
+	Int,
+	LeaveGuildMessage,
 	LoginDataMessage,
 	PacketType,
-	PlayerJoinedGuildMessage,
 	PlayerLeftGuildMessage,
-	ReceiveGuildApplicationMessage, ReceiveGuildInviteMessage,
+	ReceiveGuildApplicationMessage,
+	ReceiveGuildInviteMessage,
 	ReceiveGuildStateMessage,
-	RequestClanPvmStatsMessage, RequestGuildBulletinInfoMessage,
-	RequestGuildStateMessage,
+	RequestClanPvmStatsMessage,
+	RequestGuildBulletinInfoMessage,
+	RequestGuildPageInfoMessage,
 	RequestGuildVaultMessage,
 	SendGuildInviteMessage,
 	UpgradeType
@@ -44,6 +52,7 @@ import { RefObject, useRef } from "react";
 import { ActiveClan } from "@/api/IdleClansAPI.ts";
 import { TextUtils } from "@idleclient/utils/TextUtils.tsx";
 import { ClanInvitationsModalId } from "@pages/game/clan/modals/ClanInvitationsModal.tsx";
+import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase.ts";
 
 const CLAN_MANAGEMENT_LOADING = "clan_management_loading";
 const CLAN_MANAGEMENT_LOADING_MESSAGE = "Updating clan...";
@@ -54,7 +63,7 @@ export interface ClanManagerType extends ManagerType {
 	 */
 	clan: SmartRef<Clan | null>;
 	//hasClan: SmartRef<boolean>;
-	accumulatedCredits: SmartRef<Int>;
+	//accumulatedCredits: SmartRef<Int>;
 	clanInvitations: SmartRef<GuildInvitation[]>;
 
 	// General clan information.
@@ -94,15 +103,11 @@ export interface ClanManagerType extends ManagerType {
 		/**
 		 * Requests an updated clan state from the server.
 		 */
-		refreshClanState: () => void;
+		refreshClanPage: () => void;
 		/**
 		 * Request the server to send us our clan vault contents.
 		 */
 		refreshClanVault: (force?: boolean) => void;
-		/**
-		 * Request the server to send us our pve stats.
-		 */
-		refreshClanPveStats: (force?: boolean) => void;
 		/**
 		 * Request the server to send us the bulletin board of the clan.
 		 */
@@ -184,7 +189,6 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 
 	const _clanRef = useSmartRef<Clan | null>(null);
 	const _hasClanRef = useSmartRef<boolean>(false);
-	const _accumulatedCreditsRef = useSmartRef<Int>(0);
 	const _clanInvitationsRef = useSmartRef<GuildInvitation[]>([]);
 
 	const _cachedRecruitingClansRef = useRef<{ clans: ActiveClan[], time: Date } | undefined>(undefined);
@@ -241,9 +245,9 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 
 	// Basic
 
-	const _refreshClanState = () => {
+	const _refreshClanPage = () => {
 		if (_clanRef.content() === null) return;
-		Network.send(new RequestGuildStateMessage());
+		Network.send(new RequestGuildPageInfoMessage(null, null));
 	}
 
 	const _refreshClanVault = (force: boolean = false) => {
@@ -251,13 +255,6 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		if (clan === null) return;
 		if (clan.vault !== null && !force) return;
 		Network.send(new RequestGuildVaultMessage());
-	}
-
-	const _refreshClanPveStats = (force: boolean = false) => {
-		const clan = _clanRef.content();
-		if (clan === null) return;
-		if (clan.pvmStats !== null && !force) return;
-		Network.send(new RequestClanPvmStatsMessage(null));
 	}
 
 	const _refreshClanBulletinBoard = (force: boolean = false) => {
@@ -409,84 +406,11 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 	// Update
 
 	usePacket<GuildBulletinBoardEditResponseMessage>(packet => {
-		toasts.info("Clan", packet.Success ? "Successfully updated your clan's bulletin board." :
-			"Failed to update your clan's bulletin board.");
+		toasts.info("Clan", packet.Success ?
+			"Successfully updated your clan's bulletin board." :
+			"Failed to update your clan's bulletin board."
+		);
 	}, [], PacketType.GuildBulletinBoardEditResponseMessage);
-
-	// Recruitment
-
-	// Called when our clans' recruitment status has been updated.
-	usePacket<GuildUpdateRecruitmentStateMessage>(packet => {
-		loading.remove(CLAN_MANAGEMENT_LOADING);
-		const clan = getClanOrWarn("Received GuildUpdateRecruitmentStateMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onGuildUpdateRecruitmentStateMessage(packet);
-		_clanRef.trigger();
-
-		toasts.info("Clan", packet.Value ? "Your clan is now actively recruiting." :
-			"Your clan is no longer recruiting.");
-	}, [], PacketType.GuildUpdateRecruitmentStateMessage);
-
-	// Called when our clan category has been updated.
-	usePacket<GuildUpdateStatusMessage>(packet => {
-		loading.remove(CLAN_MANAGEMENT_LOADING);
-		const clan = getClanOrWarn("Received GuildUpdateStatusMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onGuildUpdateStatusMessage(packet);
-		_clanRef.trigger();
-
-		const category = packet.Status === ClanCategory.None ? ClanCategory.Casual : packet.Status;
-		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's category has been updated to <b>${ClanCategory[category]}</b>.`) as any);
-	}, [], PacketType.GuildUpdateStatusMessage);
-
-	// Called when our clan language has been updated.
-	usePacket<GuildUpdatePrimaryLanguageMessage>(packet => {
-		loading.remove(CLAN_MANAGEMENT_LOADING);
-		const clan = getClanOrWarn("Received GuildUpdatePrimaryLanguageMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onGuildUpdatePrimaryLanguageMessage(packet);
-		_clanRef.trigger();
-
-		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's language has been updated to <b>${packet.Language}</b>.`) as any);
-	}, [], PacketType.GuildUpdatePrimaryLanguageMessage);
-
-	// Called when our clan recruitment message has been updated.
-	usePacket<GuildUpdateRecruitmentMessageMessage>(packet => {
-		loading.remove(CLAN_MANAGEMENT_LOADING);
-		const clan = getClanOrWarn("Received GuildUpdateRecruitmentMessageMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onGuildUpdateRecruitmentMessageMessage(packet);
-		_clanRef.trigger();
-
-		toasts.info("Clan", "Your clan's recruitment message has been updated.");
-	}, [], PacketType.GuildUpdateRecruitmentMessageMessage);
-
-	// Called when our clans' minimum total level requirement has been updated.
-	usePacket<GuildUpdateMinimumTotalLevelRequirementMessage>(packet => {
-		loading.remove(CLAN_MANAGEMENT_LOADING);
-		const clan = getClanOrWarn("Received GuildUpdateMinimumTotalLevelRequirementMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onGuildUpdateMinimumTotalLevelRequirementMessage(packet);
-		_clanRef.trigger();
-
-		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's minimum total level requirement has been updated to <b>${packet.MinimumTotalLevel}</b>.`) as any);
-	}, [], PacketType.GuildUpdateMinimumTotalLevelRequirementMessage);
-
-	// Called when our clan tag has been updated.
-	usePacket<GuildUpdateTagMessage>(packet => {
-		const clan = getClanOrWarn("Received GuildUpdateTagMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onGuildUpdateTagMessage(packet);
-		_clanRef.trigger();
-
-		toasts.info("Clan", TextUtils.getStyledMessage(`Your clan's tag has been updated to <b>${packet.Tag}</b>.`) as any);
-	}, [], PacketType.GuildUpdateTagMessage);
 
 	// Applications
 
@@ -510,17 +434,6 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		clan.onClearAllGuildApplicationsMessage(packet);
 		_clanRef.trigger();
 	}, [], PacketType.ClearAllGuildApplicationsMessage);
-
-	/**
-	 * Update our clans' state when we receive ReceiveGuildStateMessage.
-	 */
-	usePacket<ReceiveGuildStateMessage>(packet => {
-		const clan = getClanOrWarn("Received ReceiveGuildStateMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onReceiveGuildStateMessage(packet);
-		_clanRef.trigger();
-	}, [], PacketType.ReceiveGuildStateMessage);
 
 	// Clan vault has been updated.
 	usePacket<GuildVaultMessage>(packet => {
@@ -562,82 +475,59 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 			return;
 		}
 
-		clan.onGuildLeaderLeftGuildMessage(packet);
-		_clanRef.trigger()
-
-		// TODO: Trigger an event / display a notification.
-
+		// Doesn't seem to be sent anymore when another guild leader leaves the clan?
+		console.warn(`Received GuildLeaderLeftGuildMessage, but we aren't the leader?`);
 	}, [], PacketType.GuildLeaderLeftGuildMessage);
-
-	// A member was kicked from the clan (could be us).
-	usePacket<GuildMemberKickedMessage>(packet => {
-		const playerManager = managers.playerManager!;
-
-		const clan = getClanOrWarn("Received GuildMemberKickedMessage without being in a clan.");
-		if (clan === null) return;
-
-		// If we're the one being kicked, then set our clan to null.
-		if (playerManager.username.content() === packet.PlayerName) {
-			setClanRef(null);
-
-			// TODO: Trigger an event / display a notification.
-
-			return;
-		}
-
-		clan.onGuildMemberKickedMessage(packet);
-		_clanRef.trigger();
-
-		// TODO: Trigger an event / display a notification.
-
-	}, [], PacketType.GuildMemberKickedMessage);
 
 	/*
 	 * Handling player joining and leaving a clan. If we are the player, then
 	 * the clan object will either be created or cleared.
 	 */
 
-	usePacket<PlayerJoinedGuildMessage>(packet => {
-		const playerManager = managers.playerManager!;
-
-		// If we're the one joining a clan, then create the clan object.
-		if (playerManager.username.content() === packet.PlayerJoining) {
-			setClanRef(Clan.fromJoinPacket(packet));
-			return;
-		}
-
-		// Someone else joined the clan we're in.
-		const clan = getClanOrWarn("Received PlayerJoinedGuildMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onPlayerJoinedGuildMessage(playerManager.mode.content(), packet);
-		_clanRef.trigger();
-
-		// TODO: Trigger an event / display a notification.
-
-	}, [], PacketType.PlayerJoinedGuildMessage);
-
 	usePacket<PlayerLeftGuildMessage>(packet => {
 		const playerManager = managers.playerManager!;
 
 		// If we're the one leaving the clan, then clear our current clan.
 		if (playerManager.username.content() === packet.PlayerName) {
+
+			// TODO: Trigger an event / display a notification.
+
 			setClanRef(null);
 			return;
 		}
 
-		// Someone else left the clan.
-		const clan = getClanOrWarn("Received PlayerLeftGuildMessage without being in a clan.");
-		if (clan === null) return;
-
-		clan.onPlayerLeftGuildMessage(packet);
-		_clanRef.trigger();
-
-		// TODO: Trigger an event / display a notification.
-
+		// Doesn't seem to be sent anymore when other people leave the clan?
+		console.warn(`Received PlayerLeftGuildMessage for player ${packet.PlayerName} which isn't us?`);
 	}, [], PacketType.PlayerLeftGuildMessage);
 
-	// General
+	/*
+	 * General packets
+	 */
+
+	usePacket<ReceiveGuildStateMessage>(packet => {
+		let clan = _clanRef.content();
+
+		// If we don't currently have a clan, then we just joined one.
+		if (clan === null) {
+			if (packet.IsPartialUpdate) {
+				console.warn("Received ReceiveGuildStateMessage for a clan we don't have, but it's a partial update?");
+				return;
+			}
+
+			clan = Clan.fromPacket(managers.playerManager?.mode.content() ?? GameMode.Default, packet);
+			setClanRef(clan);
+			return;
+		}
+
+		if (clan.onReceiveGuildStateMessage(packet))
+			_clanRef.trigger();
+		loading.remove(CLAN_MANAGEMENT_LOADING);
+
+		if (packet.Message != null) {
+			const message = LocalizationDatabase.loc(packet.Message.LocalizationKey, packet.Message.Args);
+			toasts.info("Clan", TextUtils.getStyledMessage(message) as any);
+		}
+	}, [], PacketType.ReceiveGuildStateMessage);
 
 	usePacket<GuildRequestResultMessage>(packet => {
 		const localizationKey = GuildActionResponse[packet.MessageType];
@@ -649,7 +539,7 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		const clan = getClanOrWarn("Received GuildMemberLoggedInMessage without being in a clan.");
 		if (clan === null) return;
 
-		clan.onGuildMemberLoggedInMessage(packet);
+		if (!clan.onGuildMemberLoggedInMessage(packet)) return;
 		_clanRef.trigger();
 
 		toasts.info("Clan", `${packet.GuildMemberName} logged in`);
@@ -659,20 +549,13 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		const clan = getClanOrWarn("Received GuildMemberLoggedOutMessage without being in a clan.");
 		if (clan === null) return;
 
-		clan.onGuildMemberLoggedOutMessage(packet);
+		if (!clan.onGuildMemberLoggedOutMessage(packet)) return;
 		_clanRef.trigger();
 
 		toasts.info("Clan", `${packet.GuildMemberName} logged out`);
 	}, [], PacketType.GuildMemberLoggedOutMessage);
 
-	// Create and delete
-
-	usePacket<CreateGuildMessage>(packet => {
-		setClanRef(Clan.fromCreatePacket(managers, packet));
-
-		// TODO: Trigger an event / display a notification.
-
-	}, [], PacketType.CreateGuildMessage);
+	// Delete clan
 
 	usePacket<GuildDeletedMessage>(_ => {
 		setClanRef(null);
@@ -686,15 +569,13 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 	 */
 
 	const initialize = (data: LoginDataMessage) => {
-		if (data.GuildName !== null) setClanRef(Clan.fromLoginPacket(data));
-		_accumulatedCreditsRef.setContent(data.AccumulatedCredits);
+		if (data.IsInGuild) setClanRef(Clan.fromPacket(data.GameMode ?? GameMode.Default, data.GuildStateMessage!));
 		_clanInvitationsRef.setContent(data.GuildInvitations ?? []);
 	}
 
 	const cleanup = () => {
 		_clanRef.setContent(null);
 		_hasClanRef.setContent(false);
-		_accumulatedCreditsRef.setContent(0);
 		_clanInvitationsRef.setContent([]);
 	}
 
@@ -702,8 +583,6 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 		$managerName: "clanManager",
 
 		clan: _clanRef,
-		//hasClan: _hasClanRef,
-		accumulatedCredits: _accumulatedCreditsRef,
 		clanInvitations: _clanInvitationsRef,
 
 		cachedRecruitingClans: _cachedRecruitingClansRef,
@@ -716,9 +595,8 @@ export const ClanManager = (managers: ManagerContext): ClanManagerType => {
 			deleteClan: _deleteClan,
 			leaveClan: _leaveClan,
 
-			refreshClanState: _refreshClanState,
+			refreshClanPage: _refreshClanPage,
 			refreshClanVault: _refreshClanVault,
-			refreshClanPveStats: _refreshClanPveStats,
 			refreshClanBulletinBoard: _refreshClanBulletinBoard,
 
 			updateBulletinBoard: _updateBulletinBoard,

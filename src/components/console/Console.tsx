@@ -41,7 +41,7 @@ const Console: React.FC = () => {
 
 	return (
 		<div
-			className="fixed inset-0 bg-black/50 z-50"
+			className="fixed inset-0 bg-black/50 z-4000"
 			onClick={() => console.setVisible(false)}
 		>
 			<div

@@ -88,7 +88,7 @@ export const TaskManager = (context: ManagerContext): TaskManagerType => {
 		currentTask.setContent(null);
 	}, [], PacketType.ActiveTaskCancelledMessage);
 
-	usePacket<CompleteTaskMessage>(packet => {
+	/*usePacket<CompleteTaskMessage>(packet => {
 		const current = currentTask.content();
 		const job = current?.task;
 
@@ -329,7 +329,7 @@ export const TaskManager = (context: ManagerContext): TaskManagerType => {
 		const exp = task.getModifiedExperience(context.game!);
 		context.skillManager!.addExperience(task.skill, exp);
 		debug.debug(`TaskManager: Experience Handling / Auto cooking triggered, giving ${exp} exp to ${Skill[task.skill]}.`);
-	}, [], PacketType.CompleteTaskMessage);
+	}, [], PacketType.CompleteTaskMessage);*/
 
 	usePacket<CompleteTaskMessage>(packet => {
 		const current = currentTask.content();
@@ -342,6 +342,24 @@ export const TaskManager = (context: ManagerContext): TaskManagerType => {
 
 		if (job.taskType !== packet.TaskType || job.taskId !== packet.TaskId) {
 			debug.warn(`TaskManager: Task Handling / Received CompleteTaskMessage, but the task type or id doesn't match. Packet: ${packet}, current: ${current}.`);
+		}
+
+		// Update items
+		for (const entry of packet.ItemChanges) {
+			const itemDef = ItemDatabase.item(entry.ItemId);
+			if (entry.Amount > 0) {
+				context.inventoryManager!.addItem(entry.ItemId, entry.Amount);
+				debug.write(LogType.DEBUG, `TaskManager: Item Handling / Added ${itemDef.name} x ${entry.Amount} to inventory, task ${job.name}`)
+			} else if (entry.Amount < 0) {
+				context.inventoryManager!.removeItem(entry.ItemId, -entry.Amount);
+				debug.write(LogType.DEBUG, `TaskManager: Item Handling / Removed ${itemDef.name} x ${-entry.Amount} from inventory, task ${job.name}`)
+			}
+		}
+
+		// Update experience
+		for (const entry of packet.ExpChanges) {
+			context.skillManager!.addExperience(entry.Skill, entry.Amount);
+			debug.write(LogType.DEBUG, `TaskManager: Experience Handling / Added ${entry.Amount} exp to ${Skill[entry.Skill]}, task ${job.name}`)
 		}
 
 		// If we can't afford the task, stop it.
@@ -379,7 +397,7 @@ export const TaskManager = (context: ManagerContext): TaskManagerType => {
 			if (task !== undefined && task.canAfford(context.game!)) {
 				currentTask.setContent({
 					task: task,
-					start: Date.now()
+					start: Date.now()// - progress.ElapsedMs // ???
 				});
 				debug.debug(`TaskManager: initialize / Continuing task ${task.name} (type: ${type}, id: ${id})`);
 			} else if (task === undefined) {

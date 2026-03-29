@@ -1,4 +1,4 @@
-import { GameMode, GuildMember, GuildRank } from "@idleclient/network/NetworkData.ts";
+import { GameMode, GuildMemberDto, GuildRank } from "@idleclient/network/NetworkData.ts";
 import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
 
 export class ClanMember {
@@ -9,20 +9,31 @@ export class ClanMember {
 	private _premium: boolean;
 	private _gilded: boolean;
 
-	private _server: string | null = null;
+	private _server: string | null;
 	private _rank: ClanRank;
 	private _vaultAccess: boolean;
 
 	private readonly _joinDate: Date;
 	private _logoutTime: Date;
 
-	constructor(name: string, mode: GameMode, online: boolean, premium: boolean, gilded: boolean, rank: GuildRank,
-	            vaultAccess: boolean, joinDate: Date, logoutTime: Date) {
+	constructor(
+		name: string,
+		mode: GameMode,
+		online: boolean,
+		premium: boolean,
+		gilded: boolean,
+		server: string | null,
+		rank: GuildRank,
+		vaultAccess: boolean,
+		joinDate: Date,
+		logoutTime: Date
+	) {
 		this._name = name;
 		this._mode = mode;
 		this._online = online;
 		this._premium = premium;
 		this._gilded = gilded;
+		this._server = server;
 		this._rank = rank as any; // GuildRank and ClanRank have the same IDs.
 		this._vaultAccess = vaultAccess;
 		this._joinDate = joinDate;
@@ -38,7 +49,7 @@ export class ClanMember {
 	get gilded(): boolean { return this._gilded; }
 
 	get server(): string | null { return this._server; }
-	set server(value: string) { this._server = value; }
+	set server(value: string | null) { this._server = value; }
 
 	get rank(): ClanRank { return this._rank; }
 	set rank(value: ClanRank) { this._rank = value; }
@@ -53,11 +64,11 @@ export class ClanMember {
 	 * "Constructors"
 	 */
 
-	public static fromGuildMember(name: string, data: GuildMember) {
+	public static fromGuildMember(data: GuildMemberDto) {
 		const joinDate = data.JoinDate === null ? new Date() : new Date(data.JoinDate);
 		const logoutTime = data.LogoutTime === null ? new Date() : new Date(data.LogoutTime);
 
-		return new ClanMember(name, data.GameMode, data.IsOnline, data.IsPremium, data.IsPremiumPlus, data.Rank as any,
-			data.HasVaultAccess, joinDate, logoutTime);
+		return new ClanMember(data.Username, data.GameMode, data.ActiveServerId != null, data.IsPremium,
+			data.IsGilded, data.ActiveServerId, data.Rank as any, data.HasVaultAccess, joinDate, logoutTime);
 	}
 }

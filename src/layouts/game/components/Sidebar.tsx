@@ -12,6 +12,7 @@ import { FiSettings } from "react-icons/fi";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import useSkillWatcher from "@hooks/game/skill/useSkillWatcher.ts";
 import Tooltip from "@components/Tooltip.tsx";
+import { IdleClient } from "@idleclient/IdleClient.ts";
 
 interface SidebarEntry {
 	icon: ReactNode;
@@ -185,7 +186,7 @@ const Sidebar: React.FC<{ setSidebar: (value: boolean) => void, sidebar: boolean
 						onClick={() => setDebug(prev => (prev + 1) % 4)}
 						className="text-gray-300/75 text-sm tbox-trim-both-cap italic cursor-pointer"
 					>
-						v0.1.0 / v{SettingsDatabase.shared().latestBuildVersion}
+						v{IdleClient.VERSION} / v{SettingsDatabase.shared().latestBuildVersion}
 						{debug > 0 && <span key={debug} className="text-gray-400/75 scale-pop pl-1"> ({debug}/4)</span>}
 					</p>
 				</div>

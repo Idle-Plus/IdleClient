@@ -374,7 +374,7 @@ export class ItemDefinition {
 						[SettingsDatabase.shared().iapClanVaultSpacePerPurchase]);
 				}
 
-				const purchasedSpace = clan.purchasedVaultSpace;
+				const purchasedSpace = clan.purchasedVaultSlots;
 				return LocalizationDatabase.loc(this.description ?? "", [
 					SettingsDatabase.shared().iapClanVaultSpacePerPurchase,
 					purchasedSpace,

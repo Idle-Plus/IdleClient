@@ -92,6 +92,8 @@ class SharedSettings {
 
 	get tasksLockedBehindPremium(): Int[] { return this.TasksLockedBehindPremium; }
 
+	get clanCreditsPerClanTaskCompletion(): Int { return this.ClanCreditsPerClanTaskCompletion; }
+
 	get dailyAdsExperienceBoostPct(): Int { return this.DailyAdsExperienceBoostPct; }
 	get totalLevelRequirementForClanCreation(): Int { return this.TotalLevelRequirementForClanCreation; }
 	get goldCostForClanCreation(): Int { return this.GoldCostForClanCreation; }

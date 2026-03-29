@@ -115,9 +115,6 @@ const BaseModal: React.FC<BaseModalProps> = ({
 				}
 			>
 				<div className="flex-1" />
-				{/*<React.Fragment key={stage !== 2 ? "mounting" : "mounted"}>
-					{ children }
-				</React.Fragment>*/}
 				{ children }
 				<div className="flex-2" />
 			</div>

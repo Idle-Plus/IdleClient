@@ -55,7 +55,7 @@ export const IdleButton: React.FC<IdleButtonProps> = ({
 
 	return (
 		<button
-			className={`px-4 py-2 rounded-full select-none transition-colors duration-100 whitespace-nowrap ${textSize} ${style} ${className}`}
+			className={`px-4 py-2 rounded-sm select-none transition-colors duration-100 whitespace-nowrap ${textSize} ${style} ${className}`}
 			onClick={onClick}
 
 			disabled={disabled}

@@ -14,7 +14,7 @@ import { IdleDropdown } from "@components/input/IdleDropdown.tsx";
 import { IdleNumberInput } from "@components/input/IdleNumberInput.tsx";
 import { IdleInput } from "@components/input/IdleInput.tsx";
 import AutoSizer from "react-virtualized-auto-sizer";
-import { GameContextType } from "@context/GameContext.tsx";
+import { GameContextType, useGame } from "@context/GameContext.tsx";
 import { useModal } from "@context/ModalContext.tsx";
 import { ModalUtils } from "@utils/ModalUtils.tsx";
 import { Network } from "@idleclient/network/Network.ts";
@@ -110,7 +110,8 @@ const ApplicationEntry: React.FC<{ application: ClanApplication }> = ({ applicat
 	);
 }
 
-const ClanManagementTab: React.FC<{ game: GameContextType, clan: Clan }> = ({ game, clan }) => {
+const ClanManagementTab: React.FC<{ clan: Clan }> = ({ clan }) => {
+	const game = useGame();
 	const modals = useModal();
 	const clanHouseTier = clan.getHouse()?.houseId ?? -1;
 

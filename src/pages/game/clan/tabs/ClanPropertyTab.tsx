@@ -3,8 +3,6 @@ import { ItemIcon, SpriteIcon } from "@components/icon";
 import { toKMB } from "@idleclient/game/utils/numberUtils.ts";
 import { Clan } from "@idleclient/types/clan/Clan.ts";
 import { ClanMember } from "@idleclient/types/clan/ClanMember.ts";
-import { useGame } from "@context/GameContext.tsx";
-import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import { IoSettings } from "react-icons/io5";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
 import ItemSlot from "@components/item/ItemSlot.tsx";
@@ -15,13 +13,10 @@ import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase
 import AutoSizer from "react-virtualized-auto-sizer";
 
 const CreditsContainer = ({clan}: {clan: Clan}) => {
-	const game = useGame();
-	const accumulatedCredits = useSmartRefWatcher(game.clan.accumulatedCredits);
-
 	return (
 		<div className="w-full bg-ic-dark-500 p-3 px-4 mx-auto rounded-md text-gray-300">
 			<p>Clan credits: <span className="text-gray-100">{clan.credits.toLocaleString()}</span></p>
-			<p>My accumulated credits: <span className="text-gray-100">{accumulatedCredits.toLocaleString()}</span></p>
+			<p>My accumulated credits: <span className="text-gray-100">{clan.accumulatedCredits.toLocaleString()}</span></p>
 		</div>
 	);
 }
@@ -39,7 +34,7 @@ const VaultContainer = ({ clan }: { clan: Clan }) => {
 
 	const purchasedSpace = (
 		<span className="text-gray-100">
-			{clan.purchasedVaultSpace} / {maxVaultSpace}
+			{clan.purchasedVaultSlots} / {maxVaultSpace}
 		</span>
 	);
 	const totalSpace = (

@@ -1,5 +1,6 @@
 import { Skill } from "@idleclient/network/NetworkData.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
+import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 
 const EXP_TABLE = [
 	0,        75,       151,      227,      303,      380,      531,      683,      836,      988,
@@ -65,9 +66,15 @@ export class SkillUtils {
 			current = xp - currentLevelExperience;
 			target = target - currentLevelExperience;
 		} else {
-			current = xp;
-			target = GameData.settings().shared().maxPlayerSkillExperience;
-			progress = xp / GameData.settings().shared().maxPlayerSkillExperience;
+			if (xp > SettingsDatabase.shared().maxPlayerSkillExperience) {
+				current = SettingsDatabase.shared().maxPlayerSkillExperience;
+				target = SettingsDatabase.shared().maxPlayerSkillExperience;
+				progress = 1;
+			} else {
+				current = xp;
+				target = GameData.settings().shared().maxPlayerSkillExperience;
+				progress = xp / GameData.settings().shared().maxPlayerSkillExperience;
+			}
 		}
 
 		return { level: level, totalXp: xp, currentXp: current, targetXp: target, progress: progress };

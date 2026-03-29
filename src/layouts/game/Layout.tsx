@@ -5,6 +5,7 @@ import { GameState, useGame } from "@context/GameContext.tsx";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
 import Topbar from "@layouts/game/components/Topbar.tsx";
 import Sidebar from "@layouts/game/components/Sidebar.tsx";
+import Console from "@components/console/Console.tsx";
 
 const Layout: React.FC = () => {
 	const user = useSession();
@@ -23,6 +24,8 @@ const Layout: React.FC = () => {
 
 	return (
 		<div className="flex h-screen">
+
+			<Console />
 
 			<Topbar setSidebar={() => setSidebar(!sidebar)} sidebar={sidebar} />
 			<Sidebar setSidebar={(value: boolean) => setSidebar(value)} sidebar={sidebar} />

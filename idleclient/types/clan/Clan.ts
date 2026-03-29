@@ -2,23 +2,23 @@ import { ClanMember } from "@idleclient/types/clan/ClanMember.ts";
 import {
 	ClanCategory,
 	ClearAllGuildApplicationsMessage,
-	CreateGuildMessage,
 	DailyGuildQuest,
-	GameMode, GuildBulletinBoardInfoMessage,
-	GuildLeaderLeftGuildMessage,
-	GuildMemberKickedMessage, GuildMemberLoggedInMessage, GuildMemberLoggedOutMessage,
-	GuildRank,
-	GuildUpdateMinimumTotalLevelRequirementMessage,
-	GuildUpdatePrimaryLanguageMessage,
-	GuildUpdateRecruitmentMessageMessage,
-	GuildUpdateRecruitmentStateMessage,
-	GuildUpdateStatusMessage,
-	GuildUpdateTagMessage,
+	GameMode,
+	GuildBulletinBoardInfoMessage,
+	GuildMemberLoggedInMessage,
+	GuildMemberLoggedOutMessage,
+	GuildStateAdmin,
+	GuildStateEconomy,
+	GuildStateEvents,
+	GuildStateHouse,
+	GuildStateMembers,
+	GuildStateMeta,
+	GuildStateProgress,
+	GuildStateQuests,
+	GuildStateVault,
 	GuildVaultMessage,
 	Int,
 	LoginDataMessage,
-	PlayerJoinedGuildMessage,
-	PlayerLeftGuildMessage,
 	PvmStatType,
 	ReceiveGuildApplicationMessage,
 	ReceiveGuildStateMessage,
@@ -28,79 +28,154 @@ import {
 } from "@idleclient/network/NetworkData.ts";
 import { ClanHouse, ClanHouseDatabase } from "@idleclient/game/data/ClanHouseDatabase.ts";
 import { ItemId } from "@idleclient/types/gameTypes.ts";
-import { ManagerContext } from "@context/GameContext.tsx";
 import { ClanRank } from "@idleclient/types/clan/ClanRank.ts";
 import { SkillUtils } from "@idleclient/game/utils/SkillUtils.ts";
 import { SettingsDatabase } from "@idleclient/game/data/SettingsDatabase.ts";
 
+function assertDefined<T>(value: T | null | undefined, message: string): T {
+	if (value === null || value === undefined) throw new Error(message);
+	return value;
+}
+
 export class Clan {
 
+	// Meta
 	private readonly _mode: GameMode;
-	private readonly _name: string;
-	private readonly _members: Map<string, ClanMember> = new Map();
+	private _name: string;
+	private _tag: string | null;
+	private _recruitmentMessage: string | null;
+	private _creationDate: Date;
+	private _earliestPossibleDeletionDate: Date | null;
+	private _recentlyCreated: boolean;
 
-	private _credits: Int;
+	// Progress
+	private _experience: Map<Skill, number>;
+
+	// Members
+	private _members: Map<string, ClanMember>;
+
+	// Vault
 	private _gold: Int;
-	private _purchasedVaultSpace: Int;
 
+	// House
+	private _houseId: Int;
+
+	// Economy
+	private _purchasedVaultSlots: Int;
+	private _credits: Int;
+	private _accumulatedCredits: Int;
+	private _invokingPlayerHasClaimableLoot: boolean;
+	private _upgrades: Set<UpgradeType>;
+
+	// Quests
+	private _questsResetDate: Date;
 	private _skillingQuests: DailyGuildQuest[];
 	private _skillingContributors: string[];
 	private _combatQuests: DailyGuildQuest[];
 	private _combatContributors: string[];
-	private _questsResetDate: Date;
 
-	private _houseId: Int;
-	private _upgrades: Set<UpgradeType>;
+	// Events
+	private _serializedEvents: string | null;
+	private _skillingTickets: Map<Skill, Int>;
+	private _skillingPartyCompletions: Int = 0;
+
+	// Admin
+	private _recruiting: boolean;
+	private _category: ClanCategory;
+	private _language: string | null;
+	private _minTotalLevel: Int;
 	private _applications: ClanApplication[];
 
-	//
+	// Dynamic properties, loaded when needed.
 
-	private _skills: Map<Skill, number> | null = null;
-	private _vault: Map<ItemId, number> | null = null; // TODO: Implement
-
-	private _eventStates: string | null = null;
-	private _skillingTickets: Map<Skill, Int> = new Map();
-	private _skillingPartyCompletions: Int = 0;
-	private _recruiting: boolean = false;
-	private _category: ClanCategory = ClanCategory.None;
-	private _language: string | null = null;
-	private _minTotalLevel: Int = 0;
-	private _tag: string | null = null;
-
+	private _vault: Map<ItemId, number> | null = null; // Dynamically loaded when needed.
 	private _pvmStats: { stats: Map<PvmStatType, Int>, refreshed: Date } | null = null;
 	private _bulletinBoard: { message: string, discordCode: string } | null = null;
 
-	constructor(mode: GameMode, name: string, members: Map<string, ClanMember>, credits: Int, gold: Int, purchasedVaultSpace: Int,
-	            skillingQuests: DailyGuildQuest[], skillingContributors: string[], combatQuests: DailyGuildQuest[],
-	            combatContributors: string[], questResetDate: Date, houseId: Int, upgrades: Set<UpgradeType>,
-	            applications: ClanApplication[]) {
-
+	constructor(
+		mode: GameMode,
+		meta: GuildStateMeta,
+		progress: GuildStateProgress,
+		members: GuildStateMembers,
+		vault: GuildStateVault,
+		house: GuildStateHouse,
+		economy: GuildStateEconomy,
+		quests: GuildStateQuests,
+		events: GuildStateEvents,
+		admin: GuildStateAdmin | null
+	) {
+		// Meta
 		this._mode = mode;
-		this._name = name;
-		this._members = members;
+		this._name = assertDefined(meta.GuildName, "GuildName is null");
+		this._tag = meta.Tag;
+		this._recruitmentMessage = meta.RecruitmentMessage;
+		this._creationDate = meta.CreationDate ? new Date(meta.CreationDate) : new Date();
+		this._earliestPossibleDeletionDate = meta.EarliestPossibleDeletionDate ? new Date(meta.EarliestPossibleDeletionDate) : null;
+		this._recentlyCreated = meta.RecentlyCreated ?? false;
 
-		this._credits = credits;
-		this._gold = gold;
-		this._purchasedVaultSpace = purchasedVaultSpace;
+		// Progress
+		this._experience = new Map(Object.keys(progress.Experiences ?? {}).map(value => {
+			const skill = Skill[value as keyof typeof Skill]
+			if (skill === undefined) throw new Error(`Invalid skill ${value}`);
+			return [ skill, (progress.Experiences ?? {})[value] ] as [ Skill, number ];
+		}));
 
-		this._skillingQuests = skillingQuests;
-		this._skillingContributors = skillingContributors;
-		this._combatQuests = combatQuests;
-		this._combatContributors = combatContributors;
-		this._questsResetDate = questResetDate;
+		// Members
+		this._members = new Map((members.Members ?? [])
+			.map((member, _) =>
+				[member.Username, ClanMember.fromGuildMember(member)]));
 
-		this._houseId = houseId;
-		this._upgrades = upgrades;
-		this._applications = applications;
+		// Vault
+		this._gold = vault.Gold ?? 0;
+
+		// House
+		this._houseId = house.GuildHouseId ?? -1;
+
+		// Economy
+		this._purchasedVaultSlots = economy.PurchasedVaultSlots ?? 0;
+		this._credits = economy.ClanCredits ?? 0;
+		this._accumulatedCredits = economy.AccumulatedCredits ?? 0;
+		this._invokingPlayerHasClaimableLoot = economy.InvokingPlayerHasClaimableLoot ?? false;
+		this._upgrades = new Set(economy.UnlockedUpgrades ?? []);
+
+		// Quests
+		this._questsResetDate = new Date(assertDefined(quests.NextQuestGenerationTimestamp, "NextQuestGenerationTimestamp is null"));
+		this._skillingQuests = quests.DailySkillingQuests ?? [];
+		this._skillingContributors = quests.SkillingContributors ?? [];
+		this._combatQuests = quests.DailyCombatQuests ?? [];
+		this._combatContributors = quests.CombatContributors ?? [];
+
+		// Events
+		this._serializedEvents = events.Serialized;
+		this._skillingTickets = new Map(Object.keys(events.SkillingTickets ?? {}).map(value => {
+			const skill = Skill[value as keyof typeof Skill];
+			if (skill === undefined) throw new Error(`Invalid skill ${value}`);
+			return [ skill, (events.SkillingTickets ?? {})[value] ] as [ Skill, number ];
+		}));
+		this._skillingPartyCompletions = events.SkillingPartyCompletions ?? 0;
+
+		// Admin
+		this._recruiting = admin?.IsRecruiting ?? true;
+		this._category = admin?.Category ?? ClanCategory.None;
+		this._language = admin?.PrimaryLanguage ?? null;
+		this._minTotalLevel = admin?.MinimumTotalLevelRequired ?? 0;
+		this._applications = admin?.ActiveGuildApplications
+			?.map(v => ({name: v.ApplicantName, message: v.Message,
+				level: v.TotalLevelAtTimeOfApplication})) ?? [];
 	}
 
+	// Meta
 	get mode(): GameMode { return this._mode; }
 	get name(): string { return this._name; }
+	get tag(): string | null { return this._tag; }
+
 	get members(): ReadonlyMap<string, ClanMember> { return this._members; }
 
 	get credits(): Int { return this._credits; }
+	get accumulatedCredits(): Int { return this._accumulatedCredits; }
+	get invokingPlayerHasClaimableLoot(): boolean { return this._invokingPlayerHasClaimableLoot; }
 	get gold(): Int { return this._gold; }
-	get purchasedVaultSpace(): Int { return this._purchasedVaultSpace; }
+	get purchasedVaultSlots(): Int { return this._purchasedVaultSlots; }
 
 	get skillingQuests(): ReadonlyArray<DailyGuildQuest> { return this._skillingQuests; }
 	get skillingContributors(): ReadonlyArray<string> { return this._skillingContributors; }
@@ -108,7 +183,7 @@ export class Clan {
 	get combatContributors(): ReadonlyArray<string> { return this._combatContributors; }
 	get questsResetDate(): Date { return this._questsResetDate; }
 
-	get skills(): ReadonlyMap<Skill, number> | null { return this._skills; }
+	get skills(): ReadonlyMap<Skill, number> | null { return this._experience; }
 	get vault(): ReadonlyMap<ItemId, number> | null { return this._vault; }
 
 	get upgrades(): Set<UpgradeType> { return this._upgrades; }
@@ -119,7 +194,6 @@ export class Clan {
 	get category(): ClanCategory { return this._category; }
 	get language(): string | null { return this._language; }
 	get minTotalLevel(): Int { return this._minTotalLevel; }
-	get tag(): string | null { return this._tag; }
 
 	get pvmStats(): { stats: Map<PvmStatType, Int>, refreshed: Date } | null { return this._pvmStats; }
 	get bulletinBoard(): { message: string, discordCode: string } | null { return this._bulletinBoard; }
@@ -132,7 +206,7 @@ export class Clan {
 	public getTotalLevel(): Int {
 		let result = 0;
 		for (const skill of SkillUtils.getSkills()) {
-			result += SkillUtils.getLevelForExperience(this._skills?.get(skill) ?? 0);
+			result += SkillUtils.getLevelForExperience(this._experience?.get(skill) ?? 0);
 		}
 		return result;
 	}
@@ -152,7 +226,7 @@ export class Clan {
 	}
 
 	public getTotalVaultSpace(): Int {
-		const purchasedVaultSpace = this.purchasedVaultSpace;
+		const purchasedVaultSpace = this.purchasedVaultSlots;
 		const houseVaultSpace = this.getHouse()?.inventorySpace ?? 0;
 		const baseVaultSpace = SettingsDatabase.shared().baseClanVaultSpace;
 		return purchasedVaultSpace + houseVaultSpace + baseVaultSpace;
@@ -167,38 +241,110 @@ export class Clan {
 	}
 
 	public getSkillLevel(skill: Skill): Int {
-		return SkillUtils.getLevelForExperience(this._skills?.get(skill) ?? 0);
+		return SkillUtils.getLevelForExperience(this._experience?.get(skill) ?? 0);
 	}
 
 	/*
 	 * Packets
 	 */
 
-	public onReceiveGuildStateMessage(packet: ReceiveGuildStateMessage) {
-		const skillExperiences = packet.SkillExperiences ?? {};
-		this._skills = new Map(Object.keys(skillExperiences).map(value => {
-			const skill = Skill[value as keyof typeof Skill]
-			if (skill === undefined) throw new Error(`Invalid skill ${value}`);
-			return [ skill, skillExperiences[value] ] as [ Skill, number ];
-		}));
+	public onReceiveGuildStateMessage(packet: ReceiveGuildStateMessage): boolean {
+		let result = false;
 
-		// Inventory isn't included.
+		if (packet.Meta != null) {
+			const meta = packet.Meta;
+			if (meta.GuildName != null) this._name = meta.GuildName;
+			if (meta.Tag != null) this._tag = meta.Tag;
+			if (meta.RecruitmentMessage != null) this._recruitmentMessage = meta.RecruitmentMessage;
+			if (meta.CreationDate != null) this._creationDate = new Date(meta.CreationDate);
+			if (meta.EarliestPossibleDeletionDate != null) this._earliestPossibleDeletionDate = new Date(meta.EarliestPossibleDeletionDate);
+			if (meta.RecentlyCreated != null) this._recentlyCreated = meta.RecentlyCreated;
+			result = true;
+		}
 
-		this._eventStates = packet.EventStates;
+		if (packet.Progress != null) {
+			const progress = packet.Progress;
+			if (progress.Experiences != null) {
+				this._experience = new Map(Object.keys(progress.Experiences ?? {}).map(v => {
+					const skill = Skill[v as keyof typeof Skill]
+					if (skill === undefined) throw new Error(`Invalid skill ${v}`);
+					return [ skill, (progress.Experiences ?? {})[v] ] as [ Skill, number ];
+				}));
+			}
+			result = true;
+		}
 
-		const skillingTickets = packet.SkillingTickets ?? {};
-		this._skillingTickets = new Map(Object.keys(skillingTickets).map(value => {
-			const skill = Skill[value as keyof typeof Skill]
-			if (skill === undefined) throw new Error(`Invalid skill ${value}`);
-			return [ skill, skillingTickets[value] ] as [ Skill, number ];
-		}))
+		if (packet.Members != null) {
+			const members = packet.Members;
+			if (members.Members != null) {
+				this._members = new Map((members.Members ?? [])
+					.map((member, _) =>
+						[member.Username, ClanMember.fromGuildMember(member)]));
+			}
+			result = true;
+		}
 
-		this._skillingPartyCompletions = packet.SkillingPartyCompletions;
-		this._recruiting = packet.IsRecruiting;
-		this._category = packet.Status;
-		this._language = packet.PrimaryLanguage;
-		this._minTotalLevel = packet.MinimumTotalLevelRequired;
-		this._tag = packet.Tag;
+		if (packet.Vault != null) {
+			const vault = packet.Vault;
+			if (vault.Gold != null) this._gold = vault.Gold;
+			result = true;
+		}
+
+		if (packet.House != null) {
+			const house = packet.House;
+			if (house.GuildHouseId != null) this._houseId = house.GuildHouseId;
+			result = true;
+		}
+
+		if (packet.Economy != null) {
+			const economy = packet.Economy;
+			if (economy.PurchasedVaultSlots != null) this._purchasedVaultSlots = economy.PurchasedVaultSlots;
+			if (economy.ClanCredits != null) this._credits = economy.ClanCredits;
+			if (economy.AccumulatedCredits != null) this._accumulatedCredits = economy.AccumulatedCredits;
+			if (economy.InvokingPlayerHasClaimableLoot != null) this._invokingPlayerHasClaimableLoot = economy.InvokingPlayerHasClaimableLoot;
+			if (economy.UnlockedUpgrades != null) this._upgrades = new Set(economy.UnlockedUpgrades);
+			result = true;
+		}
+
+		if (packet.Quests != null) {
+			const quests = packet.Quests;
+			if (quests.NextQuestGenerationTimestamp != null) this._questsResetDate = new Date(quests.NextQuestGenerationTimestamp);
+			if (quests.DailySkillingQuests != null) this._skillingQuests = quests.DailySkillingQuests;
+			if (quests.DailyCombatQuests != null) this._combatQuests = quests.DailyCombatQuests;
+			if (quests.SkillingContributors != null) this._skillingContributors = quests.SkillingContributors;
+			if (quests.CombatContributors != null) this._combatContributors = quests.CombatContributors;
+			result = true;
+		}
+
+		if (packet.Events != null) {
+			const events = packet.Events;
+			if (events.Serialized != null) this._serializedEvents = events.Serialized;
+			if (events.SkillingTickets != null) {
+				this._skillingTickets = new Map(Object.keys(events.SkillingTickets ?? {}).map(v => {
+					const skill = Skill[v as keyof typeof Skill];
+					if (skill === undefined) throw new Error(`Invalid skill ${v}`);
+					return [ skill, (events.SkillingTickets ?? {})[v] ] as [ Skill, number ];
+				}));
+			}
+			if (events.SkillingPartyCompletions != null) this._skillingPartyCompletions = events.SkillingPartyCompletions;
+			result = true;
+		}
+
+		if (packet.Admin != null) {
+			const admin = packet.Admin;
+			if (admin.IsRecruiting != null) this._recruiting = admin.IsRecruiting;
+			if (admin.Category != null) this._category = admin.Category;
+			if (admin.PrimaryLanguage != null) this._language = admin.PrimaryLanguage;
+			if (admin.MinimumTotalLevelRequired != null) this._minTotalLevel = admin.MinimumTotalLevelRequired;
+			if (admin.ActiveGuildApplications != null) {
+				this._applications = admin.ActiveGuildApplications
+					?.map(v => ({name: v.ApplicantName, message: v.Message,
+						level: v.TotalLevelAtTimeOfApplication})) ?? [];
+			}
+			result = true;
+		}
+
+		return result;
 	}
 
 	public onGuildVaultMessage(packet: GuildVaultMessage) {
@@ -224,49 +370,27 @@ export class Clan {
 		};
 	}
 
-	public onGuildLeaderLeftGuildMessage(packet: GuildLeaderLeftGuildMessage) {
-		this._members.delete(this.getLeader().name);
-		const member = Array.from(this._members.values())
-			.find(value => value.name === packet.NewLeader);
-
-		if (member === undefined)
-			throw new Error(`New leader ${packet.NewLeader} not found in clan ${this.name}.`);
-
-		member.rank = ClanRank.LEADER;
-	}
-
-	public onGuildMemberKickedMessage(packet: GuildMemberKickedMessage) {
-		this._members.delete(packet.PlayerName);
-	}
-
-	public onPlayerJoinedGuildMessage(mode: GameMode, packet: PlayerJoinedGuildMessage) {
-		const clanMember = new ClanMember(packet.PlayerJoining, mode, packet.IsOnline, packet.IsPremium,
-			packet.IsPremiumPlus, GuildRank.member, false, new Date(), packet.LogOutTime === null ?
-				new Date() : new Date(packet.LogOutTime));
-		this._members.set(packet.PlayerJoining, clanMember);
-	}
-
-	public onPlayerLeftGuildMessage(packet: PlayerLeftGuildMessage) {
-		this._members.delete(packet.PlayerName);
-	}
-
 	public onClearAllGuildApplicationsMessage(packet: ClearAllGuildApplicationsMessage) {
 		this._applications = [];
 	}
 
 	// General
 
-	public onGuildMemberLoggedInMessage(packet: GuildMemberLoggedInMessage) {
+	public onGuildMemberLoggedInMessage(packet: GuildMemberLoggedInMessage): boolean {
 		const member = this._members.get(packet.GuildMemberName);
-		if (member === undefined) return;
+		if (member === undefined) return false;
 		member.online = true;
+		member.server = packet.ActiveServerId;
+		return true;
 	}
 
-	public onGuildMemberLoggedOutMessage(packet: GuildMemberLoggedOutMessage) {
+	public onGuildMemberLoggedOutMessage(packet: GuildMemberLoggedOutMessage): boolean {
 		const member = this._members.get(packet.GuildMemberName);
-		if (member === undefined) return;
+		if (member === undefined) return false;
 		member.online = false;
+		member.server = null;
 		member.logoutTime = new Date();
+		return true;
 	}
 
 	// Applications
@@ -279,160 +403,21 @@ export class Clan {
 		});
 	}
 
-	// Recruitment
-
-	public onGuildUpdateRecruitmentStateMessage(packet: GuildUpdateRecruitmentStateMessage) {
-		this._recruiting = packet.Value;
-	}
-
-	public onGuildUpdateStatusMessage(packet: GuildUpdateStatusMessage) {
-		this._category = packet.Status;
-	}
-
-	public onGuildUpdatePrimaryLanguageMessage(packet: GuildUpdatePrimaryLanguageMessage) {
-		this._language = packet.Language;
-	}
-
-	public onGuildUpdateRecruitmentMessageMessage(packet: GuildUpdateRecruitmentMessageMessage) {
-		// TODO: Store the recruitment message?
-	}
-
-	public onGuildUpdateMinimumTotalLevelRequirementMessage(packet: GuildUpdateMinimumTotalLevelRequirementMessage) {
-		this._minTotalLevel = packet.MinimumTotalLevel;
-	}
-
-	public onGuildUpdateTagMessage(packet: GuildUpdateTagMessage) {
-		this._tag = packet.Tag;
-	}
-
 	/*
 	 * "Constructors"
 	 */
 
-	public static fromLoginPacket(data: LoginDataMessage): Clan {
-		const mode = data.GameMode ?? GameMode.NotSelected;
-		const name = data.GuildName ?? "?null?";
-		let members = new Map(Object.entries(data.Members || {})
-			.map(([name, member], _) =>
-				[name, ClanMember.fromGuildMember(name, member)]));
+	public static fromPacket(mode: GameMode, data: ReceiveGuildStateMessage): Clan {
+		const meta = assertDefined(data.Meta, "Meta is null");
+		const progress = assertDefined(data.Progress, "Progress is null");
+		const members = assertDefined(data.Members, "Members is null");
+		const vault = assertDefined(data.Vault, "Vault is null");
+		const house = assertDefined(data.House, "House is null");
+		const economy = assertDefined(data.Economy, "Economy is null");
+		const quests = assertDefined(data.Quests, "Quests is null");
+		const events = assertDefined(data.Events, "Events is null");
 
-		// TODO: Temp for testing.
-		if (members.size < 20) {
-			// Predefined members.
-			members.set("1maxHP", new ClanMember("1maxHP", GameMode.Default, true, false, true, GuildRank.deputy, true, new Date(), new Date()));
-			members.set("MsWildnoXYZ", new ClanMember("MsWildnoXYZ", GameMode.Default, true, true, true, GuildRank.deputy, true, new Date(), new Date()));
-			members.set("FRUndonyMana", new ClanMember("FRUndonyMana", GameMode.Default, true, false, false, GuildRank.deputy, false, new Date(), new Date()));
-			members.set("Fellinioo", new ClanMember("Fellinioo", GameMode.Default, false, true, true, GuildRank.deputy, false, new Date(), new Date()));
-			members.set("NoahTTV_1", new ClanMember("NoahTTV_1", GameMode.Default, false, true, false, GuildRank.deputy, true, new Date(), new Date()));
-
-			const toFill = 20 - members.size;
-			let deputies = 0;
-
-			const namesPre = [ "Pro", "Mr", "Ms", "x_", "xX_", "King", "", "Base", "Super", "1", "_", "Based", "Wondy", "Lux", "FR" ];
-			const namesMid = [ "rax", "max", "wildno", "Wild", "Sharee", "Undony", "grimes", "Andy", "noob", "qwartys", "Curtin", "Fredrik", "Guss", "Hannah", "Uno", "Viking" ];
-			const namesPost = [ "_Xx", "_x", "", "Randy", "man", "wom", "Mana", "HP", "TTV", "YT", "Work", "s", "1", "2", "3", "_", "XYZ", "HD" ];
-
-			const getName = () => {
-				const pre = namesPre[Math.floor(Math.random() * namesPre.length)];
-				const mid = namesMid[Math.floor(Math.random() * namesMid.length)];
-				const post = namesPost[Math.floor(Math.random() * namesPost.length)];
-				return pre + mid + post;
-			}
-
-			for (let i = 0; i < toFill; i++) {
-				const testName = getName();
-				const deputy = deputies > 0;
-				if (deputy) deputies--;
-				members.set(testName, new ClanMember(testName, GameMode.Default, Math.random() < 0.50,
-					Math.random() > 0.75, Math.random() > 0.55, !deputy ? GuildRank.member : GuildRank.deputy,
-					Math.random() > 0.75, new Date(), new Date()));
-			}
-
-			members = new Map([...members.entries()].sort((a, b) => b[1].rank - a[1].rank));
-		}
-
-		const credits = data.ClanCredits ?? 0;
-		const gold = data.VaultGold ?? 0;
-		const vaultSpace = data.ClanVaultSpacePurchased;
-
-		const skillingQuests = data.DailySkillingQuests ?? [];
-		const skillingContributors = data.SkillingContributors ?? [];
-		const combatQuests = data.DailyCombatQuests ?? [];
-		const combatContributors = data.CombatContributors ?? [];
-		const questsResetDate = data.NextQuestGenerationTimestamp !== null ?
-			new Date(data.NextQuestGenerationTimestamp) : new Date();
-
-		const houseId = data.GuildHouseId ?? -1;
-		const upgrades = new Set(data.UnlockedUpgrades ?? []);
-		const applications = data.ActiveGuildApplications
-			?.map(v => ({ name: v.ApplicantName, message: v.Message,
-				level: v.TotalLevelAtTimeOfApplication })) ?? [];
-
-		return new Clan(mode, name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
-			combatContributors, questsResetDate, houseId, upgrades, applications);
-	}
-
-	public static fromJoinPacket(data: PlayerJoinedGuildMessage): Clan {
-		if (data.GuildName === null) throw new Error("PlayerJoinedGuildMessage doesn't contain clan name.");
-
-		const name = data.GuildName;
-		const members = new Map(Object.entries(data.Members || {})
-			.map(([name, member], _) =>
-				[name, ClanMember.fromGuildMember(name, member)]));
-		// Get the mode from the first member.
-		const mode = members.entries().next().value?.[1]?.mode ?? GameMode.NotSelected;
-
-
-		const credits = data.Credits ?? 0;
-		const gold = data.Gold ?? 0;
-		const vaultSpace = data.ClanVaultSpacePurchased;
-
-		const skillingQuests = data.DailySkillingQuests ?? [];
-		const skillingContributors = data.SkillingContributors ?? [];
-		const combatQuests = data.DailyCombatQuests ?? [];
-		const combatContributors = data.CombatContributors ?? [];
-		const questsResetDate = data.NextQuestGenerationTimestamp !== null ?
-			new Date(data.NextQuestGenerationTimestamp) : new Date();
-
-		const houseId = data.OwnedHouseId ?? -1;
-		const upgrades = new Set(data.UnlockedUpgrades ?? []);
-		// NOTE: Applications aren't sent when you join a clan, meaning if you join a clan that
-		//       has an application, get promoted, then you won't be able to see any applications
-		//       until you relog.
-		const applications: ClanApplication[] = [];
-
-		return new Clan(mode, name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
-			combatContributors, questsResetDate, houseId, upgrades, applications);
-	}
-
-	public static fromCreatePacket(context: ManagerContext, data: CreateGuildMessage): Clan {
-		const playerManager = context.playerManager!;
-
-		const mode = playerManager.mode.content();
-		const name = data.GuildName;
-		const members = new Map([[playerManager.username.content(), new ClanMember(
-			playerManager.username.content(), playerManager.mode.content(), true,
-			playerManager.premium.content(), playerManager.gilded.content(), GuildRank.leader,
-			true, new Date(), new Date()
-		)]]);
-
-		const credits = 0;
-		const gold = 0;
-		const vaultSpace = 0;
-
-		const skillingQuests = data.DailySkillingQuests ?? [];
-		const skillingContributors: string[] = [];
-		const combatQuests = data.DailyCombatQuests ?? [];
-		const combatContributors: string[] = [];
-		const questsResetDate = data.NextQuestGenerationTimestamp !== null ?
-			new Date(data.NextQuestGenerationTimestamp) : new Date();
-
-		const houseId = -1;
-		const upgrades: Set<UpgradeType> = new Set();
-		const applications: ClanApplication[] = [];
-
-		return new Clan(mode, name, members, credits, gold, vaultSpace, skillingQuests, skillingContributors, combatQuests,
-			combatContributors, questsResetDate, houseId, upgrades, applications);
+		return new Clan(mode, meta, progress, members, vault, house, economy, quests, events, data.Admin);
 	}
 }
 

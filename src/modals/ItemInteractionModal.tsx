@@ -388,7 +388,7 @@ export const ItemInteractionModal: React.FC<ItemInteractionModalProps> = ({ acti
 					) }
 
 					{/* Buttons */}
-					<div className="space-y-4">
+					<div className="space-y-2">
 						<PotionDrinkButton game={game} item={item} itemDef={itemDef} selected={selected} />
 
 						{ itemDef.healthAppliedOnConsume > 0 && (

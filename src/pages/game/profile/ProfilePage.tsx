@@ -38,10 +38,16 @@ const ProfilePage: React.FC = () => {
 				Test toast
 			</button>
 			<button
-				className="text-white" // 580
+				className="text-white" // 580 //
 				onClick={() => modal.openModal("test", <ItemInteractionModal item={{id: 580, count: 5}} />)}
 			>
-				Test modal
+				Test modal 1
+			</button>
+			<button
+				className="text-white" // 580 //
+				onClick={() => modal.openModal("test", <ItemInteractionModal item={{id: 581, count: 5}} />)}
+			>
+				Test modal 2
 			</button>
 			<button
 				className="text-white" // 580
