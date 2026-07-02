@@ -8,19 +8,21 @@ export class Upgrade {
 	public readonly isClanUpgrade: boolean = false;
 
 	private readonly Type: UpgradeType = 0;
+	private readonly IsClanUpgrade: boolean = false;
+	private readonly Discontinued: boolean = false;
 	private readonly Tiers: Int = 0;
 	private readonly CanPurchaseInBulk: boolean = false;
+	private readonly BenefitsCanBeToggledOff: boolean = false;
 	private readonly TierNameLocKeys?: string[];
 	private readonly TierDescriptionLocKeys?: string[];
 	private readonly TierUnlocks?: Int[];
 	private readonly Costs?: Int[];
 	private readonly ItemCosts?: { Item?: Int, Amount?: Int }[]; // fields marked as optional because omitted default values.
-	private readonly ItemIdWithCost?: { Item?: Int, Amount?: Int }[]; // fields marked as optional because omitted default values.
 	private readonly SkillRequirements?: { Skill?: Skill, Requirements: Int[] }[]; // fields marked as optional because omitted default values.
 	private readonly CustomRequirementLocKey?: string;
 	private readonly ClanCreditCost: Int = 0;
+	private readonly RepeatableCount: Int = 0;
 	private readonly DisabledForIronmen: boolean = false;
-	private readonly Discontinued: boolean = false;
 
 	constructor(entry: any, isClanUpgrade: boolean = false) {
 		Object.assign(this, entry);
@@ -32,7 +34,6 @@ export class Upgrade {
 	get tierUnlocks(): Int[] { return this.TierUnlocks ?? []; }
 	get costs(): Int[] | undefined { return this.Costs; }
 	get itemCosts(): { Item?: Int, Amount?: Int }[] | undefined { return this.ItemCosts; }
-	get itemIdWithCost(): { Item?: Int, Amount?: Int }[] | undefined { return this.ItemIdWithCost; }
 	get skillRequirements(): { Skill?: Skill, Requirements: Int[] }[] | undefined { return this.SkillRequirements; }
 	get customRequirementLocKey(): string | undefined { return this.CustomRequirementLocKey; }
 	get clanCreditCost(): Int { return this.ClanCreditCost; }

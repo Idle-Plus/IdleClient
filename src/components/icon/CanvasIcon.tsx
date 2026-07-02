@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { useSpriteSheets } from "@context/SpriteSheetContext.tsx";
 import { SheetIcon } from "@idleclient/game/sprite/SpriteSheet.ts";
-import { WeaponEffectType } from "@idleclient/network/NetworkData.ts";
+import { ItemEffectType } from "@idleclient/network/NetworkData.ts";
 
 const COSMETIC_SHADOWS = {
 	offsets: [
@@ -15,11 +15,11 @@ const COSMETIC_SHADOWS = {
 		[ -2, -2 ], // left-up
 	],
 
-	[WeaponEffectType.None]: { color: "#00000000", blur: 0 }, // Should never be picked.
-	[WeaponEffectType.Flaming]: { color: "#FF00007F", blur: 2 },
-	[WeaponEffectType.Ghostly]: { color: "#FFFFFF7F", blur: 2 },
-	[WeaponEffectType.Void]: { color: "#0000007F", blur: 2 },
-	[WeaponEffectType.Nature]: { color: "#00FF007F", blur: 2 }
+	[ItemEffectType.None]: { color: "#00000000", blur: 0 }, // Should never be picked.
+	[ItemEffectType.Flaming]: { color: "#FF00007F", blur: 2 },
+	[ItemEffectType.Ghostly]: { color: "#FFFFFF7F", blur: 2 },
+	[ItemEffectType.Void]: { color: "#0000007F", blur: 2 },
+	[ItemEffectType.Nature]: { color: "#00FF007F", blur: 2 }
 }
 
 interface CanvasIconProps {
@@ -31,7 +31,7 @@ interface CanvasIconProps {
 	flipY?: boolean;
 	opacity?: number;
 	tintColor?: string;
-	weaponEffect?: WeaponEffectType | null;
+	weaponEffect?: ItemEffectType | null;
 
 	className?: string;
 	style?: React.CSSProperties; // Optional inline styles for canvas
@@ -61,8 +61,8 @@ const CanvasIcon: React.FC<CanvasIconProps> = ({
 			const dpr = window.devicePixelRatio || 1;
 			canvas.width = (displaySize + (padding * 2)) * dpr;
 			canvas.height = (displaySize + (padding * 2)) * dpr;
-			canvas.style.width = `${displaySize}px`;
-			canvas.style.height = `${displaySize}px`;
+			if (canvas.style.width == null) canvas.style.width = `${displaySize}px`;
+			if (canvas.style.height == null) canvas.style.height = `${displaySize}px`;
 
 			if (!sheet) return;
 			const ctx = canvas.getContext("2d");
@@ -130,7 +130,11 @@ const CanvasIcon: React.FC<CanvasIconProps> = ({
 		};
 	}, [sheet, icon, displaySize, flipX, flipY, opacity, tintColor]);
 
-	return <canvas ref={canvasRef} className={className} style={{ ...style, width: `${displaySize}px`, height: `${displaySize}px` }} />;
+	const canvasStyle = { ...style }
+	if (canvasStyle.width == null) canvasStyle.width = `${displaySize}px`;
+	if (canvasStyle.height == null) canvasStyle.height = `${displaySize}px`;
+
+	return <canvas ref={canvasRef} className={className} style={canvasStyle} />;
 };
 
 export default CanvasIcon;

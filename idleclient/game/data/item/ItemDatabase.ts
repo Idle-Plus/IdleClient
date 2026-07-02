@@ -1,7 +1,7 @@
 import {
 	EquipmentSlot, Int, PotionType,
 	Skill, UpgradeType,
-	WeaponEffectType
+	ItemEffectType
 } from "@idleclient/network/NetworkData.ts";
 import { ItemId, ItemStack } from "@idleclient/types/gameTypes.ts";
 import { SpriteSheet } from "@idleclient/game/sprite/SpriteSheet.ts";
@@ -75,9 +75,9 @@ export class ItemDatabase {
 				item.equipmentSlot === EquipmentSlot.Ammunition ||
 				item.equipmentSlot === EquipmentSlot.Pet) continue;
 
-			for (let effect = WeaponEffectType.Flaming; effect <= 4; effect++) {
+			for (let effect = ItemEffectType.Flaming; effect <= 4; effect++) {
 				const id = Number(`${item.id}100${effect}`);
-				const name = `${item.name}_${WeaponEffectType[effect].toLowerCase()}`;
+				const name = `${item.name}_${ItemEffectType[effect].toLowerCase()}`;
 
 				entry.ItemId = id;
 				entry.Name = name;
@@ -93,7 +93,7 @@ export class ItemDatabase {
 				}
 
 				// Hacky solution to set a private field without complaints.
-				((item as any).cosmeticVariantIds as Partial<Record<WeaponEffectType, ItemId>>)[effect] = cosmeticItem.id;
+				((item as any).cosmeticVariantIds as Partial<Record<ItemEffectType, ItemId>>)[effect] = cosmeticItem.id;
 			}
 		}
 

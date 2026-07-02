@@ -52,6 +52,21 @@ export interface PetOfflineProgression {
 	TaskId: Int /* i32 */;
 }
 
+export enum PotionType {
+	None,
+	Swiftness,
+	Negotiation,
+	Resurrection,
+	Forgery,
+	GreatSight,
+	Trickery,
+	DarkMagic,
+	PurePower,
+	AncientKnowledge,
+	DragonfirePotion,
+	Ascension,
+}
+
 export interface PurchaseLimitScopeCountDto {
 	Scope: PurchaseLimitScope;
 	Used: Int /* i32 */;
@@ -77,8 +92,78 @@ export interface SkillingOfflineProgressNetwork {
 	OfflineProgressSkills: Array<Skill> | null;
 	ReceivedItemAmounts: Array<Int /* i32 */> | null;
 	ReceivedItemIds: Array<Int /* i32 */> | null;
+	StorageType: StorageType;
 	TaskIdToContinue: Byte /* i8 */;
 	TaskTypeToContinue: TaskType;
+}
+
+export enum UpgradeType {
+	upgrade_housing,
+	upgrade_bank_space,
+	upgrade_woodcutting_boost,
+	upgrade_fishing_boost,
+	upgrade_automatic_eating,
+	upgrade_automatic_looting,
+	upgrade_offline_progression,
+	upgrade_guild_quests,
+	upgrade_farming,
+	upgrade_foraging,
+	upgrade_smelting_cost,
+	upgrade_auto_cook,
+	upgrade_plank_cost,
+	upgrade_save_ammo,
+	upgrade_combat_dodge,
+	upgrade_combat_quest_boost,
+	clan_upgrade_get_up,
+	clan_upgrade_strength_in_numbers,
+	clan_upgrade_bigger_bottles,
+	clan_upgrade_group_effort,
+	clan_upgrade_an_offer_they_cant_refuse,
+	clan_upgrade_yoink,
+	clan_upgrade_bullseye,
+	clan_upgrade_gatherers,
+	upgrade_teamwork,
+	upgrade_boss_slayer,
+	upgrade_toolbelt,
+	upgrade_lazy_raider,
+	upgrade_ancient_wisdom,
+	upgrade_master_crafter,
+	clan_upgrade_gatherer_event_completions,
+	clan_upgrade_gatherer_event_cooldown,
+	clan_upgrade_crafting_event_completions,
+	clan_upgrade_crafting_event_cooldown,
+	upgrade_loadouts,
+	clan_upgrade_easy_events,
+	upgrade_kronos_protection,
+	clan_upgrade_turkey_chasers,
+	clan_upgrade_line_the_turkeys_up,
+	upgrade_auto_cook_meat_combat,
+	upgrade_better_skinner,
+	upgrade_upgraded_fisherman,
+	upgrade_upgraded_lumberjack,
+	upgrade_arrow_crafter,
+	upgrade_delicate_manufacturing,
+	upgrade_responsible_drinking,
+	upgrade_last_negotiation,
+	upgrade_kronos_item_boost,
+	upgrade_picky_eater,
+	upgrade_prestigious_woodworking,
+	upgrade_getting_in_sync,
+	clan_upgrade_auto_clan_boss,
+	clan_upgrade_clan_boss_boost,
+	upgrade_bounty_hunter,
+	clan_upgrade_ways_of_the_genie,
+	upgrade_bloodmoon_preparation,
+	upgrade_bloodmoon_exterminator,
+	upgrade_bloodmoon_fisherman,
+	upgrade_bloodmoon_helmet_upgrade,
+	upgrade_skilling_ticket_boost,
+	upgrade_pet_here_fishy_fishy,
+	upgrade_pet_theyre_not_rocks_theyre_minerals,
+	upgrade_pet_whos_a_good_boy,
+	upgrade_pet_how_to_train_your_demon_pet,
+	upgrade_principles_of_combat,
+	clan_upgrade_royal_extermination,
 }
 
 export interface WaveMilestoneRecord {
@@ -174,6 +259,7 @@ export interface GuildStateEconomy {
 	ClanCredits: Int /* i32 */ | null;
 	InvokingPlayerHasClaimableLoot: boolean | null;
 	PurchasedVaultSlots: Int /* i32 */ | null;
+	RepeatableUpgradeCounts: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null;
 	UnlockedUpgrades: Array<UpgradeType> | null;
 }
 
@@ -216,9 +302,40 @@ export interface GuildStateVault {
 	Gold: Double /* f64 */ | null;
 }
 
+export enum ItemCategory {
+	None,
+	Weapons,
+	Tools,
+	Armours,
+	Jewelry,
+	MasteryCapes,
+	SkillingOutfits,
+	Food,
+	Potions,
+	Consumables,
+	Gemstones,
+	Keys,
+	OresAndBars,
+	LogsAndPlanks,
+	SeedsAndHarvest,
+	EnchantmentScrolls,
+	Activatables,
+	Miscellaneous,
+	Pets,
+	SkillingTicket,
+}
+
 export interface ItemDelta {
 	Amount: Int /* i32 */;
 	ItemId: Int /* i32 */;
+}
+
+export enum ItemEffectType {
+	None,
+	Flaming,
+	Ghostly,
+	Void,
+	Nature,
 }
 
 export interface PlayerActivity {
@@ -248,6 +365,59 @@ export interface QuestLoginObject {
 export interface ExpDelta {
 	Amount: Int /* i32 */;
 	Skill: Skill;
+}
+
+export enum Skill {
+	None,
+	Rigour,
+	Strength,
+	Defence,
+	Archery,
+	Magic,
+	Health,
+	Crafting,
+	Woodcutting,
+	Carpentry,
+	Fishing,
+	Cooking,
+	Mining,
+	Smithing,
+	Foraging,
+	Farming,
+	Agility,
+	Plundering,
+	Enchanting,
+	Brewing,
+	Exterminating,
+	Invocation,
+}
+
+export enum StorageType {
+	None,
+	Inventory,
+	InvocationCoffer,
+}
+
+export enum TaskType {
+	None,
+	Woodcutting,
+	Fishing,
+	Mining,
+	Carpentry,
+	Smelting,
+	Smithing,
+	Combat,
+	Cooking,
+	Foraging,
+	Farming,
+	Crafting,
+	Agility,
+	Plundering,
+	Enchanting,
+	Brewing,
+	Exterminating,
+	ItemCreation,
+	Invocation,
 }
 
 export enum AttackStyle {
@@ -436,28 +606,6 @@ export enum ItemActivatableType {
 	ExterminatingSupplyCrate,
 }
 
-export enum ItemCategory {
-	None,
-	Weapons,
-	Tools,
-	Armours,
-	Jewelry,
-	MasteryCapes,
-	SkillingOutfits,
-	Food,
-	Potions,
-	Consumables,
-	Gemstones,
-	Keys,
-	OresAndBars,
-	LogsAndPlanks,
-	SeedsAndHarvest,
-	EnchantmentScrolls,
-	Activatables,
-	Miscellaneous,
-	Pets,
-}
-
 export enum ItemEffectTriggerType {
 	None,
 	Lifesteal,
@@ -475,20 +623,6 @@ export enum PlayerRewardType {
 	None,
 	BloodmoonRoll,
 	BloodmoonHighRoller,
-}
-
-export enum PotionType {
-	None,
-	Swiftness,
-	Negotiation,
-	Resurrection,
-	Forgery,
-	GreatSight,
-	Trickery,
-	DarkMagic,
-	PurePower,
-	AncientKnowledge,
-	DragonfirePotion,
 }
 
 export enum PurchaseLimitScope {
@@ -522,54 +656,9 @@ export enum RaidType {
 	BloodmoonMassacre,
 }
 
-export enum Skill {
-	None,
-	Rigour,
-	Strength,
-	Defence,
-	Archery,
-	Magic,
-	Health,
-	Crafting,
-	Woodcutting,
-	Carpentry,
-	Fishing,
-	Cooking,
-	Mining,
-	Smithing,
-	Foraging,
-	Farming,
-	Agility,
-	Plundering,
-	Enchanting,
-	Brewing,
-	Exterminating,
-}
-
 export enum TaskPotionInteraction {
 	None,
 	Trickery,
-}
-
-export enum TaskType {
-	None,
-	Woodcutting,
-	Fishing,
-	Mining,
-	Carpentry,
-	Smelting,
-	Smithing,
-	Combat,
-	Cooking,
-	Foraging,
-	Farming,
-	Crafting,
-	Agility,
-	Plundering,
-	Enchanting,
-	Brewing,
-	Exterminating,
-	ItemCreation,
 }
 
 export enum TaskUpgradeInteraction {
@@ -579,69 +668,6 @@ export enum TaskUpgradeInteraction {
 	UpgradePlankGoldDecrease,
 	UpgradeWoodcuttingExtraPlank,
 	LampExtraCoal,
-}
-
-export enum UpgradeType {
-	upgrade_housing,
-	upgrade_bank_space,
-	upgrade_woodcutting_boost,
-	upgrade_fishing_boost,
-	upgrade_automatic_eating,
-	upgrade_automatic_looting,
-	upgrade_offline_progression,
-	upgrade_guild_quests,
-	upgrade_farming,
-	upgrade_foraging,
-	upgrade_smelting_cost,
-	upgrade_auto_cook,
-	upgrade_plank_cost,
-	upgrade_save_ammo,
-	upgrade_combat_dodge,
-	upgrade_combat_quest_boost,
-	clan_upgrade_get_up,
-	clan_upgrade_strength_in_numbers,
-	clan_upgrade_bigger_bottles,
-	clan_upgrade_group_effort,
-	clan_upgrade_an_offer_they_cant_refuse,
-	clan_upgrade_yoink,
-	clan_upgrade_bullseye,
-	clan_upgrade_gatherers,
-	upgrade_teamwork,
-	upgrade_boss_slayer,
-	upgrade_toolbelt,
-	upgrade_lazy_raider,
-	upgrade_ancient_wisdom,
-	upgrade_master_crafter,
-	clan_upgrade_gatherer_event_completions,
-	clan_upgrade_gatherer_event_cooldown,
-	clan_upgrade_crafting_event_completions,
-	clan_upgrade_crafting_event_cooldown,
-	upgrade_loadouts,
-	clan_upgrade_easy_events,
-	upgrade_kronos_protection,
-	clan_upgrade_turkey_chasers,
-	clan_upgrade_line_the_turkeys_up,
-	upgrade_auto_cook_meat_combat,
-	upgrade_better_skinner,
-	upgrade_upgraded_fisherman,
-	upgrade_upgraded_lumberjack,
-	upgrade_arrow_crafter,
-	upgrade_delicate_manufacturing,
-	upgrade_responsible_drinking,
-	upgrade_last_negotiation,
-	upgrade_kronos_item_boost,
-	upgrade_picky_eater,
-	upgrade_prestigious_woodworking,
-	upgrade_getting_in_sync,
-	clan_upgrade_auto_clan_boss,
-	clan_upgrade_clan_boss_boost,
-	upgrade_bounty_hunter,
-	clan_upgrade_ways_of_the_genie,
-	upgrade_bloodmoon_preparation,
-	upgrade_bloodmoon_exterminator,
-	upgrade_bloodmoon_fisherman,
-	upgrade_bloodmoon_helmet_upgrade,
-	upgrade_skilling_ticket_boost,
 }
 
 export enum WeaponClassType {
@@ -655,14 +681,6 @@ export enum WeaponClassType {
 	Crossbow,
 	Staff,
 	Spear,
-}
-
-export enum WeaponEffectType {
-	None,
-	Flaming,
-	Ghostly,
-	Void,
-	Nature,
 }
 
 export enum WeaponType {
@@ -698,10 +716,10 @@ export class ActiveTaskCancelledMessage extends Packet {
 export class CompleteTaskMessage extends Packet {
 	public readonly MsgType: number = 4;
 	public OriginServerId: string | null = null;
-	constructor(public TaskType: TaskType, public TaskId: Byte /* i8 */, public ItemChanges: Array<ItemDelta>, public ExpChanges: Array<ExpDelta>) { super(); }
+	constructor(public TaskType: TaskType, public TaskId: Byte /* i8 */, public ItemChanges: Array<ItemDelta>, public ExpChanges: Array<ExpDelta>, public StorageType: StorageType) { super(); }
 
 	public static fromJson(json: any): CompleteTaskMessage {
-		const _data_ = new CompleteTaskMessage(json.TaskType, json.TaskId, json.ItemChanges, json.ExpChanges);
+		const _data_ = new CompleteTaskMessage(json.TaskType, json.TaskId, json.ItemChanges, json.ExpChanges, json.StorageType);
 		_data_.OriginServerId = json.OriginServerId;
 		return _data_;
 	}
@@ -746,10 +764,10 @@ export class InventoryItemSwapMessage extends Packet {
 export class LoginDataMessage extends Packet {
 	public readonly MsgType: number = 1;
 	public OriginServerId: string | null = null;
-	constructor(public Username: string | null, public SkillExperiencesJson: string | null, public InventoryJson: string | null, public Gold: Double /* f64 */, public EquipmentJson: string | null, public EquippedAmmunitionAmount: Int /* i32 */, public NewPlayer: boolean, public Health: Int /* i32 */, public IsVerified: boolean, public PremiumEndDate: string | null, public IsPremiumPlus: boolean, public UnlockedBossHunter: boolean, public UnlockedAutoLoadouts: boolean, public Upgrades: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null, public CombatStyle: Byte /* i8 */, public ArcheryCombatStyle: Byte /* i8 */, public MagicCombatStyle: Byte /* i8 */, public AutoEatPercentage: Byte /* i8 */, public UsedBossKey: Int /* i32 */, public KronosAttackStyleWeakness: AttackStyle, public TutorialStage: FTUEStage | null, public GameMode: GameMode | null, public ConfigVersion: Int /* i32 */, public GuildStateMessage: ReceiveGuildStateMessage | null, public GuildLobbyStates: Array<GuildEventLobbyState> | null, public OfflineTime: string, public SkillingOfflineProgress: SkillingOfflineProgressNetwork | null, public CombatOfflineProgress: CombatOfflineProgressNetwork | null, public ItemsSoldOffline: Array<ShopListingItem> | null, public SerializedPlayerToggleableSettings: string | null, public AdsWatchedToday: Byte /* i8 */, public LastAdWatchedTimestampTicks: Long /* i64 */, public AdBoostedSeconds: Int /* i32 */, public AdBoostPaused: boolean, public PurchasedInventorySlots: Int /* i32 */, public ClanVaultSpacePurchased: Int /* i32 */, public ActivePotionEffects: { [key: string /* Name of: PotionType */]: Int /* i32 */ } | null, public SerializedItemEnchantments: string | null, public GuildInvitations: Array<GuildInvitation> | null, public UseInventoryConsumables: boolean, public QuestLoginObject: QuestLoginObject, public QuesterUnlocked: boolean, public PetOfflineProgress: PetOfflineProgression | null, public ActivePetSkill: Skill | null, public PetTaskId: Byte /* i8 */, public ItemsInWithdrawalBox: boolean, public ExterminatingPoints: Int /* i32 */, public ActiveExterminatingAssignment: ActiveExterminatingAssignment | null, public ExterminatorUnlocked: boolean, public UnlockedExterminatingPurchases: Array<ExterminatingShopUnlockType> | null, public PlayerRewards: { [key: string /* Name of: PlayerRewardType */]: Int /* i32 */ } | null, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ }, public PvmBestTimes: { [key: string /* Name of: PvmStatType */]: PvmBestRecord } | null, public AfkRaidInfo: AfkRaidInfo | null, public UnlockedAFKRaids: Array<RaidType>, public PurchaseLimitCounts: Array<PurchaseLimitScopeCountDto>, public ServerId: string, public ActiveHolidayEvent: HolidayEvent, public IsInGuild: boolean) { super(); }
+	constructor(public Username: string | null, public SkillExperiencesJson: string | null, public InventoryJson: string | null, public Gold: Double /* f64 */, public EquipmentJson: string | null, public EquippedAmmunitionAmount: Int /* i32 */, public NewPlayer: boolean, public Health: Int /* i32 */, public IsVerified: boolean, public PremiumEndDate: string | null, public IsPremiumPlus: boolean, public UnlockedBossHunter: boolean, public UnlockedAutoLoadouts: boolean, public Upgrades: { [key: string /* Name of: UpgradeType */]: Int /* i32 */ } | null, public DisabledUpgrades: Array<UpgradeType>, public CombatStyle: Byte /* i8 */, public ArcheryCombatStyle: Byte /* i8 */, public MagicCombatStyle: Byte /* i8 */, public AutoEatPercentage: Byte /* i8 */, public UsedBossKey: Int /* i32 */, public KronosAttackStyleWeakness: AttackStyle, public TutorialStage: FTUEStage | null, public GameMode: GameMode | null, public ConfigVersion: Int /* i32 */, public GuildStateMessage: ReceiveGuildStateMessage | null, public GuildLobbyStates: Array<GuildEventLobbyState> | null, public OfflineTime: string, public SkillingOfflineProgress: SkillingOfflineProgressNetwork | null, public CombatOfflineProgress: CombatOfflineProgressNetwork | null, public ItemsSoldOffline: Array<ShopListingItem> | null, public SerializedPlayerToggleableSettings: string | null, public AdsWatchedToday: Byte /* i8 */, public LastAdWatchedTimestampTicks: Long /* i64 */, public AdBoostedSeconds: Int /* i32 */, public AdBoostPaused: boolean, public PurchasedInventorySlots: Int /* i32 */, public ClanVaultSpacePurchased: Int /* i32 */, public ActivePotionEffects: { [key: string /* Name of: PotionType */]: Int /* i32 */ } | null, public SerializedItemEnchantments: string | null, public GuildInvitations: Array<GuildInvitation> | null, public UseInventoryConsumables: boolean, public QuestLoginObject: QuestLoginObject, public QuesterUnlocked: boolean, public PetOfflineProgress: PetOfflineProgression | null, public ActivePetSkill: Skill | null, public PetTaskId: Byte /* i8 */, public ItemsInWithdrawalBox: boolean, public ExterminatingPoints: Int /* i32 */, public ActiveExterminatingAssignment: ActiveExterminatingAssignment | null, public ExterminatorUnlocked: boolean, public UnlockedExterminatingPurchases: Array<ExterminatingShopUnlockType> | null, public PlayerRewards: { [key: string /* Name of: PlayerRewardType */]: Int /* i32 */ } | null, public Stats: { [key: string /* Name of: PvmStatType */]: Int /* i32 */ }, public PvmBestTimes: { [key: string /* Name of: PvmStatType */]: PvmBestRecord } | null, public AfkRaidInfo: AfkRaidInfo | null, public UnlockedAFKRaids: Array<RaidType>, public PurchaseLimitCounts: Array<PurchaseLimitScopeCountDto>, public ServerId: string, public ActiveHolidayEvent: HolidayEvent, public InvocationCofferGold: Double /* f64 */, public InvocationRitualPower: Long /* i64 */, public IsInGuild: boolean) { super(); }
 
 	public static fromJson(json: any): LoginDataMessage {
-		const _data_ = new LoginDataMessage(json.Username, json.SkillExperiencesJson, json.InventoryJson, json.Gold, json.EquipmentJson, json.EquippedAmmunitionAmount, json.NewPlayer, json.Health, json.IsVerified, json.PremiumEndDate, json.IsPremiumPlus, json.UnlockedBossHunter, json.UnlockedAutoLoadouts, json.Upgrades, json.CombatStyle, json.ArcheryCombatStyle, json.MagicCombatStyle, json.AutoEatPercentage, json.UsedBossKey, json.KronosAttackStyleWeakness, json.TutorialStage, json.GameMode, json.ConfigVersion, json.GuildStateMessage, json.GuildLobbyStates, json.OfflineTime, json.SkillingOfflineProgress, json.CombatOfflineProgress, json.ItemsSoldOffline, json.SerializedPlayerToggleableSettings, json.AdsWatchedToday, json.LastAdWatchedTimestampTicks, json.AdBoostedSeconds, json.AdBoostPaused, json.PurchasedInventorySlots, json.ClanVaultSpacePurchased, json.ActivePotionEffects, json.SerializedItemEnchantments, json.GuildInvitations, json.UseInventoryConsumables, json.QuestLoginObject, json.QuesterUnlocked, json.PetOfflineProgress, json.ActivePetSkill, json.PetTaskId, json.ItemsInWithdrawalBox, json.ExterminatingPoints, json.ActiveExterminatingAssignment, json.ExterminatorUnlocked, json.UnlockedExterminatingPurchases, json.PlayerRewards, json.Stats, json.PvmBestTimes, json.AfkRaidInfo, json.UnlockedAFKRaids, json.PurchaseLimitCounts, json.ServerId, json.ActiveHolidayEvent, json.IsInGuild);
+		const _data_ = new LoginDataMessage(json.Username, json.SkillExperiencesJson, json.InventoryJson, json.Gold, json.EquipmentJson, json.EquippedAmmunitionAmount, json.NewPlayer, json.Health, json.IsVerified, json.PremiumEndDate, json.IsPremiumPlus, json.UnlockedBossHunter, json.UnlockedAutoLoadouts, json.Upgrades, json.DisabledUpgrades, json.CombatStyle, json.ArcheryCombatStyle, json.MagicCombatStyle, json.AutoEatPercentage, json.UsedBossKey, json.KronosAttackStyleWeakness, json.TutorialStage, json.GameMode, json.ConfigVersion, json.GuildStateMessage, json.GuildLobbyStates, json.OfflineTime, json.SkillingOfflineProgress, json.CombatOfflineProgress, json.ItemsSoldOffline, json.SerializedPlayerToggleableSettings, json.AdsWatchedToday, json.LastAdWatchedTimestampTicks, json.AdBoostedSeconds, json.AdBoostPaused, json.PurchasedInventorySlots, json.ClanVaultSpacePurchased, json.ActivePotionEffects, json.SerializedItemEnchantments, json.GuildInvitations, json.UseInventoryConsumables, json.QuestLoginObject, json.QuesterUnlocked, json.PetOfflineProgress, json.ActivePetSkill, json.PetTaskId, json.ItemsInWithdrawalBox, json.ExterminatingPoints, json.ActiveExterminatingAssignment, json.ExterminatorUnlocked, json.UnlockedExterminatingPurchases, json.PlayerRewards, json.Stats, json.PvmBestTimes, json.AfkRaidInfo, json.UnlockedAFKRaids, json.PurchaseLimitCounts, json.ServerId, json.ActiveHolidayEvent, json.InvocationCofferGold, json.InvocationRitualPower, json.IsInGuild);
 		_data_.OriginServerId = json.OriginServerId;
 		return _data_;
 	}
@@ -1231,10 +1249,10 @@ export class SendGuildInviteMessage extends Packet {
 export class SellItemMessage extends Packet {
 	public readonly MsgType: number = 6;
 	public OriginServerId: string | null = null;
-	constructor(public ItemId: Int /* i32 */, public ItemAmount: Int /* i32 */) { super(); }
+	constructor(public ItemId: Int /* i32 */, public ItemAmount: Int /* i32 */, public ItemsToAdd: { [key: Int /* i32 */]: Int /* i32 */ } | null, public ItemsToRemove: { [key: Int /* i32 */]: Int /* i32 */ } | null) { super(); }
 
 	public static fromJson(json: any): SellItemMessage {
-		const _data_ = new SellItemMessage(json.ItemId, json.ItemAmount);
+		const _data_ = new SellItemMessage(json.ItemId, json.ItemAmount, json.ItemsToAdd, json.ItemsToRemove);
 		_data_.OriginServerId = json.OriginServerId;
 		return _data_;
 	}

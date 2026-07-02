@@ -20,11 +20,13 @@ import { ModalUtils } from "@utils/ModalUtils.tsx";
 import { RecruitmentCenterModal, RecruitmentCenterModalId } from "@pages/game/clan/modals/RecruitmentCenterModal.tsx";
 import IdleMarkdown from "@components/markdown/IdleMarkdown.tsx";
 import idleAtPlayerMention from "@components/markdown/plugins/MdPlayerMentions.tsx";
+import { LocalizationDatabase } from "@idleclient/game/data/LocalizationDatabase.ts";
+import { ClanHouseDatabase } from "@idleclient/game/data/ClanHouseDatabase.ts";
 
 const RAID_TYPES = [
-	{ type: PvmStatType.ReckoningOfTheGods, icon: "raid/raid_reckoning_of_the_gods", text: "Completions: " },
-	{ type: PvmStatType.GuardiansOfTheCitadel, icon: "raid/raid_guardians_of_the_citadel", text: "Completions: " },
-	{ type: PvmStatType.BloodmoonMassacre, icon: "raid/raid_bloodmoon_massacre", text: "Highest wave: " },
+	{ type: PvmStatType.ReckoningOfTheGods, icon: "raid/raid_reckoning_of_the_gods", text: "" },
+	{ type: PvmStatType.GuardiansOfTheCitadel, icon: "raid/raid_guardians_of_the_citadel", text: "" },
+	{ type: PvmStatType.BloodmoonMassacre, icon: "raid/raid_bloodmoon_massacre", text: "" },
 ];
 
 const BOSS_TYPES = [
@@ -41,6 +43,42 @@ const BOSS_TYPES = [
 	{ type: PvmStatType.SkeletonWarrior, icon: "task/combat/skeleton_warrior" },
 	{ type: PvmStatType.OtherworldlyGolem, icon: "task/combat/otherworldly_golem" },
 ];
+
+const ClanCredits: React.FC<{ clan: Clan }> = ({ clan }) => {
+	return (
+		<div className="flex flex-col justify-center p-4 py-2 bg-ic-dark-500 text-lg/5 tbox-trim-both text-gray-300">
+			<div>Clan credits: <span className="text-white">{clan.credits}</span></div>
+			<div>My accumulated credits: <span className="text-white">{clan.accumulatedCredits}</span></div>
+		</div>
+	);
+};
+
+const ClanProperty: React.FC<{ clan: Clan }> = ({ clan }) => {
+	let clanHouse = clan.getHouse();
+	if (clanHouse == null) clanHouse = ClanHouseDatabase.getHouse(0) ?? null;
+
+	return (
+		<div className="flex justify-between gap-4 p-4 py-2 bg-ic-dark-500 text-lg/5 tbox-trim-both text-gray-300">
+			{ clanHouse !== null && (<>
+				<div>
+					Property: <span className="text-white">{LocalizationDatabase.get(clanHouse?.name ?? "")}</span><br/>
+					Skilling xp boost: <span className="text-white">{clanHouse?.globalSkillingBoost ?? 0}%</span><br/>
+					Extra vault space: <span className="text-white">{(clanHouse?.inventorySpace ?? 0)}</span>
+				</div>
+
+				<SpriteIcon
+					icon={`clan_house/${clanHouse?.name}`}
+					size={60}
+					className="drop-shadow-black/50 drop-shadow-md"
+				/>
+			</>) || (<>
+				<div>
+					Purchase a property to unlock benefits for your entire clan.
+				</div>
+			</>)}
+		</div>
+	);
+};
 
 const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan, player }) => {
 	const MAX_CHARACTERS = 1000;
@@ -88,9 +126,9 @@ const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan,
 	}
 
 	return (
-		<div className={`bg-ic-dark-500/75 space-y-2 p-4 pt-2 ${collapsed ? "pb-2 space-y-0!" : ""}`}>
-			<div className="flex justify-between items-center">
-				<div className="text-2xl font-semibold text-gray-100">Bulletin Board</div>
+		<div className={`bg-ic-dark-300`}>
+			<div className={`flex justify-between items-center p-4 pt-2 pb-2 bg-ic-dark-500 ${!collapsed ? "border-b-2 border-ic-dark-600" : "pb-1"}`}>
+				<div className="text-2xl text-gray-100">Bulletin Board</div>
 
 				<div
 					onClick={() => setCollapsed(!collapsed)}
@@ -104,7 +142,7 @@ const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan,
 				<Loader title={""} spinnerClass="h-10! w-10! border-4!" />
 			) }
 
-			<div className={`relative p-2 bg-ic-dark-300 rounded-md shadow-black/25 shadow-md ${collapsed ? "hidden" : ""} ${clan.bulletinBoard === null ? "hidden" : ""}`}>
+			<div className={`relative p-2 pb-[0.1px] bg-ic-dark-300 rounded-sm shadow-black/25 shadow-md ${collapsed ? "hidden" : ""} ${clan.bulletinBoard === null ? "hidden" : ""}`}>
 				{ (isEditing && canEdit) ? (
 					<>
 						<div className="relative">
@@ -130,7 +168,7 @@ const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan,
 							</div>
 						</div>
 
-						<div className="relative">
+						<div className="relative pb-2">
 							<input
 								placeholder="Enter discord invite code"
 								maxLength={20}
@@ -147,14 +185,14 @@ const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan,
 				) : (
 					<>
 						{ (message.trim().length <= 0 && discordCode.trim().length <= 0) && (
-							<div className="w-full p-2 text-lg text-gray-300">
+							<div className="w-full p-2 pb-4 text-base text-gray-300 italic">
 								No bulletin board message or discord invite has been set.
 							</div>
 						) }
 
 						{ (message.trim().length > 0) && (
 							<div
-								className="p-2 pb-0 text-gray-200 markdown-container"
+								className={`p-2 pb-0 text-gray-200 markdown-container ${discordCode.trim().length <= 0 ? "pb-2" : ""}`}
 								style={{
 									"--md-link-color": "var(--color-ic-light-200)",
 									"--md-link-color-hover": "var(--color-ic-light-000)"
@@ -171,7 +209,7 @@ const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan,
 						) }
 
 						{ (discordCode.trim().length > 0) && (
-							<div className={`w-full p-2 pt-0 text-gray-300 ${message.trim().length <= 0 ? "pt-2!" : ""}`}>
+							<div className={`w-full p-2 pt-0 pb-4 text-gray-300 ${message.trim().length <= 0 ? "pt-2!" : ""}`}>
 								{"Click "}
 								<a
 									href={`https://discord.gg/${discordCode}`}
@@ -200,13 +238,13 @@ const ClanBulletinBoard: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan,
 
 const ClanSkills: React.FC<{ clan: Clan }> = ({ clan }) => {
 	return (
-		<div className="bg-ic-dark-500/75 space-y-1 p-4 pt-2">
-			<div className="flex justify-between text-2xl pb-1">
-				<div className="font-semibold text-gray-100">Skills</div>
-				<div className="text-gray-300">Total level: <span className="text-gray-100">{clan.getTotalLevel()}</span></div>
+		<div className="bg-ic-dark-500">
+			<div className="flex justify-between text-2xl p-4 pt-2 pb-1 border-b-2 border-ic-dark-600">
+				<div className="text-gray-100">Skills</div>
+				<div className="text-xl text-gray-200">Total Lv. <span className="text-gray-100">{clan.getTotalLevel()}</span></div>
 			</div>
 
-			<div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 select-none">
+			<div className="grid grid-cols-3 xs:grid-cols-4 md:grid-cols-5 gap-1 p-2 select-none bg-ic-dark-300">
 				{ SkillUtils.getSkills().map((skill, index) => (
 					<ClanSkill key={index} clan={clan} skill={skill} />
 				)) }
@@ -241,13 +279,15 @@ const ClanSkill: React.FC<{ clan: Clan, skill: Skill }> = ({ clan, skill }) => {
 			delay={300}
 			direction="bottom"
 			offset={4}
-			className="w-full flex flex-col items-center pt-2 pb-3 px-2 bg-ic-dark-300 rounded-md shadow-black/25 shadow-md"
+			className="w-full flex flex-col items-center py-2 bg-ic-dark-100/75"
 		>
 			<SpriteIcon icon={SkillUtils.getSpriteIconId(skill, 32)} size={28} className="mb-1 drop-shadow-md drop-shadow-black/25" />
-			<p className="text-gray-200 tbox-trim-both">Lv. <span className="text-white"> {level}</span></p>
-			<div className="w-full relative">
-				<div className="absolute w-full h-1 bg-ic-light-700 rounded-md" />
-				<div className="absolute h-1 bg-ic-light-200 rounded-md" style={{ width: (progress.progress * 100) + "%" }} />
+			<p className="text-white tbox-trim-both"><span className="text-gray-300 text-sm">Lv. </span>{level}</p>
+			<div className="w-full px-1">
+				<div className="w-full relative">
+					<div className="absolute w-full h-1 bg-ic-light-700 rounded-md" />
+					<div className="absolute h-1 bg-ic-light-200 rounded-md" style={{ width: (progress.progress * 100) + "%" }} />
+				</div>
 			</div>
 		</Tooltip>
 	);
@@ -256,33 +296,37 @@ const ClanSkill: React.FC<{ clan: Clan, skill: Skill }> = ({ clan, skill }) => {
 const ClanPvmStats: React.FC<{ clan: Clan }> = ({ clan }) => {
 
 	return (
-		<div className="space-y-1 p-4 pt-2 bg-ic-dark-500/75 text-gray-200">
-			<h1 className="text-2xl font-semibold pb-1">
+		<div className="bg-ic-dark-300 text-gray-200">
+			<h1 className="text-2xl p-4 pt-2 pb-1 border-b-2 text-gray-100 bg-ic-dark-500 border-ic-dark-600">
 				PvM Stats
 			</h1>
 
-			{/* Raids */}
-			<div className="grid grid-cols-3 gap-1">
+			<div className="p-2 space-y-1">
+				{/* Raids */}
+				<div className="grid grid-cols-3 gap-1 content-center">
 
-				{ RAID_TYPES.map((raid, index) => (
-					<div key={index} className="flex flex-col items-center p-1 bg-ic-dark-300 rounded-md shadow-black/25 shadow-md">
-						<SpriteIcon icon={raid.icon + "_48"} size={48} className="drop-shadow-md drop-shadow-black/25" />
-						<span className="tbox-trim-both">
+					{ RAID_TYPES.map((raid, index) => (
+						<div key={index} className="flex flex-col items-center p-1 bg-ic-dark-100/75">
+							<SpriteIcon icon={raid.icon + "_48"} size={48} className="drop-shadow-md drop-shadow-black/25" />
+							<span className="tbox-trim-both">
 							<span className="hidden sm:inline">{raid.text}</span>
-							{clan.pvmStats?.stats.get(raid.type) ?? 0}
+								{clan.pvmStats?.stats.get(raid.type) ?? 0}
 						</span>
-					</div>
-				)) }
-			</div>
+						</div>
+					)) }
+				</div>
 
-			{/* Bosses */}
-			<div className="grid grid-cols-4 sm:grid-cols-6 gap-1 pt-1">
-				{ BOSS_TYPES.map((boss, index) => (
-					<div key={index} className="flex flex-col items-center p-2 pb-1 bg-ic-dark-300 rounded-md shadow-black/25 shadow-md">
-						<SpriteIcon icon={boss.icon + "_48"} size={48} className="drop-shadow-md drop-shadow-black/25" />
-						<span className="tbox-trim-both">{clan.pvmStats?.stats.get(boss.type) ?? 0}</span>
-					</div>
-				)) }
+				<div className="h-0.5 my-2 bg-white/10"></div>
+
+				{/* Bosses */}
+				<div className="grid grid-cols-4 sm:grid-cols-4 gap-1">
+					{ BOSS_TYPES.map((boss, index) => (
+						<div key={index} className="flex flex-col items-center p-1 bg-ic-dark-100/75">
+							<SpriteIcon icon={boss.icon + "_48"} size={48} className="drop-shadow-md drop-shadow-black/25" />
+							<span className="tbox-trim-both">{clan.pvmStats?.stats.get(boss.type) ?? 0}</span>
+						</div>
+					)) }
+				</div>
 			</div>
 		</div>
 	);
@@ -449,7 +493,7 @@ const ClanInfoTab: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan, playe
 		<div className="h-full flex flex-col lg:flex-row gap-2 grow">
 
 			{/* Clan name and buttons - Mobile view only */}
-			<div className="lg:hidden p-4 space-y-2 bg-ic-dark-500/75">
+			<div className="lg:hidden p-4 space-y-2 bg-ic-dark-500">
 				<div className="text-white text-4xl font-bold text-center ">
 					{clan.name} { clan.tag && (<span className="font-normal text-gray-200">{`[${clan.tag}]`}</span>) }
 				</div>
@@ -478,7 +522,7 @@ const ClanInfoTab: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan, playe
 			<div className="flex-3 space-y-2">
 
 				{/* Buttons - Desktop view only */}
-				<div className="hidden lg:flex flex-col md:flex-row justify-between gap-2 p-2 bg-ic-dark-500/75">
+				<div className="hidden lg:flex flex-col md:flex-row justify-between gap-2 p-2 bg-ic-dark-500">
 					<IdleButton
 						title="Claimable loot"
 						disabled={!clan.invokingPlayerHasClaimableLoot}
@@ -492,9 +536,16 @@ const ClanInfoTab: React.FC<{ clan: Clan, player: ClanMember }> = ({ clan, playe
 					<LeaveClanButton clan={clan} player={player} />
 				</div>
 
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					<ClanCredits clan={clan} />
+					<ClanProperty clan={clan} />
+				</div>
+
 				<ClanBulletinBoard clan={clan} player={player} />
-				<ClanSkills clan={clan} />
-				<ClanPvmStats clan={clan} />
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+					<ClanSkills clan={clan} />
+					<ClanPvmStats clan={clan} />
+				</div>
 			</div>
 		</div>
 	);

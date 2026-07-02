@@ -315,6 +315,8 @@ body {
 	100% { transform: scale(1); }
 }
 
+/*  */
+
 /* Hide scrollbar */
 
 .no-scrollbar::-webkit-scrollbar {
@@ -327,11 +329,6 @@ body {
 }
 
 /* Dark theme scrollbar */
-
-/*.dark-scrollbar {
-	scrollbar-color: #ffffff50 #00000050;
-	scrollbar-width: thin;
-}*/
 
 .dark-scrollbar::-webkit-scrollbar {
 	width: 0.5rem !important;

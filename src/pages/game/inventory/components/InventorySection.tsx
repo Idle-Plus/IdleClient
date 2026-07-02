@@ -7,7 +7,7 @@ import useInventorySlotWatcher from "@hooks/game/inventory/useInventorySlotWatch
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { InventoryCurrentlyDraggingContext } from "@pages/game/inventory/InventoryPage.tsx";
 import useSmartRefWatcher from "@hooks/smartref/useSmartRefWatcher.ts";
-import { WeaponEffectType } from "@idleclient/network/NetworkData.ts";
+import { ItemEffectType } from "@idleclient/network/NetworkData.ts";
 import { toKMB } from "@idleclient/game/utils/numberUtils.ts";
 import ItemTooltip from "@components/item/ItemTooltip.tsx";
 import { ItemDatabase } from "@idleclient/game/data/item/ItemDatabase.ts";
@@ -28,11 +28,11 @@ const COSMETIC_SHADOWS = {
 		[ -2, -2 ], // left-up
 	],
 
-	[WeaponEffectType.None]: { color: "#00000000", blur: 0 }, // Should never be picked.
-	[WeaponEffectType.Flaming]: { color: "#FF00007F", blur: 2 },
-	[WeaponEffectType.Ghostly]: { color: "#FFFFFF7F", blur: 2 },
-	[WeaponEffectType.Void]: { color: "#0000007F", blur: 2 },
-	[WeaponEffectType.Nature]: { color: "#00FF007F", blur: 2 }
+	[ItemEffectType.None]: { color: "#00000000", blur: 0 }, // Should never be picked.
+	[ItemEffectType.Flaming]: { color: "#FF00007F", blur: 2 },
+	[ItemEffectType.Ghostly]: { color: "#FFFFFF7F", blur: 2 },
+	[ItemEffectType.Void]: { color: "#0000007F", blur: 2 },
+	[ItemEffectType.Nature]: { color: "#00FF007F", blur: 2 }
 }
 
 interface InventorySectionProps {

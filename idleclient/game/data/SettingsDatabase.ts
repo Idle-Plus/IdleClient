@@ -1,6 +1,16 @@
 import { Float, Int, WeaponType } from "@idleclient/network/NetworkData.ts";
 import { GameData } from "@idleclient/game/data/GameData.ts";
 
+interface RitualPowerCurveSettings {
+	RitualPowerMaxMultiplier?: Float;
+	RitualPowerMinMultiplier?: Float;
+	RitualPowerRefBaseValue?: Float;
+	RitualPowerRefMultiplier?: Float;
+	RitualPowerExponentK?: Float;
+	GlobalRitualPowerMultiplier?: Float;
+	UntradeableItemMultiplier?: Float;
+}
+
 class SharedSettings {
 
 	private readonly RequiredBuildVersion: string = ""; // Hopefully this will never be empty.
@@ -15,6 +25,7 @@ class SharedSettings {
 	private readonly PremiumOneMonthItemId: Int = 0;
 	private readonly PremiumPermanentItemId: Int = 0;
 	private readonly TasksLockedBehindPremium: Int[] = [];
+	private readonly MaxPremiumSkillLevelWithoutRank: Int = 0;
 	private readonly BaseOfflineProgressCapHours: Int = 0;
 	private readonly OfflineHoursFromPremium: Int = 0;
 	private readonly ChatEnabled: boolean = false;
@@ -79,6 +90,7 @@ class SharedSettings {
 	private readonly CombatPetExperienceSharePercentage: Int = 0;
 	private readonly ClanCupCreditRewards: Int[] = [];
 	private readonly ClanCupCreditRewardsIronman: Int[] = [];
+	private readonly RitualPowerCurveSettings: RitualPowerCurveSettings = {};
 
 	constructor(entry: any) {
 		Object.assign(this, entry);
@@ -91,6 +103,7 @@ class SharedSettings {
 	get baseClanVaultSpace(): Int { return this.BaseClanVaultSpace; }
 
 	get tasksLockedBehindPremium(): Int[] { return this.TasksLockedBehindPremium; }
+	get maxPremiumSkillLevelWithoutRank(): Int { return this.MaxPremiumSkillLevelWithoutRank; }
 
 	get clanCreditsPerClanTaskCompletion(): Int { return this.ClanCreditsPerClanTaskCompletion; }
 

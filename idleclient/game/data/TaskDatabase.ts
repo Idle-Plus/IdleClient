@@ -21,23 +21,35 @@ interface TaskCost {
 	amount: Int,
 }
 
+interface SkillRequirement {
+	Skill?: Skill,
+	Level?: Int,
+}
+
 export class JobTask {
 
 	private readonly TaskId: Int = 0;
 	private readonly Name: string = "";
-	private readonly Disabled: boolean = false;
-
+	private readonly DescriptionLocKey: string | null = null;
 	private readonly Skill: Skill = Skill.None;
+	private readonly TaskCategory: TaskType = TaskType.None;
 	private readonly LevelRequirement: Int = 0;
+	private readonly AdditionalLevelRequirements: SkillRequirement[] = [];
+
 	private readonly BaseTime: Float = 0;
 	private readonly CustomPetTimeMs: Float = 0;
 	private readonly ExpReward: Float = 0;
 	private readonly CustomPetExpReward: Float = 0;
 	private readonly ItemReward: Int = 0;
 	private readonly ItemAmount: Int = 0;
+	private readonly Disabled: boolean = false;
+	private readonly Hidden: boolean = false;
 	private readonly IsSymbolTask: boolean = false;
+	private readonly CanReceiveFromSkillingPartyEvent: boolean = false;
+	private readonly AffectedByShowUsTheMoney: boolean = false;
 	private readonly Costs: { Item?: Int, Amount?: Int }[] = []; // fields marked as optional because omitted default values.
 	private readonly CustomIconId: Int = 0;
+	// .. a ton more ...
 
 	// The id of the "category" this task is in.
 	public readonly identifiableType: string = "";
@@ -278,14 +290,16 @@ export class JobTaskCategory {
 	public readonly tasks: JobTask[] = [];
 	public readonly customId: string = "";
 	public readonly sortOrder: number = 0;
+	public readonly invisibleTasks: boolean = false;
 
 	public readonly disabled: boolean = false;
 	private readonly tasksById: Map<Int, JobTask> = new Map();
 
-	constructor(tasks: JobTask[], customId: string, sortOrder: number) {
+	constructor(tasks: JobTask[], customId: string, sortOrder: number, invisibleTasks: boolean) {
 		this.tasks = tasks;
 		this.customId = customId;
 		this.sortOrder = sortOrder;
+		this.invisibleTasks = invisibleTasks;
 
 		const tasksById = new Map<Int, JobTask>();
 
@@ -335,7 +349,7 @@ export class TaskDatabase {
 			}
 
 			// Sort the entries by sort order, lowest to highest.
-			const entries = taskData[key] as { Items: any[], CustomId: string, SortOrder: number }[];
+			const entries = taskData[key] as { Items: any[], CustomId: string, SortOrder: number, InvisibleTasks: boolean }[];
 			entries.sort((a, b) =>
 				(a.SortOrder ?? 0) - (b.SortOrder ?? 0));
 
@@ -347,6 +361,7 @@ export class TaskDatabase {
 				const items = entry.Items;
 				const customId = entry.CustomId ?? "";
 				const sortOrder = entry.SortOrder ?? 0;
+				const invisibleTasks = entry.InvisibleTasks ?? false;
 
 				// The tasks that will be added to the category.
 				const tasksArray: JobTask[] = [];
@@ -367,7 +382,7 @@ export class TaskDatabase {
 				}
 
 				// Store the category and increase the start id.
-				categoriesArray.push(new JobTaskCategory(tasksArray, customId, sortOrder));
+				categoriesArray.push(new JobTaskCategory(tasksArray, customId, sortOrder, invisibleTasks));
 			}
 
 			jobs.set(type, jobsMap);

@@ -5,14 +5,13 @@ import {
 	Int,
 	ItemActivatableType,
 	ItemCategory,
-	ItemEffectTriggerType,
+	ItemEffectTriggerType, ItemEffectType,
 	MasteryCapeType,
 	PotionType,
 	Skill,
 	TaskType,
 	UpgradeType,
 	WeaponClassType,
-	WeaponEffectType,
 	WeaponType
 } from "@idleclient/network/NetworkData.ts";
 import { SheetIcon, SpriteSheet } from "@idleclient/game/sprite/SpriteSheet.ts";
@@ -89,6 +88,11 @@ interface LevelRequirement {
 	Level?: Int;
 }
 
+interface ItemInvocationData {
+	CanBeSacrificed?: boolean;
+	SacrificialPowerModifier?: Float;
+}
+
 export class ItemDefinition {
 
 	// Everything is private as I don't want to expose the names
@@ -112,6 +116,7 @@ export class ItemDefinition {
 	private readonly TradeableWithClan: boolean = false;
 	private readonly FlipSprite: boolean = false;
 	private readonly IsTool: boolean = false;
+	private readonly Unobtainable: boolean = false;
 	private readonly MasteryCapeType: MasteryCapeType = MasteryCapeType.None;
 	private readonly Category: ItemCategory = ItemCategory.None;
 	private readonly EquipmentSlot: EquipmentSlot = EquipmentSlot.None;
@@ -143,7 +148,7 @@ export class ItemDefinition {
 	private readonly TriggerEffects?: TriggerEffect[]; // ItemTriggerEffect object
 	private readonly InventoryConsumableBoost?: SkillBoost; // ItemSkillBoost object
 	private readonly LevelRequirement?: LevelRequirement; // ItemLevelRequirement object
-	private readonly CosmeticScrollEffect: WeaponEffectType = WeaponEffectType.None;
+	private readonly CosmeticScrollEffect: ItemEffectType = ItemEffectType.None;
 	//
 	private readonly UsableEnchantmentScroll: EnchantmentScrollType = EnchantmentScrollType.None;
 	private readonly EnchantedVersionItemId: Int = 0;
@@ -151,6 +156,7 @@ export class ItemDefinition {
 	private readonly EnchantingSkillType: Skill = Skill.None;
 	private readonly ScrollType: EnchantmentScrollType = EnchantmentScrollType.None;
 	private readonly ProcChance: Int = 0;
+	private readonly ItemInvocationData?: ItemInvocationData;
 
 	/*
 	 * Custom properties
@@ -169,13 +175,13 @@ export class ItemDefinition {
 	public readonly levelRequirement: ItemLevelRequirement | null;
 
 	public readonly originalItemId: ItemId | null;
-	public readonly cosmeticVariant: WeaponEffectType;
+	public readonly cosmeticVariant: ItemEffectType;
 
 	/*
 	 * Other
 	 */
 
-	private readonly cosmeticVariantIds: Partial<Record<WeaponEffectType, ItemId>> = {};
+	private readonly cosmeticVariantIds: Partial<Record<ItemEffectType, ItemId>> = {};
 	private readonly icon: SheetIcon | null = null;
 	private readonly icon32: SheetIcon | null = null;
 	private readonly icon48: SheetIcon | null = null;
@@ -190,7 +196,7 @@ export class ItemDefinition {
 		entry: any,
 		sheet: SpriteSheet | null,
 		originalItemId?: ItemDefinition,
-		cosmeticVariant?: WeaponEffectType
+		cosmeticVariant?: ItemEffectType
 	) {
 		Object.assign(this, entry);
 		this.ItemId = entry.ItemId ?? 0;
@@ -199,7 +205,7 @@ export class ItemDefinition {
 
 		// Cosmetic info.
 		this.originalItemId = originalItemId?.id ?? null;
-		this.cosmeticVariant = cosmeticVariant ?? WeaponEffectType.None;
+		this.cosmeticVariant = cosmeticVariant ?? ItemEffectType.None;
 
 		// Pre-fetch the item icon.
 		if (originalItemId) this.icon = originalItemId.icon;
@@ -328,7 +334,7 @@ export class ItemDefinition {
 	public getLocalizedName(): string {
 		if (this.isCosmeticVariant()) {
 			const baseName = ItemDatabase.item(this.getOriginalItemId()).getLocalizedName();
-			return `${baseName} (${WeaponEffectType[this.cosmeticVariant]})`
+			return `${baseName} (${ItemEffectType[this.cosmeticVariant]})`
 		}
 
 		// Handle mastery capes.
@@ -462,9 +468,9 @@ export class ItemDefinition {
 		return this.originalItemId !== null && this.cosmeticVariant !== null;
 	}
 
-	public getCosmeticEffect(): WeaponEffectType | null {
+	public getCosmeticEffect(): ItemEffectType | null {
 		if (this.isCosmeticVariant()) return this.cosmeticVariant;
-		if (this.CosmeticScrollEffect === WeaponEffectType.None) return null;
+		if (this.CosmeticScrollEffect === ItemEffectType.None) return null;
 		return this.CosmeticScrollEffect;
 	}
 

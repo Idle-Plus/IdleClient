@@ -184,7 +184,7 @@ export const InventoryManager = (context: ManagerContext): InventoryManagerType 
 		if (loading.is(LOADING_SELL_ITEM)) return;
 		debug.log(`Inventory: Selling ${amount} of item ${itemId}.`);
 		loading.set(LOADING_SELL_ITEM, "Selling item");
-		Network.send(new SellItemMessage(itemId, amount));
+		Network.send(new SellItemMessage(itemId, amount, null, null));
 	}
 
 	/*

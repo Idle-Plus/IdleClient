@@ -265,11 +265,20 @@ export class Clan {
 		if (packet.Progress != null) {
 			const progress = packet.Progress;
 			if (progress.Experiences != null) {
-				this._experience = new Map(Object.keys(progress.Experiences ?? {}).map(v => {
+				const updatedExperience = new Map(Object.keys(progress.Experiences ?? {}).map(v => {
 					const skill = Skill[v as keyof typeof Skill]
 					if (skill === undefined) throw new Error(`Invalid skill ${v}`);
 					return [ skill, (progress.Experiences ?? {})[v] ] as [ Skill, number ];
 				}));
+				// If this is a partial update, then only change the updated experience,
+				// if not, replace the whole map.
+				if (packet.IsPartialUpdate ?? false) {
+					for (const [skill, experience] of updatedExperience) {
+						this._experience?.set(skill, experience);
+					}
+				} else {
+					this._experience = updatedExperience;
+				}
 			}
 			result = true;
 		}
